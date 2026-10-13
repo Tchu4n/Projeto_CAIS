@@ -258,6 +258,13 @@ body {
   background: var(--superficie-alt);
   pointer-events: none;
 }
+/* [PV-12] A IMPRESSÃO DO CERTIFICADO (components do app: /certificados/[trilhaId]): papel A4 deitado, sem menu nem topo nem botões (.nao-imprimir), a folha ocupa a página e as cores da marca saem como na tela. */
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  aside, header, nav, .nao-imprimir { display: none !important; }
+  html, body, .raiz-shell, .raiz-shell main { display: block !important; height: auto !important; overflow: visible !important; background: #fff !important; }
+  .certificado-folha { width: 100% !important; max-width: none !important; border-radius: 0 !important; box-shadow: none !important; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 /* Cartões da homepage erguem um pouco ao passar o mouse. */
 .cartao-erguido { transition: transform 200ms ease-out, box-shadow 200ms ease-out; }
 .cartao-erguido:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14); }

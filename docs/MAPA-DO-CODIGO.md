@@ -92,17 +92,18 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/minhas-trilhas/[id]/page.tsx`
 *uma trilha vista por quem a cumpre: alcance, prazo, progresso e a lista de etapas com o estado de cada uma (concluída, atual, bloqueada) e o motivo do bloqueio; botão "Começar"/"Continuar" (fixo no rodapé no celular).*
 
-1. O DETALHE DA TRILHA para quem a cumpre. Trilha fora do público, em rascunho ou inexistente leva a /sem-permissao (a mesma resposta nos três casos, para não revelar quais trilhas existem). _(linha 36)_
-2. O BOTÃO PRINCIPAL: "Começar" se nada foi feito, "Continuar" se já começou; some quando a trilha termina. No celular ele vai para a barra fixa do rodapé. _(linha 76)_
-3. AS ETAPAS SÃO FEITAS EM ORDEM: antes da atual = concluída, a atual e as seguintes = bloqueadas (com o motivo escrito). _(linha 126)_
-4. AS TENTATIVAS MOSTRADAS NA ETAPA DE QUIZ: o limite da etapa ou, se não houver, TENTATIVAS_PADRAO (lib/trilhas.ts). _(linha 129)_
+1. O DETALHE DA TRILHA para quem a cumpre. Trilha fora do público, em rascunho ou inexistente leva a /sem-permissao (a mesma resposta nos três casos, para não revelar quais trilhas existem). _(linha 37)_
+2. O BOTÃO PRINCIPAL: "Começar" se nada foi feito, "Continuar" se já começou; some quando a trilha termina. No celular ele vai para a barra fixa do rodapé. _(linha 77)_
+3. AS ETAPAS SÃO FEITAS EM ORDEM: antes da atual = concluída, a atual e as seguintes = bloqueadas (com o motivo escrito). _(linha 132)_
+4. AS TENTATIVAS MOSTRADAS NA ETAPA DE QUIZ: o limite da etapa ou, se não houver, TENTATIVAS_PADRAO (lib/trilhas.ts). _(linha 135)_
 
 ### `app/(sistema)/minhas-trilhas/page.tsx`
 *as trilhas que a pessoa logada recebe, com "Continue de onde parou" no topo e a lista agrupada por alcance (geral, empresa, profissional).*
 
-1. A ORDEM DOS GRUPOS na tela (§4): trilha geral, depois a da empresa e por último a do profissional. Grupo sem trilha não aparece. _(linha 32)_
-2. O "CONTINUE DE ONDE PAROU": a primeira trilha não concluída; a lista já vem com o prazo mais curto primeiro (trilhasDaPessoaDetalhadas). _(linha 82)_
-3. O DESTAQUE DO TOPO: trilha, próxima etapa e botão; o texto muda entre "Comece por aqui" e "Continue de onde parou". A faixa usa a cor do alcance da trilha. _(linha 125)_
+1. A ORDEM DOS GRUPOS na tela (§4): trilha geral, depois a da empresa e por último a do profissional. Grupo sem trilha não aparece. _(linha 34)_
+2. O "CONTINUE DE ONDE PAROU": a primeira trilha não concluída; a lista já vem com o prazo mais curto primeiro (trilhasDaPessoaDetalhadas). _(linha 87)_
+3. OS CERTIFICADOS: um cartão por trilha concluída, com o botão para abrir e imprimir (/certificados/[trilhaId]). Some quando a pessoa ainda não concluiu nenhuma. _(linha 106)_
+4. O DESTAQUE DO TOPO: trilha, próxima etapa e botão; o texto muda entre "Comece por aqui" e "Continue de onde parou". A faixa usa a cor do alcance da trilha. _(linha 154)_
 
 ### `app/(sistema)/painel/page.tsx`
 *a tela inicial do sistema. Só escolhe qual painel mostrar conforme o perfil de quem está logado ("o painel muda conforme quem olha", §6).*
@@ -189,6 +190,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 201)_
 10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 216)_
 11. AS ANIMAÇÕES DE ENTRADA DA HOMEPAGE: itens sobem ao entrar na tela (components/home/Revelar.tsx), os passos de "Como funciona" aparecem um a um (círculo, depois a linha) e os cartões erguem no hover. Duração e distância ficam aqui. _(linha 220)_
+12. A IMPRESSÃO DO CERTIFICADO (components do app: /certificados/[trilhaId]): papel A4 deitado, sem menu nem topo nem botões (.nao-imprimir), a folha ocupa a página e as cores da marca saem como na tela. _(linha 261)_
 
 ### `app/layout.tsx`
 *a "moldura" HTML de todas as páginas do CAIS (<html>, <head>, <body>).*
@@ -852,21 +854,21 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 *funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).*
 
 1. QUEM ABRE CADA TELA: a lista de rotas por perfil. Tela nova precisa entrar aqui (rota fora da lista é só do admin) e no menu (components/shell/navegacao.ts). _(linha 19)_
-2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 48)_
-3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 99)_
-4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 110)_
-5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 121)_
-6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 129)_
-7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 135)_
-8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 146)_
-9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 155)_
-10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 179)_
-11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 190)_
-12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 216)_
-13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 234)_
-14. Nomes das ações na tabela de permissões de /acessos. _(linha 254)_
-15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 270)_
-16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 303)_
+2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 50)_
+3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 101)_
+4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 112)_
+5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 123)_
+6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 131)_
+7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 137)_
+8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 148)_
+9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 157)_
+10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 181)_
+11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 192)_
+12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 218)_
+13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 236)_
+14. Nomes das ações na tabela de permissões de /acessos. _(linha 257)_
+15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 273)_
+16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 306)_
 
 ### `lib/preferencias.ts`
 *hook que devolve a densidade das tabelas escolhida pela pessoa logada (confortável ou compacta).*
@@ -1010,4 +1012,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-114 arquivos mapeados, 532 pontos vitais.
+114 arquivos mapeados, 534 pontos vitais.

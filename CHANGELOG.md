@@ -2,6 +2,12 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Certificados das trilhas (13/10/2026)
+- Criado: lib/certificados.ts (quem tem direito, dados do certificado e o código de verificação CAIS-AAAA-XXXXXXXX, tudo calculado do progresso, sem guardar nada) com lib/certificados.casos.ts (17 casos); a página /certificados/[trilhaId] (folha A4 deitada para imprimir ou salvar em PDF pelo navegador); a rota /certificados em lib/permissoes.ts (empresa e profissional); testes/navegador/h06-certificados.mjs.
+- Modificado: Minhas trilhas ganhou a seção "Seus certificados" e o detalhe da trilha concluída o botão "Ver certificado"; o certificado fica liberado mesmo com a trilha obrigatória pendente; o CSS de impressão (app/globals.css) esconde menu, topo e botões; o layout ganhou a classe raiz-shell.
+- Fora desta entrega (itens 5 e 6 do plano): página pública de verificação do código e lista de certificados emitidos para admin e empresa.
+- Removido: nada.
+
 ## Homepage mais dinâmica (13/10/2026)
 - Criado: components/home/VoltarAoTopo.tsx (botão redondo no canto inferior direito, com anel de progresso da leitura, aparece após 400 px de rolagem), LinkRolar.tsx (o botão "Quero trazer minha empresa" rola TODA vez) e Revelar.tsx (itens sobem ao entrar na tela); testes/navegador/h05-home-dinamica.mjs.
 - Modificado: os passos de "Como funciona" aparecem um a um (círculo, depois a linha até o próximo); os cartões de Pilares e Perfis entram em sequência e erguem no hover; a abertura (Hero) entra em etapas. Tudo se desliga com prefers-reduced-motion.

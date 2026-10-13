@@ -23,7 +23,7 @@ try {
   await ir('/minhas-trilhas');
   const ana = await titulosDaLista();
   c('Ana vê as 3 trilhas do público dela', JSON.stringify([...ana].sort()) === JSON.stringify(['Boas-vindas ao programa', 'Nivelamento de front-end', 'Processos da Vértice']), ana.join(', '));
-  c('grupos na ordem geral → empresa → profissional', JSON.stringify(await ev(`[...document.querySelectorAll('main section h2')].map((h) => h.textContent.replace(/\\(.*\\)/, '').trim())`)) === JSON.stringify(['Trilha geral', 'Trilha da empresa', 'Trilha do profissional']));
+  c('grupos na ordem geral → empresa → profissional', JSON.stringify(await ev(`[...document.querySelectorAll('main section h2')].map((h) => h.textContent.replace(/\\(.*\\)/, '').trim()).filter((t) => t !== 'Seus certificados')`)) === JSON.stringify(['Trilha geral', 'Trilha da empresa', 'Trilha do profissional']));
   const destaque = await ev(`document.querySelector('main')?.innerText.split('Trilha geral')[0].replace(/\\n+/g, ' | ')`);
   c('"Continue de onde parou" mostra o Nivelamento na etapa 3 (Tipagem com TypeScript)', /continue de onde parou/i.test(destaque) && /Nivelamento de front-end/.test(destaque) && /3 de 5/.test(destaque) && /Tipagem com TypeScript/.test(destaque), destaque?.slice(0, 160));
   const nivel = await textoDoCard('Nivelamento de front-end');

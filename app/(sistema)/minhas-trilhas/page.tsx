@@ -18,10 +18,12 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { ArrowRight, BookOpenCheck, PartyPopper, Star } from 'lucide-react';
+import { ArrowRight, Award, BookOpenCheck, PartyPopper, Star } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { trilhasDaPessoaDetalhadas, type TrilhaDaPessoa } from '@/lib/metricas';
+import { certificadosDaPessoa } from '@/lib/certificados';
+import { dataBR } from '@/lib/utils';
 import { ALCANCE, TIPOS_ETAPA, hrefEtapa } from '@/lib/trilhas';
 import type { Trilha } from '@/lib/tipos';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
@@ -44,6 +46,9 @@ export default function PaginaMinhasTrilhas() {
   const d = useDados();
   // Recalcula só quando os dados ou a pessoa mudam (a lista percorre trilhas, pessoas e alocações).
   const minhas = useMemo(() => (sessao && d.pronto ? trilhasDaPessoaDetalhadas(sessao.pessoaId, d) : []), [sessao, d]);
+
+  // Certificados de quem já concluiu trilhas (calculados do progresso; nada é guardado).
+  const certificados = useMemo(() => (sessao && d.pronto ? certificadosDaPessoa(sessao.pessoaId, d) : []), [sessao, d]);
 
   const cabecalho = <CabecalhoPagina titulo="Minhas trilhas" descricao="As trilhas atribuídas a você, o seu progresso e os prazos." />;
 
@@ -98,6 +103,30 @@ export default function PaginaMinhasTrilhas() {
         </Card>
       )}
 
+      {/* [PV-3] OS CERTIFICADOS: um cartão por trilha concluída, com o botão para abrir e imprimir (/certificados/[trilhaId]). Some quando a pessoa ainda não concluiu nenhuma. */}
+      {certificados.length > 0 && (
+        <section aria-labelledby="titulo-certificados" className="mb-8">
+          <h2 id="titulo-certificados" className="mb-3 flex items-center gap-2 font-space text-base font-semibold text-tinta">
+            <Award className="h-4 w-4 text-primaria" aria-hidden />Seus certificados
+            <span className="text-sm font-normal text-tinta-suave">({certificados.length})</span>
+          </h2>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {certificados.map((c) => (
+              <li key={c.trilhaId}>
+                <Card className="flex items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate font-space text-[15px] font-semibold text-tinta">{c.trilhaTitulo}</p>
+                    <p className="text-[13px] text-tinta-suave">{c.concluidaEm ? `Concluída em ${dataBR(c.concluidaEm)}` : 'Concluída'}</p>
+                  </div>
+                  {/* NAVEGA: abre o certificado para imprimir ou salvar em PDF. */}
+                  <Link href={`/certificados/${c.trilhaId}`} className={classesBotao({ variante: 'secundario', tamanho: 'sm', className: 'shrink-0' })}>Ver certificado</Link>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* Grupos por alcance; grupo sem trilha não aparece. */}
       <div className="space-y-8">
         {ORDEM_ALCANCE.map((alcance) => {
@@ -122,7 +151,7 @@ export default function PaginaMinhasTrilhas() {
   );
 }
 
-// [PV-3] O DESTAQUE DO TOPO: trilha, próxima etapa e botão; o texto muda entre "Comece por aqui" e "Continue de onde parou". A faixa usa a cor do alcance da trilha.
+// [PV-4] O DESTAQUE DO TOPO: trilha, próxima etapa e botão; o texto muda entre "Comece por aqui" e "Continue de onde parou". A faixa usa a cor do alcance da trilha.
 /**
  * Destaque do topo (§4: "próximo passo em destaque"): trilha, próxima etapa e botão.
  * @param props.t a trilha não concluída de prazo mais curto.

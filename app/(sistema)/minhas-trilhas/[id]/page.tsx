@@ -24,6 +24,7 @@ import { ArrowRight, CircleCheck, Lock, Star } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { trilhasDaPessoaDetalhadas } from '@/lib/metricas';
+import { certificadoDaPessoa } from '@/lib/certificados';
 import { ALCANCE, TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa } from '@/lib/trilhas';
 import { tentativasDoQuiz } from '@/lib/quiz';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
@@ -116,7 +117,12 @@ export default function DetalheMinhaTrilha() {
       )}
 
       {concluida && (
-        <div className="mb-6"><Aviso tipo="sucesso" titulo="Trilha concluída">Você terminou todas as etapas{t.nota !== undefined ? ` com nota ${t.nota} no quiz` : ''}. Pode rever qualquer etapa quando quiser.</Aviso></div>
+        <div className="mb-6"><Aviso tipo="sucesso" titulo="Trilha concluída">Você terminou todas as etapas{t.nota !== undefined ? ` com nota ${t.nota} no quiz` : ''}. Pode rever qualquer etapa quando quiser.</Aviso>
+          {/* NAVEGA: o certificado desta trilha (só aparece se a pessoa tem direito a ele). */}
+          {sessao && certificadoDaPessoa(trilha, sessao.pessoaId, d) && (
+            <Link href={`/certificados/${trilha.id}`} className={classesBotao({ className: 'mt-3' })}>Ver certificado</Link>
+          )}
+        </div>
       )}
 
       <h2 className="mb-3 font-space text-base font-semibold text-tinta">Etapas</h2>

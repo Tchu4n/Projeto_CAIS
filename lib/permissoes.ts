@@ -40,6 +40,8 @@ export const ROTAS_POR_PERFIL: Record<string, readonly Perfil[]> = {
   // §3: Empresa cumpre a trilha dela e Profissional cumpre as atribuídas.
   // TODO(PROGLOGIC): confirmar
   '/minhas-trilhas': ['empresa', 'profissional'],
+  // O certificado de uma trilha concluída é de quem a concluiu (empresa e profissional); o admin não cumpre trilha.
+  '/certificados': ['empresa', 'profissional'],
   // §3: só o Profissional "vê e move as próprias tarefas".
   // TODO(PROGLOGIC): confirmar
   '/minhas-tarefas': ['profissional'],
@@ -224,7 +226,7 @@ export function temTrilhaObrigatoriaPendente(pessoaId: string, dados: Dados): bo
 export function rotaLiberadaComTrilhaPendente(caminho: string): boolean {
   const limpo = caminho.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
   // Fronteira de segmento (igual a podeAcessar): "/painelx" NÃO conta como "/painel".
-  return ['/minhas-trilhas', '/painel'].some((p) => limpo === p || limpo.startsWith(p + '/'));
+  return ['/minhas-trilhas', '/certificados', '/painel'].some((p) => limpo === p || limpo.startsWith(p + '/'));
 }
 
 /* ============================================================================
@@ -248,6 +250,7 @@ export const ROTULO_DAS_ROTAS: Record<string, string> = {
   '/carga': 'Carga da equipe',
   '/acessos': 'Acessos',
   '/minhas-trilhas': 'Minhas trilhas',
+  '/certificados': 'Certificados das trilhas',
   '/minhas-tarefas': 'Minhas tarefas',
 };
 

@@ -94,6 +94,7 @@ As regras ficam em funções puras, sem React, e podem ser testadas com Node:
 | `/empresas`, `/pessoas`, `/design-system`, `/carga`, `/acessos` | sim | não | não |
 | `/trilhas` | sim | sim (só as dela) | não |
 | `/minhas-trilhas` | não | sim | sim |
+| `/certificados/[trilhaId]` | não | sim | sim |
 | `/minhas-tarefas` | não | não | sim |
 
 | Ação em projetos | Admin | Empresa | Profissional |

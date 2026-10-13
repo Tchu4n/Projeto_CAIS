@@ -149,7 +149,7 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
   return (
     // h-screen + overflow-hidden: a casca tem exatamente a altura da janela e
     // não rola. Assim o menu e o topo ficam sempre no lugar (§10).
-    <div className="flex h-screen overflow-hidden bg-fundo">
+    <div className="raiz-shell flex h-screen overflow-hidden bg-fundo">
       {/* Link "pular para o conteúdo": invisível (sr-only) até receber foco
         * pelo Tab; aí aparece no canto (focus:not-sr-only). Ajuda quem navega
         * só pelo teclado a não passar por todo o menu (§13). */}
