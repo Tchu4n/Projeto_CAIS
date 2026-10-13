@@ -188,6 +188,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 193)_
 9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 201)_
 10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 216)_
+11. AS ANIMAÇÕES DE ENTRADA DA HOMEPAGE: itens sobem ao entrar na tela (components/home/Revelar.tsx), os passos de "Como funciona" aparecem um a um (círculo, depois a linha) e os cartões erguem no hover. Duração e distância ficam aqui. _(linha 220)_
 
 ### `app/layout.tsx`
 *a "moldura" HTML de todas as páginas do CAIS (<html>, <head>, <body>).*
@@ -209,8 +210,8 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/page.tsx`
 *a página pública da raiz "/", que apresenta o CAIS para uma empresa que avalia participar do programa.*
 
-1. O TÍTULO E A DESCRIÇÃO da homepage; o título é absoluto (ignora o modelo "· CAIS" do layout raiz). _(linha 34)_
-2. A ORDEM DAS SEÇÕES DA HOMEPAGE: Hero, Problema (O programa), Pilares, Como funciona, Para sua empresa, Perfis, Perguntas e o formulário de interesse. Reordenar ou tirar uma seção exige conferir components/home/secoes.ts. _(linha 56)_
+1. O TÍTULO E A DESCRIÇÃO da homepage; o título é absoluto (ignora o modelo "· CAIS" do layout raiz). _(linha 36)_
+2. A ORDEM DAS SEÇÕES DA HOMEPAGE: Hero, Problema (O programa), Pilares, Como funciona, Para sua empresa, Perfis, Perguntas e o formulário de interesse. Reordenar ou tirar uma seção exige conferir components/home/secoes.ts. _(linha 58)_
 
 ### `app/primeiro-acesso/page.tsx`
 *a página da rota "/primeiro-acesso?convite=<pessoaId>" (pública, fora do grupo protegido).*
@@ -311,8 +312,9 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/home/ComoFunciona.tsx`
 *linha do tempo em 4 passos (Empresa, Projeto, Alocação, Tarefa) e o bloco "A trilha da sua empresa".*
 
-1. OS QUATRO NÍVEIS do §5 (Empresa, Projeto, Alocação, Tarefa) e a frase de cada um. Passo novo entra aqui; o desenho acompanha a quantidade. _(linha 12)_
-2. A seção "Como funciona" (id como-funciona): título, descrição e os passos lado a lado no desktop e empilhados no celular. _(linha 21)_
+1. OS QUATRO NÍVEIS do §5 (Empresa, Projeto, Alocação, Tarefa) e a frase de cada um. Passo novo entra aqui; o desenho acompanha a quantidade. _(linha 13)_
+2. A seção "Como funciona" (id como-funciona): título, descrição e os passos lado a lado no desktop e empilhados no celular. _(linha 22)_
+3. O RITMO DOS PASSOS: cada passo espera 600 ms depois do anterior (atraso={i * 600}). Aumente para ficar mais devagar. _(linha 46)_
 
 ### `components/home/FormularioInteresse.tsx`
 *formulário em que a empresa conta o interesse em participar do programa. O envio é SIMULADO (ainda não existe API).*
@@ -326,8 +328,8 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/home/Hero.tsx`
 *a primeira dobra da página: o que é o CAIS em uma frase, os dois botões de ação e o diagrama dos três pilares.*
 
-1. A CHAMADA PRINCIPAL da homepage (o único h1) e o texto de apoio logo abaixo. Mude aqui para trocar a mensagem de abertura. _(linha 34)_
-2. OS DOIS BOTÕES da abertura: "Quero trazer minha empresa" rola até #participar (FormularioInteresse) e "Já tenho acesso" vai para /login. _(linha 44)_
+1. A CHAMADA PRINCIPAL da homepage (o único h1) e o texto de apoio logo abaixo. Mude aqui para trocar a mensagem de abertura. _(linha 36)_
+2. OS DOIS BOTÕES da abertura: "Quero trazer minha empresa" rola até #participar (FormularioInteresse) e "Já tenho acesso" vai para /login. _(linha 46)_
 
 ### `components/home/ParaSuaEmpresa.tsx`
 *explica o que a empresa vê no CAIS e mostra uma prévia ILUSTRATIVA do painel da empresa, com dados fictícios.*
@@ -339,7 +341,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/home/Perfis.tsx`
 *três cards com os perfis do sistema (Administrador, Empresa e Profissional), destacando o da Empresa.*
 
-1. OS TRÊS CARDS DE PERFIL (§3): nome, resumo, itens e ícone de cada um. A Empresa vem em destaque por ser o público da página (destaque: true). _(linha 25)_
+1. OS TRÊS CARDS DE PERFIL (§3): nome, resumo, itens e ícone de cada um. A Empresa vem em destaque por ser o público da página (destaque: true). _(linha 26)_
 
 ### `components/home/Perguntas.tsx`
 *lista de perguntas e respostas que abrem e fecham, feita com <details>/<summary> nativos (funciona até sem JavaScript).*
@@ -349,7 +351,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/home/Pilares.tsx`
 *três cards (Onboarding, Gestão de projetos, Dashboards), cada um com o título e quatro itens do que a plataforma entrega naquele pilar.*
 
-1. OS TRÊS PILARES (§1, §4, §5 e §6): título, itens e a cor de acento de cada um. A cor é só barra lateral e ícone; o texto usa tokens de tinta (contraste AA). _(linha 22)_
+1. OS TRÊS PILARES (§1, §4, §5 e §6): título, itens e a cor de acento de cada um. A cor é só barra lateral e ícone; o texto usa tokens de tinta (contraste AA). _(linha 23)_
 
 ### `components/home/Problema.tsx`
 *duas colunas que comparam o cenário atual de formação e acompanhamento com o que muda usando o CAIS, fechando com a ideia do rastro único.*
@@ -988,4 +990,4 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 ---
 
-110 arquivos mapeados, 527 pontos vitais.
+110 arquivos mapeados, 529 pontos vitais.

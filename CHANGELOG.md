@@ -2,6 +2,12 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Homepage mais dinâmica (13/10/2026)
+- Criado: components/home/VoltarAoTopo.tsx (botão redondo no canto inferior direito, com anel de progresso da leitura, aparece após 400 px de rolagem), LinkRolar.tsx (o botão "Quero trazer minha empresa" rola TODA vez) e Revelar.tsx (itens sobem ao entrar na tela); testes/navegador/h05-home-dinamica.mjs.
+- Modificado: os passos de "Como funciona" aparecem um a um (círculo, depois a linha até o próximo); os cartões de Pilares e Perfis entram em sequência e erguem no hover; a abertura (Hero) entra em etapas. Tudo se desliga com prefers-reduced-motion.
+- Corrigido: o botão da abertura não rolava de novo depois de subir a página (o Link do Next não repete a mesma âncora).
+- Removido: nada.
+
 ## Checklist da tarefa (13/10/2026)
 - Criado: ação `marcar_checklist` em lib/permissoes.ts (admin em qualquer tarefa, profissional só nas próprias, empresa nunca) com 6 casos novos; `testes/navegador/h04-checklist.mjs`.
 - Modificado: no detalhe da tarefa o profissional responsável passa a marcar e desmarcar os itens do checklist; adicionar e remover itens continua só do administrador; a empresa só vê (ela aprova a entrega). O quadro "O que cada perfil pode fazer" em /acessos ganhou a linha da ação.

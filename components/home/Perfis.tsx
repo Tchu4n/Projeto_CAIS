@@ -3,12 +3,13 @@
    O que é: três cards com os perfis do sistema (Administrador, Empresa e
    Profissional), destacando o da Empresa.
    Onde é usado: app/page.tsx.
-   Depende de: lucide-react, components/ui/basicos (Etiqueta), ./CabecalhoSecao.
+   Depende de: lucide-react, components/ui/basicos (Etiqueta), ./CabecalhoSecao, ./Revelar.
    Contexto: §3 (perfis) e §7 (escopo: o back-end e as permissões são da PROGLOGIC).
    ============================================================================ */
 import { Briefcase, Building2, Smartphone, type LucideIcon } from "lucide-react";
 import { Etiqueta } from "@/components/ui/basicos";
 import CabecalhoSecao from "./CabecalhoSecao";
+import Revelar from "./Revelar";
 
 /** Dados de um perfil. */
 interface Perfil {
@@ -80,11 +81,13 @@ export default function Perfis() {
         />
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {PERFIS.map(({ nome, resumo, itens, Icone, destaque, etiqueta }) => (
-            <article
+          {PERFIS.map(({ nome, resumo, itens, Icone, destaque, etiqueta }, i) => (
+            <Revelar
+              como="article"
+              atraso={i * 150}
               key={nome}
               // O card em destaque ganha borda roxa e sombra; os outros ficam neutros.
-              className={`rounded-2xl border bg-superficie p-6 ${
+              className={`cartao-erguido rounded-2xl border bg-superficie p-6 ${
                 destaque ? "border-primaria shadow-card ring-1 ring-primaria/30" : "border-borda"
               }`}
             >
@@ -103,7 +106,7 @@ export default function Perfis() {
                   </li>
                 ))}
               </ul>
-            </article>
+            </Revelar>
           ))}
         </div>
       </div>

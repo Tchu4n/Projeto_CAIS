@@ -39,6 +39,7 @@ c('Ana marca na tarefa dela', propria && propria.caixas > 0 && propria.habilitad
 c('Ana NÃO vê remover nem adicionar item', propria && propria.remover === 0 && !propria.adicionar, JSON.stringify(propria));
 // Marcar de verdade: o número de itens marcados na tela muda.
 const secaoChecklist = `[...document.querySelectorAll('section')].find((s) => s.textContent.includes('Checklist'))`;
+/** Quantos itens do checklist aparecem marcados na tela. */
 const marcados = () => ev(`${secaoChecklist}.querySelectorAll('input[type=checkbox]:checked').length`);
 const antes = await marcados();
 await ev(`${secaoChecklist}.querySelector('input[type=checkbox]').click()`);

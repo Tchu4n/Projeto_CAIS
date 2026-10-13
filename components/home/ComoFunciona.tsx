@@ -3,11 +3,12 @@
    O que é: linha do tempo em 4 passos (Empresa, Projeto, Alocação, Tarefa) e
    o bloco "A trilha da sua empresa".
    Onde é usado: app/page.tsx (âncora #como-funciona).
-   Depende de: lucide-react, ./CabecalhoSecao.
+   Depende de: lucide-react, ./CabecalhoSecao, ./Revelar.
    Contexto: §5 (os quatro níveis de projeto) e §4 (trilha da empresa).
    ============================================================================ */
 import { ListChecks } from "lucide-react";
 import CabecalhoSecao from "./CabecalhoSecao";
+import Revelar from "./Revelar";
 
 // [PV-1] OS QUATRO NÍVEIS do §5 (Empresa, Projeto, Alocação, Tarefa) e a frase de cada um. Passo novo entra aqui; o desenho acompanha a quantidade.
 // Os quatro níveis do §5, na ordem em que acontecem.
@@ -21,6 +22,7 @@ const PASSOS = [
 // [PV-2] A seção "Como funciona" (id como-funciona): título, descrição e os passos lado a lado no desktop e empilhados no celular.
 /**
  * Seção "Como funciona". Server Component.
+ * Os passos aparecem um a um ao rolar (Revelar, 600 ms entre eles): primeiro o círculo, depois a linha até o próximo.
  * Os passos são uma lista ordenada (<ol>): no celular ficam um embaixo do
  * outro; a partir de md ficam lado a lado, com uma linha ligando os números.
  *
@@ -41,9 +43,12 @@ export default function ComoFunciona() {
           * pelo ::before de cada passo (menos o último); no celular vira linha vertical. */}
         <ol className="mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
           {PASSOS.map((p, i) => (
-            <li
+            // [PV-3] O RITMO DOS PASSOS: cada passo espera 600 ms depois do anterior (atraso={i * 600}). Aumente para ficar mais devagar.
+            <Revelar
+              como="li"
+              atraso={i * 600}
               key={p.nome}
-              className={`relative pl-14 md:pl-0 md:pt-14 ${
+              className={`passo-linha relative pl-14 md:pl-0 md:pt-14 ${
                 i < PASSOS.length - 1
                   ? "before:absolute before:left-5 before:top-10 before:h-[calc(100%+2rem-2.5rem)] before:w-px before:bg-borda md:before:left-10 md:before:top-5 md:before:h-px md:before:w-[calc(100%+1.5rem-2.5rem)]"
                   : ""
@@ -52,13 +57,13 @@ export default function ComoFunciona() {
               {/* Número do passo. Posição: à esquerda no celular, acima no desktop. */}
               <span
                 aria-hidden="true"
-                className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-botao font-space text-base font-semibold text-white"
+                className="passo-numero absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-botao font-space text-base font-semibold text-white"
               >
                 {i + 1}
               </span>
               <h3 className="font-space text-lg font-semibold text-tinta">{p.nome}</h3>
               <p className="mt-1.5 text-[15px] leading-relaxed text-tinta-suave">{p.texto}</p>
-            </li>
+            </Revelar>
           ))}
         </ol>
 

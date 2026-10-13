@@ -5,7 +5,7 @@
    Onde é usado: rota "/". Chegam aqui visitantes de fora e o link
      "Ir para a página inicial" da página 404 (app/not-found.tsx).
    Depende de: as seções de components/home/ (TopoHome, Hero, Problema, Pilares,
-     ComoFunciona, ParaSuaEmpresa, Perfis, Perguntas, FormularioInteresse, RodapeHome).
+     ComoFunciona, ParaSuaEmpresa, Perfis, Perguntas, FormularioInteresse, RodapeHome, VoltarAoTopo).
    Contexto: §15 item 0 (homepage como ponto de entrada público) e §16;
      docs/notas-next16.md §1 (Server Component) e §5 (metadados).
 
@@ -15,8 +15,9 @@
      - Cada seção é um arquivo em components/home/. A maioria é Server
        Component (só texto e imagens: nenhum JavaScript vai ao navegador).
      - Só vira Client Component quem precisa de interação ou da sessão:
-       TopoHome (menu do celular, tecla Esc e useAuth) e FormularioInteresse
-       (campos, validação e envio simulado).
+       TopoHome (menu do celular, tecla Esc e useAuth), FormularioInteresse
+       (campos, validação e envio simulado), VoltarAoTopo, LinkRolar e Revelar
+       (rolagem e animações).
    ============================================================================ */
 
 import type { Metadata } from 'next';
@@ -30,6 +31,7 @@ import Perfis from '@/components/home/Perfis';
 import Perguntas from '@/components/home/Perguntas';
 import FormularioInteresse from '@/components/home/FormularioInteresse';
 import RodapeHome from '@/components/home/RodapeHome';
+import VoltarAoTopo from '@/components/home/VoltarAoTopo';
 
 // [PV-1] O TÍTULO E A DESCRIÇÃO da homepage; o título é absoluto (ignora o modelo "· CAIS" do layout raiz).
 /**
@@ -66,6 +68,8 @@ export default function Home() {
         <FormularioInteresse />
       </main>
       <RodapeHome />
+      {/* Botão redondo no canto inferior direito: aparece depois de descer a página. */}
+      <VoltarAoTopo />
     </div>
   );
 }
