@@ -379,8 +379,8 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 *faixa escura no fim da página com a logo, o nome do programa, os links das seções e o link "Entrar".*
 
 1. O VISUAL dos links do rodapé da homepage (sobre fundo escuro, com foco visível). _(linha 13)_
-2. O NOME DO PROGRAMA no rodapé (PROGLOGIC · Residência Técnica). _(linha 30)_
-3. Os links do rodapé: os mesmos de secoes.ts mais o "Entrar" (/login), que fica por último. _(linha 36)_
+2. O NOME DO PROGRAMA no rodapé, ao lado da logo (PROGLOGIC · Residência Técnica). O traço vertical é só separador visual. _(linha 31)_
+3. Os links do rodapé: os mesmos de secoes.ts mais o "Entrar" (/login), que fica por último. _(linha 38)_
 
 ### `components/home/secoes.ts`
 *a lista (id + rótulo) das seções que o topo e o rodapé linkam.*

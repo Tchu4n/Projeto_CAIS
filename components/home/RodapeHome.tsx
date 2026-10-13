@@ -24,11 +24,13 @@ const LINK_RODAPE =
 export default function RodapeHome() {
   return (
     <footer className="bg-noite text-white dark:bg-noite-alt">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-start md:justify-between">
-        <div>
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between">
+        {/* Logo e nome do programa na MESMA linha (flex-wrap deixa o nome descer só em telas muito estreitas). */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <CaisLogo size={32} tone="claro" />
-          {/* [PV-2] O NOME DO PROGRAMA no rodapé (PROGLOGIC · Residência Técnica). */}
-          <p className="mt-4 text-sm text-white/70">PROGLOGIC · Residência Técnica</p>
+          {/* [PV-2] O NOME DO PROGRAMA no rodapé, ao lado da logo (PROGLOGIC · Residência Técnica). O traço vertical é só separador visual. */}
+          <span aria-hidden="true" className="h-5 w-px bg-white/25" />
+          <p className="text-sm text-white/70">PROGLOGIC · Residência Técnica</p>
         </div>
 
         <nav aria-label="Links do rodapé">
@@ -52,7 +54,7 @@ export default function RodapeHome() {
       </div>
 
       <div className="border-t border-white/10">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-sm text-white/60 sm:px-6">
+        <p className="mx-auto max-w-6xl px-4 py-5 text-center text-sm text-white/60 sm:px-6">
           © {new Date().getFullYear()} Projeto CAIS
         </p>
       </div>
