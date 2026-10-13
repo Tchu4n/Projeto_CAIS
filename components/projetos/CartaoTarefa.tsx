@@ -54,10 +54,10 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
   /*
    * Cor do selo de prazo, por prioridade: concluída (verde) > atrasada
    * (vermelho) > perto (amarelo) > normal (cinza). No tema escuro o texto
-   * vira tinta escura (dark:text-[#14161F]) para manter contraste.
+   * vira tinta escura (dark:text-noite) para manter contraste.
    */
-  const prazoCls = concluida ? 'bg-sucesso text-white dark:text-[#14161F]'
-    : atrasada ? 'bg-erro text-white dark:text-[#14161F]'
+  const prazoCls = concluida ? 'bg-sucesso text-white dark:text-noite'
+    : atrasada ? 'bg-erro text-white dark:text-noite'
     : perto ? 'bg-aviso/15 text-aviso'
     : 'text-tinta-suave';
   // Texto do selo segue a mesma ordem; concluída mostra quando foi feita.

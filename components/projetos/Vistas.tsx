@@ -187,7 +187,7 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
               {/* Linha vermelha de "hoje", só se hoje cair dentro da janela. */}
               {hoje >= inicio && hoje <= fim && (
                 <span className="absolute inset-y-0 w-0.5 bg-erro/70" style={{ left: `${x(hoje)}%` }}>
-                  <span className="absolute -top-0.5 left-1 rounded bg-erro px-1 text-[10px] font-bold text-white dark:text-[#14161F]">hoje</span>
+                  <span className="absolute -top-0.5 left-1 rounded bg-erro px-1 text-[10px] font-bold text-white dark:text-noite">hoje</span>
                 </span>
               )}
               {/* Linha roxa da entrega prevista do projeto. */}

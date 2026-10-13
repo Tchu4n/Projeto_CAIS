@@ -9,7 +9,7 @@
    ============================================================================ */
 
 import {
-  diasUteisEntre, fimAposDiasUteis, linhaDoTempo, nivelDaOcupacao, ocupacaoNaSemana, ocupacaoNoDia,
+  diasUteisEntre, fimAposDiasUteis, linhaDoTempo, nivelDaOcupacao, ocupacaoNaSemana, ocupacaoNoDia, primeiroDiaUtil,
   picoNoPeriodo, proximaJanelaLivre, segundaDaSemana, semanasEntre, simularAlocacao,
 } from './carga.ts';
 import type { Alocacao, Pessoa, Projeto } from './tipos.ts';
@@ -95,6 +95,9 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'proximaJanelaLivre devolve null quando a pessoa está cheia por mais de 365 dias', obtido: janelaCheio, esperado: null },
   { porque: 'proximaJanelaLivre devolve null quando a carga sozinha passa do limite', obtido: proximaJanelaLivre(elisa, 31, 1, '2026-10-12', dados), esperado: null },
   { porque: 'fim de um trabalho de 2 dias úteis começando na sexta é a segunda', obtido: fimAposDiasUteis('2026-10-09', 2), esperado: '2026-10-12' },
+  { porque: 'primeiroDiaUtil: sábado vira a segunda seguinte', obtido: primeiroDiaUtil('2026-10-10'), esperado: '2026-10-12' },
+  { porque: 'primeiroDiaUtil: domingo vira a segunda seguinte', obtido: primeiroDiaUtil('2026-10-11'), esperado: '2026-10-12' },
+  { porque: 'primeiroDiaUtil: dia útil fica como está', obtido: primeiroDiaUtil('2026-10-09'), esperado: '2026-10-09' },
 ];
 
 // Roda os casos e imprime OK/FALHOU com o porquê (mesmo formato de permissoes.casos.ts).

@@ -75,6 +75,16 @@ export default function FiltroPeriodo({ periodo, onChange }: { periodo: Periodo;
   // Datas digitadas no personalizado (só viram período quando são válidas).
   const [de, setDe] = useState(periodo.de);
   const [ate, setAte] = useState(periodo.ate);
+  // Acompanha o período que vem da URL: se ele mudar por fora (botão Voltar do navegador, link colado),
+  // os campos e o "Personalizado" voltam a refletir o período, em vez de ficarem presos ao que estava aberto.
+  // "digitado" guarda o par que ESTA tela acabou de aplicar, para não fechar o Personalizado enquanto a pessoa digita.
+  const chave = periodo.de + '|' + periodo.ate;
+  const [chaveVista, setChaveVista] = useState(chave);
+  const [digitado, setDigitado] = useState('');
+  if (chave !== chaveVista) {
+    setChaveVista(chave);
+    if (chave !== digitado) { setDe(periodo.de); setAte(periodo.ate); setPersonalizando(atalho === 'personalizado'); }
+  }
   // [PV-4] A validação do "Personalizado": o fim não pode vir antes do início; com erro, o período não é aplicado.
   const erro = de && ate && ate < de ? 'O fim não pode vir antes do início.' : undefined;
   const marcado: AtalhoPeriodo = personalizando ? 'personalizado' : atalho;
@@ -92,7 +102,7 @@ export default function FiltroPeriodo({ periodo, onChange }: { periodo: Periodo;
    */
   const aplicar = (novoDe: string, novoAte: string) => {
     setDe(novoDe); setAte(novoAte);
-    if (DATA.test(novoDe) && DATA.test(novoAte) && novoDe <= novoAte) onChange({ de: novoDe, ate: novoAte });
+    if (DATA.test(novoDe) && DATA.test(novoAte) && novoDe <= novoAte) { setDigitado(novoDe + '|' + novoAte); onChange({ de: novoDe, ate: novoAte }); }
   };
 
   return (

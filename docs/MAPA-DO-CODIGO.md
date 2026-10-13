@@ -64,12 +64,12 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/layout.tsx`
 *a casca (menu lateral + topo + área de conteúdo) de todas as telas internas, e o "porteiro" que barra quem não está logado ou cujo perfil não pode abrir a rota (lib/permissoes.ts).*
 
-1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 37)_
-2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 68)_
-3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 95)_
-4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 114)_
-5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 129)_
-6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 159)_
+1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 38)_
+2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 69)_
+3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 96)_
+4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 121)_
+5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 136)_
+6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 166)_
 
 ### `app/(sistema)/minhas-tarefas/page.tsx`
 *as tarefas em que a pessoa logada é responsável, de todos os projetos, agrupadas por prazo (Atrasadas, Hoje, Esta semana, Depois) e as concluídas recentemente (recolhidas), com filtros de projeto e prioridade. Clicar abre o detalhe da tarefa por cima da lista (?tarefa= na URL, como no quadro).*
@@ -181,19 +181,19 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 2. AS CORES DOS GRÁFICOS no tema claro (concluída, andamento, revisão, a fazer, não iniciada, extras). Lidas por COR_GRAFICO em components/ui/Graficos.tsx. _(linha 46)_
 3. AS CORES DO TEMA ESCURO: os mesmos nomes do :root com valores para fundo escuro (a classe "dark" no <html> liga). Mudou um nome lá, mude aqui. _(linha 61)_
 4. A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam as cores fixas do painel de marca (noite e pilares) e as fontes (Space Grotesk nos títulos, Archivo no resto). _(linha 95)_
-5. O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). _(linha 129)_
-6. AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. _(linha 138)_
-7. A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. _(linha 182)_
-8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 191)_
-9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 199)_
-10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 214)_
+5. O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). _(linha 131)_
+6. AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. _(linha 140)_
+7. A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. _(linha 184)_
+8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 193)_
+9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 201)_
+10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 216)_
 
 ### `app/layout.tsx`
 *a "moldura" HTML de todas as páginas do CAIS (<html>, <head>, <body>).*
 
 1. O TÍTULO E A DESCRIÇÃO PADRÃO da aba do navegador. O modelo "%s · CAIS" monta o título das outras páginas (ex.: "Projetos · CAIS"). _(linha 19)_
 2. A COR DA BARRA DO NAVEGADOR NO CELULAR (Névoa no tema claro, Tinta no escuro) e o viewportFit "cover", que libera a área segura do iPhone para as barras fixas. _(linha 31)_
-3. O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar. A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts: mude os dois juntos. Não escreva comentários dentro do texto. _(linha 49)_
+3. O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar. A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts: mude os dois juntos. Não escreva comentários dentro do texto. _(linha 51)_
 
 ### `app/login/page.tsx`
 *a página da rota "/login" — tela de entrada no sistema.*
@@ -676,8 +676,8 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. O período padrão dos painéis quando a URL não traz um válido: 30 dias. _(linha 23)_
 2. A leitura do período na URL (?de=&ate=). URL sem período, com data malformada ou com fim antes do início volta ao padrão. Precisa de <Suspense> na página. _(linha 29)_
 3. Trocar o período grava na URL (replace, não push: o botão Voltar não passa por cada período). É o que faz o link ser compartilhável. _(linha 47)_
-4. A validação do "Personalizado": o fim não pode vir antes do início; com erro, o período não é aplicado. _(linha 78)_
-5. Os atalhos do filtro (7, 30 e 90 dias, Este mês, Personalizado) e seus nomes. O significado de cada um está em lib/metricas.ts (ultimosDias, esteMes). _(linha 101)_
+4. A validação do "Personalizado": o fim não pode vir antes do início; com erro, o período não é aplicado. _(linha 88)_
+5. Os atalhos do filtro (7, 30 e 90 dias, Este mês, Personalizado) e seus nomes. O significado de cada um está em lib/metricas.ts (ultimosDias, esteMes). _(linha 111)_
 
 ### `components/ui/form.tsx`
 *Select, Área de texto, Controle segmentado, Interruptor e Seção de formulário, com os mesmos estados do Campo (padrão, foco, erro, desabilitado).*
@@ -773,11 +773,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 5. Os textos dos quatro níveis ("Livre", "Com folga", "No limite", "Acima do limite") que aparecem em todas as telas do semáforo. _(linha 72)_
 6. A cor semântica de cada nível (cinza, verde, âmbar, vermelho). Cor sempre vem junto de ícone e texto. _(linha 81)_
 7. Regra de dia útil (segunda a sexta). TODO(PROGLOGIC): feriados ainda contam como dia útil; é aqui que entraria uma lista de feriados. _(linha 110)_
-8. Quem entra no semáforo: pessoa inativa e pessoa com limite de horas 0 ficam fora. Mudar aqui muda quem aparece em /carga. _(linha 207)_
-9. Quais alocações ocupam a agenda: projeto concluído não conta; pausado depende de CONTAR_PAUSADOS. É o filtro de toda a conta de carga. _(linha 217)_
-10. A CONTA DA CARGA: soma das horas semanais das alocações ativas no dia ÷ limite da pessoa, em %. Duas alocações que não se cruzam no tempo não se somam. _(linha 251)_
-11. A semana vale pelo PICO (o dia mais cheio), não pela média. Também calcula as horas proporcionais por projeto. Mudar aqui muda todos os níveis do semáforo. _(linha 274)_
-12. A sugestão de "usar dd/mm como início" do modal de alocação: primeira data em que a carga nova cabe sem passar de 100% em nenhum dia útil. _(linha 365)_
+8. Quem entra no semáforo: pessoa inativa e pessoa com limite de horas 0 ficam fora. Mudar aqui muda quem aparece em /carga. _(linha 220)_
+9. Quais alocações ocupam a agenda: projeto concluído não conta; pausado depende de CONTAR_PAUSADOS. É o filtro de toda a conta de carga. _(linha 230)_
+10. A CONTA DA CARGA: soma das horas semanais das alocações ativas no dia ÷ limite da pessoa, em %. Duas alocações que não se cruzam no tempo não se somam. _(linha 264)_
+11. A semana vale pelo PICO (o dia mais cheio), não pela média. Também calcula as horas proporcionais por projeto. Mudar aqui muda todos os níveis do semáforo. _(linha 287)_
+12. A sugestão de "usar dd/mm como início" do modal de alocação: primeira data em que a carga nova cabe sem passar de 100% em nenhum dia útil. _(linha 378)_
 
 ### `lib/convite.ts`
 *monta o link de convite de uma pessoa e copia texto para a área de transferência com tratamento de erro.*

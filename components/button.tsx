@@ -52,7 +52,7 @@ const VARIANTES = {
   fantasma:
     "text-tinta-suave hover:bg-superficie-alt hover:text-tinta",
   perigo:
-    "bg-erro text-white hover:brightness-110 dark:text-[#14161F]",
+    "bg-erro text-white hover:brightness-110 dark:text-noite",
 };
 
 // [PV-2] AS ALTURAS DO BOTÃO: sm 32 px, md 40 px e lg 48 px, com o espaçamento e a fonte de cada uma.

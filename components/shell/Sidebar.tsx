@@ -81,8 +81,8 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
                       className={cx('group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
                         ativo ? 'bg-white/[0.09] text-white' : 'text-white/65 hover:bg-white/[0.05] hover:text-white')}>
                       {/* Barrinha lilás à esquerda do item ativo (marca "onde você está"). */}
-                      {ativo && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[#B9A7FF]" aria-hidden />}
-                      <Icone className={cx('h-[18px] w-[18px]', ativo ? 'text-[#B9A7FF]' : 'text-white/50 group-hover:text-white/80')} aria-hidden />
+                      {ativo && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-marca-clara" aria-hidden />}
+                      <Icone className={cx('h-[18px] w-[18px]', ativo ? 'text-marca-clara' : 'text-white/50 group-hover:text-white/80')} aria-hidden />
                       {rotulo}
                     </Link>
                   </li>

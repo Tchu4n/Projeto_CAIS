@@ -59,6 +59,7 @@ node testes/navegador/g01-filtros-periodo.mjs     # 15 conferências
 node testes/navegador/g02-tempo-real.mjs          # 9 conferências (duas abas)
 node testes/navegador/g03-anexos.mjs              # 26 conferências
 node testes/navegador/h01-varredura.mjs           # parte automática do H01 (6 contas × rotas)
+node testes/navegador/h02-correcoes-h01.mjs       # as correções do H01 (Elisa, filtro de período, token do modal)
 node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, desktop e 375 px
 ```
 

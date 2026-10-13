@@ -34,6 +34,8 @@ export const metadata: Metadata = {
  * Segue o tema do sistema: Névoa (#F6F7FB) no claro e Tinta (#14161F) no
  * escuro, as mesmas cores de fundo do globals.css (§9).
  */
+// ⚠️ EXCEÇÃO ao "cores só por token": o themeColor é um metadado lido pelo navegador, que não entende variável CSS.
+// Se mudar --fundo em app/globals.css, mude estes dois hex também.
 export const viewport: Viewport = {
   // viewport-fit=cover: sem isto, env(safe-area-inset-bottom) vale sempre 0 no iPhone e a barra
   // fixa do rodapé (botão "Continuar" em /minhas-trilhas/[id]) ficaria atrás da barrinha de início.

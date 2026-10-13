@@ -121,6 +121,19 @@ export function ehDiaUtil(iso: string): boolean {
 }
 
 /**
+ * Devolve a própria data se for dia útil; sábado e domingo devolvem a segunda-feira seguinte.
+ * Serve para a carga "de hoje" não zerar no fim de semana.
+ * @param iso - data AAAA-MM-DD.
+ * @returns o primeiro dia útil a partir da data (inclusive).
+ * @example primeiroDiaUtil('2026-10-10') // '2026-10-12' (sábado → segunda)
+ */
+export function primeiroDiaUtil(iso: string): string {
+  let dia = iso;
+  while (!ehDiaUtil(dia)) dia = somaDias(dia, 1);
+  return dia;
+}
+
+/**
  * Lista os dias úteis entre duas datas, incluindo as duas pontas.
  * @param inicio - primeira data (AAAA-MM-DD).
  * @param fim - última data (AAAA-MM-DD).

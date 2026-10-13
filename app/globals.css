@@ -117,6 +117,8 @@
   /* Cores fixas do painel de marca (sempre escuro, nos dois temas) */
   --color-noite: #14161F;
   --color-noite-alt: #1B1D2A;
+  --color-marca-clara: #B9A7FF;   /* lilás do destaque do menu lateral e do logo sobre fundo escuro */
+  --color-veu: #0B0C12;           /* fundo escurecido atrás do modal (aparece com 55% de opacidade) */
   --color-pilar-roxo: #7C5CFF;
   --color-pilar-verde: #10B981;
   --color-pilar-ambar: #F5A524;

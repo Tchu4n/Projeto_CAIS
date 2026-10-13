@@ -139,7 +139,7 @@ export default function Modal({ aberto, onFechar, titulo, descricao, children, r
     <div className={cx('fixed inset-0 z-[70] flex', lateral ? 'justify-end' : 'items-end justify-center sm:items-center sm:p-6')}>
       {/* [PV-4] O fundo escurecido do modal (veil). Clicar nele fecha o modal. Cor em hex fixo: item cosmético pendente da revisão H01 (virar token). */}
       {/* Fundo escurecido: clicar fora da caixa fecha o modal. */}
-      <div className="animate-fade-in absolute inset-0 bg-[#0B0C12]/55 backdrop-blur-[2px]" onClick={onFechar} aria-hidden />
+      <div className="animate-fade-in absolute inset-0 bg-veu/55 backdrop-blur-[2px]" onClick={onFechar} aria-hidden />
       {/* tabIndex={-1} deixa a própria caixa receber foco (quando não há campo para focar). */}
       <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={idTitulo} tabIndex={-1}
         // max-h-[92vh] + flex-col: o modal nunca passa da altura da tela; só o meio rola.

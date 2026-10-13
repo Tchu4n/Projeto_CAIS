@@ -27,6 +27,7 @@ import Sidebar from '@/components/shell/Sidebar';
 import Topbar from '@/components/shell/Topbar';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
+import { podeVerProjeto } from '@/lib/escopo';
 import { podeAcessar, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO } from '@/lib/permissoes';
 import TrilhaPendente from '@/components/shell/TrilhaPendente';
 import { CaisMark } from '@/components/CaisLogo';
@@ -109,7 +110,13 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     if (!sessao) router.replace(encerradaPorInativa.current ? '/login?aviso=inativa' : `/login?voltar=${encodeURIComponent(caminho)}`);
     // NAVEGA: logado, mas o perfil não pode abrir esta rota → tela de acesso negado.
     else if (!podeAcessar(sessao.perfil, caminho)) router.replace('/sem-permissao');
-  }, [pronto, sessao, router, caminho]);
+    // NAVEGA: projeto fora do escopo da pessoa → também /sem-permissao. A página do projeto já faz isso, mas com a trilha
+    // obrigatória pendente o layout troca a página pelo aviso da trilha antes dela decidir, e a resposta ficava diferente.
+    else {
+      const idProjeto = caminho.split('/')[1] === 'projetos' ? caminho.split('/')[2] : undefined;
+      if (idProjeto && dados.pronto && !dados.erro && dados.projeto(idProjeto) && !podeVerProjeto(sessao, idProjeto, dados)) router.replace('/sem-permissao');
+    }
+  }, [pronto, sessao, router, caminho, dados]);
 
   // [PV-4] A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima.
   // Enquanto verifica (ou enquanto o redirecionamento acima não acontece),

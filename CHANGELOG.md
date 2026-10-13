@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Correções do H01 (branch `fix/h01-correcoes`)
+- Criado: `primeiroDiaUtil` (lib/carga.ts) e 3 casos novos; tokens `--color-marca-clara` e `--color-veu` (app/globals.css); `testes/navegador/h02-correcoes-h01.mjs`.
+- Modificado: `cargaDaPessoa` usa o primeiro dia útil a partir de hoje (sábado e domingo olham a segunda), então a carga não zera no fim de semana; o filtro "Personalizado" acompanha a URL (botão Voltar); Elisa (e qualquer profissional com a trilha pendente) abrindo projeto de fora pela URL vai para /sem-permissao; `dark:text-[#14161F]`, `#B9A7FF` e o fundo do modal passam a usar tokens; o `themeColor` ganhou o comentário da exceção.
+- Removido: os hex soltos desses componentes.
+
 ## Mapa do código (branch `docs/mapa-do-codigo`)
 - Criado: comentários `[PV-n]` (ponto vital de alteração) em 110 arquivos `.ts`, `.tsx` e `.css` (522 pontos), numerados por arquivo; `docs/MAPA-DO-CODIGO.md`, o mapa por arquivo para achar onde mudar uma regra, texto, cor, rota, limite ou integração; `testes/mapa-do-codigo.mjs`, que GERA o mapa dos comentários (e descreve `package.json` e `tsconfig.json`, que não aceitam comentário) e confere a numeração (`--conferir`).
 - Modificado: `testes/auditar-comentarios.mjs` passa a acusar numeração quebrada e mapa desatualizado; `CLAUDE.md` ganha a regra 6 do padrão de comentários; o comentário do porteiro em `app/(sistema)/layout.tsx` agora diz que a trava da trilha obrigatória está ligada.

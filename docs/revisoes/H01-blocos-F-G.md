@@ -1,6 +1,6 @@
 # Revisão H01 dos blocos F e G (08/10/2026)
 
-Feita sobre o `main` em `d82b596` (blocos A a G). **Nada foi corrigido ainda**: o H01 pede que o time escolha o que corrigir.
+Feita sobre o `main` em `d82b596` (blocos A a G). **Corrigidos em 13/10/2026 (branch `fix/h01-correcoes`):** a carga zerando no fim de semana, o botão Voltar do "Personalizado" e as pendências herdadas (Elisa em projeto de fora, hex do modal, `themeColor`, `dark:text-[#14161F]` e `#B9A7FF`). Os demais itens ficam como estão.
 
 ## Verificações automáticas
 

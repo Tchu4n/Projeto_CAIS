@@ -12,7 +12,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Alocacao, Dados, Empresa, Pessoa, Projeto, Tarefa, Trilha } from './tipos';
 import { criarSeed } from './seed';
 import { hojeISO } from './utils';
-import { ocupacaoNoDia } from './carga';
+import { ocupacaoNoDia, primeiroDiaUtil } from './carga';
 import { colunaAceitaAprovacao } from './metricas';
 import { canalTempoReal, type EventoTempoReal } from './tempoReal';
 // ⚠️ ATENÇÃO: lib/auth.tsx também importa daqui (lerPessoasSalvas). O import circular é seguro porque
@@ -394,7 +394,8 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     // ⚠️ ATENÇÃO: pessoa que não existe nos dados dá 0.
     cargaDaPessoa: (pessoaId, ignorar) => {
       const p = dados.pessoas.find((x) => x.id === pessoaId);
-      return p ? ocupacaoNoDia(p, hojeISO(), dados, ignorar).horas : 0;
+      // Sábado e domingo olham a segunda-feira seguinte; senão a carga "de hoje" zeraria no fim de semana.
+      return p ? ocupacaoNoDia(p, primeiroDiaUtil(hojeISO()), dados, ignorar).horas : 0;
     },
   }), [dados, pronto, erro, tentarDeNovo, eventoExterno, salvar, remover, moverTarefa, restaurarDemonstracao]);
 

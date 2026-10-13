@@ -207,7 +207,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
           // A aba ativa fica branca; as outras, translúcidas sobre o fundo colorido.
           <button key={c.id} role="tab" aria-selected={colunaMobile === c.id} onClick={() => setColunaMobile(c.id)}
             className={cx('shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors',
-              colunaMobile === c.id ? 'bg-white text-[#14161F]' : 'bg-white/15 text-white hover:bg-white/25')}>
+              colunaMobile === c.id ? 'bg-white text-noite' : 'bg-white/15 text-white hover:bg-white/25')}>
             {c.titulo} <span className="opacity-70">{daColuna(c.id).length}</span>
           </button>
         ))}
