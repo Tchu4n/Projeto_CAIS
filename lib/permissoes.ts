@@ -42,6 +42,8 @@ export const ROTAS_POR_PERFIL: Record<string, readonly Perfil[]> = {
   '/minhas-trilhas': ['empresa', 'profissional'],
   // O certificado de uma trilha concluída é de quem a concluiu (empresa e profissional); o admin não cumpre trilha.
   '/certificados': ['empresa', 'profissional'],
+  // A lista de certificados emitidos é de quem acompanha: o admin vê todos e a empresa os do time dela (lib/certificados.ts).
+  '/certificados/emitidos': ['admin', 'empresa'],
   // §3: só o Profissional "vê e move as próprias tarefas".
   // TODO(PROGLOGIC): confirmar
   '/minhas-tarefas': ['profissional'],
@@ -251,6 +253,7 @@ export const ROTULO_DAS_ROTAS: Record<string, string> = {
   '/acessos': 'Acessos',
   '/minhas-trilhas': 'Minhas trilhas',
   '/certificados': 'Certificados das trilhas',
+  '/certificados/emitidos': 'Certificados emitidos',
   '/minhas-tarefas': 'Minhas tarefas',
 };
 

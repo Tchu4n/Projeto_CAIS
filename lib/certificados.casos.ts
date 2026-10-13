@@ -8,7 +8,7 @@
    Como rodar: node --experimental-strip-types lib/certificados.casos.ts
    ============================================================================ */
 
-import { certificadoDaPessoa, certificadosDaPessoa, codigoDoCertificado } from './certificados.ts';
+import { certificadoDaPessoa, certificadosDaPessoa, certificadosEmitidos, codigoDoCertificado, verificarCodigo } from './certificados.ts';
 import type { Dados, Pessoa, Trilha } from './tipos.ts';
 
 /** Pessoa de teste. */
@@ -40,8 +40,13 @@ const dados: Dados = {
     // Trilha antiga: concluída, mas sem a data guardada.
     trilha('t5', 'publicada', { bia: { concluidas: 2 } }),
   ],
-  projetos: [], alocacoes: [], tarefas: [],
+  projetos: [{ id: 'p1', nome: 'p1', tipo: '', empresaId: 'emp_v', contatoNome: '', descricao: '', inicio: '2026-01-01', entrega: '2026-12-01', prioridade: 'media' as const, liderId: '', status: 'andamento' as const, cor: 'roxo', colunas: [] }],
+  alocacoes: [{ id: 'a1', projetoId: 'p1', pessoaId: 'ana', papel: '', inicio: '2026-01-01', fim: '2026-12-01', carga: 10, obs: '' }],
+  tarefas: [],
 };
+const admin = { pessoaId: 'adm', perfil: 'admin' as const };
+const marcos = { pessoaId: 'marcos', perfil: 'empresa' as const };
+const ana = { pessoaId: 'ana', perfil: 'profissional' as const };
 
 const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'quem concluiu todas as etapas tem certificado', obtido: certificadoDaPessoa(dados.trilhas[0], 'ana', dados)?.pessoaNome, esperado: 'Nome ana' },
@@ -60,6 +65,15 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'sem data guardada o código usa o ano 0000 e o certificado sai sem data', obtido: (() => { const c = certificadoDaPessoa(dados.trilhas[4], 'bia', dados)!; return `${c.codigo.slice(0, 9)}|${c.concluidaEm}`; })(), esperado: 'CAIS-0000|' },
   { porque: 'a lista da Ana tem 2 certificados (rascunho e sem etapas ficam de fora)', obtido: certificadosDaPessoa('ana', dados).map((c) => c.trilhaId).join(','), esperado: 't1,t2' },
   { porque: 'a lista vem com a conclusão mais recente primeiro', obtido: certificadosDaPessoa('ana', dados)[0].concluidaEm, esperado: '2026-10-01' },
+  { porque: 'verificar: o código de um certificado real é encontrado', obtido: verificarCodigo(certificadoDaPessoa(dados.trilhas[0], 'ana', dados)!.codigo, dados)?.pessoaNome, esperado: 'Nome ana' },
+  { porque: 'verificar: ignora maiúsculas e espaços nas pontas', obtido: verificarCodigo('  ' + certificadoDaPessoa(dados.trilhas[0], 'ana', dados)!.codigo.toLowerCase() + ' ', dados)?.trilhaId, esperado: 't1' },
+  { porque: 'verificar: código inventado não existe', obtido: verificarCodigo('CAIS-2026-00000000', dados), esperado: null },
+  { porque: 'verificar: texto vazio não existe', obtido: verificarCodigo('   ', dados), esperado: null },
+  { porque: 'verificar: o código de uma trilha em rascunho não vale', obtido: verificarCodigo(codigoDoCertificado('t3', 'ana', '2026-10-02'), dados), esperado: null },
+  { porque: 'emitidos: o admin vê todos (marcos/t1, ana/t1, ana/t2, bia/t5)', obtido: certificadosEmitidos(admin, dados).map((c) => c.pessoaId + '/' + c.trilhaId).join(','), esperado: 'marcos/t1,ana/t1,ana/t2,bia/t5' },
+  { porque: 'emitidos: o profissional não usa esta lista', obtido: certificadosEmitidos(ana, dados).length, esperado: 0 },
+  { porque: 'emitidos: a empresa NÃO vê trilha geral do admin (só as dela)', obtido: certificadosEmitidos(marcos, dados).length, esperado: 0 },
+  { porque: 'emitidos: a empresa vê quem do time dela concluiu a trilha DELA (ana está alocada na Vértice; caio não)', obtido: certificadosEmitidos(marcos, { ...dados, trilhas: [{ ...trilha('tv', 'publicada', { ana: { concluidas: 2, concluidaEm: '2026-10-03' }, caio: { concluidas: 2, concluidaEm: '2026-10-04' } }), alcance: 'empresa' as const, empresaId: 'emp_v' }] }).map((c) => c.pessoaId).join(','), esperado: 'ana' },
   { porque: 'quem não concluiu nada tem lista vazia', obtido: certificadosDaPessoa('caio', dados).length, esperado: 0 },
 ];
 

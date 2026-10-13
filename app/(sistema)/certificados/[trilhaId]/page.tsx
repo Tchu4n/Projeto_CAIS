@@ -99,10 +99,12 @@ export default function PaginaCertificado() {
           <div className="text-right text-[11px] sm:text-[13px]">
             <p className="text-noite/60">Código de verificação</p>
             <p className="font-mono text-[12px] font-semibold tracking-wider sm:text-base">{cert.codigo}</p>
+            <p className="text-noite/60">Confira em /verificar</p>
           </div>
         </div>
       </article>
-      <p className="nao-imprimir mt-4 text-center text-[13px] text-tinta-suave">Guarde o código de verificação: ele identifica este certificado. A página pública para conferir códigos chega com a API da PROGLOGIC.</p>
+      {/* NAVEGA: a conferência pública do código (/verificar), já preenchida com este certificado. */}
+      <p className="nao-imprimir mt-4 text-center text-[13px] text-tinta-suave">Qualquer pessoa pode conferir este certificado em <Link href={`/verificar?codigo=${cert.codigo}`} className="font-semibold text-primaria hover:underline">/verificar</Link>, com o código impresso nele.</p>
     </div>
   );
 }

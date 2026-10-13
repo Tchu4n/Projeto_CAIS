@@ -2,14 +2,16 @@
    CERTIFICADOS DAS TRILHAS CONCLUÍDAS
    O que é: funções puras que dizem quem tem direito a certificado e montam os dados dele (nome, trilha,
    data, carga, nota e o código de verificação). Nada é armazenado: o certificado é CALCULADO do progresso.
-   Onde é usado: app/(sistema)/certificados/[trilhaId]/page.tsx (a folha do certificado) e
+   Onde é usado: app/(sistema)/certificados/[trilhaId]/page.tsx (a folha do certificado),
+   app/(sistema)/certificados/emitidos (lista do admin e da empresa), app/verificar (conferência pública do código),
    app/(sistema)/minhas-trilhas (lista e botão "Ver certificado"); lib/certificados.casos.ts (testes com Node).
-   Depende de: tipos de lib/tipos.ts e situacaoNaTrilha/publicoDaTrilha de lib/metricas.ts (sem React, para rodar em Node).
+   Depende de: tipos de lib/tipos.ts, situacaoNaTrilha/publicoDaTrilha de lib/metricas.ts e o escopo de lib/escopo.ts (sem React, para rodar em Node).
    Contexto: §4 (trilhas: progresso e nota por pessoa) e pedido de 13/10/2026 (emissão de certificados).
    ============================================================================ */
 
 import type { Dados, Pessoa, Trilha } from './tipos.ts';
 import { publicoDaTrilha, situacaoNaTrilha } from './metricas.ts';
+import { colaboradoresDaEmpresa, empresaDaSessao, trilhasVisiveis, type SessaoEscopo } from './escopo.ts';
 
 /** Os dados impressos no certificado. */
 export interface Certificado {
@@ -103,4 +105,56 @@ export function certificadosDaPessoa(pessoaId: string, dados: Dados): Certificad
     .map((t) => certificadoDaPessoa(t, pessoaId, dados))
     .filter((c): c is Certificado => c !== null)
     .sort((a, b) => b.concluidaEm.localeCompare(a.concluidaEm));
+}
+
+// [PV-3] A CONFERÊNCIA DO CÓDIGO (página pública /verificar): ignora maiúsculas e espaços nas pontas e procura o código entre TODOS os certificados que existem. Quem lê vê só o que o certificado já mostra (nome, trilha, data). TODO(API): a conferência passa a ser uma consulta ao back-end, que guarda os códigos emitidos.
+/**
+ * Procura o certificado que tem o código informado.
+ * SIMULADO: no protótipo a busca roda nos dados deste navegador (a store); com a API da PROGLOGIC vira uma consulta ao servidor.
+ * @param codigo - o que a pessoa digitou (ex.: " cais-2026-9f3a12c7 ").
+ * @param dados - todos os dados.
+ * @returns o certificado, ou null se o código não existe (ou a trilha deixou de estar publicada).
+ * @example verificarCodigo('cais-2026-9f3a12c7', dados)?.pessoaNome
+ */
+export function verificarCodigo(codigo: string, dados: Dados): Certificado | null {
+  const procurado = codigo.trim().toUpperCase();
+  if (!procurado) return null;
+  for (const t of dados.trilhas) {
+    for (const pid of publicoDaTrilha(t, dados)) {
+      const c = certificadoDaPessoa(t, pid, dados);
+      if (c && c.codigo === procurado) return c;
+    }
+  }
+  return null;
+}
+
+// [PV-4] QUEM VÊ OS CERTIFICADOS EMITIDOS (lista /certificados/emitidos): o admin vê todos; a empresa só os do time dela (colaboradores alocados e contas da empresa) e só nas trilhas que ela enxerga. Mudar aqui muda o que a empresa vê.
+/**
+ * Certificados emitidos que a sessão pode ver, os mais recentes primeiro.
+ * @param sessao - quem está logado.
+ * @param dados - todos os dados.
+ * @returns a lista (admin: todos; empresa: do time dela; profissional: vazia, ele usa Minhas trilhas).
+ * @example certificadosEmitidos({ pessoaId: 'pes_marcos', perfil: 'empresa' }, dados).length
+ */
+export function certificadosEmitidos(sessao: SessaoEscopo, dados: Dados): Certificado[] {
+  if (sessao.perfil === 'profissional') return [];
+  let permitidas: Set<string> | null = null;
+  if (sessao.perfil === 'empresa') {
+    const empresaId = empresaDaSessao(sessao, dados);
+    if (!empresaId) return [];
+    // O time da empresa: quem está alocado nos projetos dela e as contas de perfil Empresa ligadas a ela.
+    permitidas = new Set([
+      ...colaboradoresDaEmpresa(empresaId, dados).map((p) => p.id),
+      ...dados.pessoas.filter((p) => p.perfil === 'empresa' && p.empresaId === empresaId).map((p) => p.id),
+    ]);
+  }
+  const lista: Certificado[] = [];
+  for (const t of trilhasVisiveis(sessao, dados)) {
+    for (const pid of publicoDaTrilha(t, dados)) {
+      if (permitidas && !permitidas.has(pid)) continue;
+      const c = certificadoDaPessoa(t, pid, dados);
+      if (c) lista.push(c);
+    }
+  }
+  return lista.sort((a, b) => b.concluidaEm.localeCompare(a.concluidaEm) || a.pessoaNome.localeCompare(b.pessoaNome));
 }

@@ -45,6 +45,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 2. OS TEXTOS DO CERTIFICADO: título, a frase de abertura e a de conclusão. Mude aqui para trocar o texto oficial. _(linha 81)_
 3. A ASSINATURA: hoje só o nome do papel (coordenação do programa). Para uma assinatura de verdade, troque por uma imagem aqui. TODO(PROGLOGIC): confirmar quem assina. _(linha 96)_
 
+### `app/(sistema)/certificados/emitidos/page.tsx`
+*a lista dos certificados de trilha emitidos, com busca por pessoa ou trilha: o administrador vê todos e a empresa vê só os do time dela.*
+
+1. A BUSCA DA LISTA: procura no nome da pessoa, no título da trilha e no código, sem acento e sem diferenciar maiúsculas. Para filtrar por outro campo (empresa, data), acrescente aqui. _(linha 38)_
+
 ### `app/(sistema)/design-system/page.tsx`
 *a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.*
 
@@ -245,6 +250,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. O NOME DO PERFIL mostrado na mensagem de acesso negado. _(linha 20)_
 2. A TELA DE ACESSO NEGADO: fica FORA de app/(sistema) de propósito (dentro dela o layout mandaria para cá em laço). Quem decide o bloqueio é lib/permissoes.ts. _(linha 24)_
 
+### `app/verificar/page.tsx`
+*a página pública (sem login) em que qualquer pessoa confere se o código de um certificado do CAIS é válido.*
+
+1. O TÍTULO DA ABA da página de verificação ("Verificar certificado · CAIS"). _(linha 18)_
+
 ## components/ (peças de tela)
 
 ### `components/AcessoLayout.tsx`
@@ -307,6 +317,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. O VISUAL dos links de texto das telas de acesso (cor, sublinhado, foco). O login tem uma cópia própria (linkClass em LoginForm.tsx): mude as duas. _(linha 14)_
 2. O CARTÃO das telas de acesso (recuperar senha e primeiro acesso): selo da marca (só no desktop), título e subtítulo. A largura máxima é 440 px. _(linha 19)_
 3. O link "Voltar para o login" do rodapé dos cartões. Texto e destino (/login) valem para todos os passos. _(linha 43)_
+
+### `components/certificados/VerificarCodigo.tsx`
+*o campo e o resultado da página pública de verificação: a pessoa digita (ou chega por link com ?codigo=) o código do certificado e vê se ele é válido, com nome, trilha e data.*
+
+1. O QUE A PÁGINA PÚBLICA MOSTRA de um certificado válido: nome, empresa, trilha, data e nota. É o máximo que qualquer pessoa com o código consegue ver; para mostrar menos, tire campos daqui. _(linha 55)_
 
 ### `components/checkbox.tsx`
 *checkbox com rótulo, feito sobre um <input type="checkbox"> real com a aparência desenhada por cima.*
@@ -612,8 +627,8 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 *a lista (agrupada) de telas que aparecem no menu lateral, com endereço, rótulo, ícone e os perfis que enxergam cada item.*
 
 1. O MENU LATERAL: grupos, rótulos, ícones, endereços e quais perfis veem cada item. Tela nova precisa ser registrada aqui (e em lib/permissoes.ts, que é quem barra o acesso). _(linha 13)_
-2. A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional). _(linha 47)_
-3. A empresa abre a mesma tela de Minhas trilhas, só com outro nome no menu ("Trilha da empresa"). Para mudar o nome que ela vê, é aqui. _(linha 52)_
+2. A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional). _(linha 49)_
+3. A empresa abre a mesma tela de Minhas trilhas, só com outro nome no menu ("Trilha da empresa"). Para mudar o nome que ela vê, é aqui. _(linha 54)_
 
 ### `components/shell/Pagina.tsx`
 *cabeçalho da página (trilha de navegação, título, descrição e ação principal) e a barra de filtros que fica acima do conteúdo.*
@@ -814,8 +829,10 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `lib/certificados.ts`
 *funções puras que dizem quem tem direito a certificado e montam os dados dele (nome, trilha, data, carga, nota e o código de verificação). Nada é armazenado: o certificado é CALCULADO do progresso.*
 
-1. COMO O CÓDIGO DE VERIFICAÇÃO É FEITO: prefixo "CAIS", ano da conclusão e 8 caracteres de um resumo (hash) de trilha + pessoa + data. Mudar o prefixo ou a receita muda TODOS os códigos já emitidos. TODO(API): o back-end passa a gerar e guardar o código (e a validar na página pública). _(linha 32)_
-2. QUEM TEM DIREITO A CERTIFICADO: a trilha precisa estar PUBLICADA, a pessoa no público dela e com TODAS as etapas concluídas (e a trilha ter ao menos uma etapa). Trilha despublicada ou excluída tira o certificado da lista. _(linha 62)_
+1. COMO O CÓDIGO DE VERIFICAÇÃO É FEITO: prefixo "CAIS", ano da conclusão e 8 caracteres de um resumo (hash) de trilha + pessoa + data. Mudar o prefixo ou a receita muda TODOS os códigos já emitidos. TODO(API): o back-end passa a gerar e guardar o código (e a validar na página pública). _(linha 34)_
+2. QUEM TEM DIREITO A CERTIFICADO: a trilha precisa estar PUBLICADA, a pessoa no público dela e com TODAS as etapas concluídas (e a trilha ter ao menos uma etapa). Trilha despublicada ou excluída tira o certificado da lista. _(linha 64)_
+3. A CONFERÊNCIA DO CÓDIGO (página pública /verificar): ignora maiúsculas e espaços nas pontas e procura o código entre TODOS os certificados que existem. Quem lê vê só o que o certificado já mostra (nome, trilha, data). TODO(API): a conferência passa a ser uma consulta ao back-end, que guarda os códigos emitidos. _(linha 110)_
+4. QUEM VÊ OS CERTIFICADOS EMITIDOS (lista /certificados/emitidos): o admin vê todos; a empresa só os do time dela (colaboradores alocados e contas da empresa) e só nas trilhas que ela enxerga. Mudar aqui muda o que a empresa vê. _(linha 131)_
 
 ### `lib/convite.ts`
 *monta o link de convite de uma pessoa e copia texto para a área de transferência com tratamento de erro.*
@@ -867,21 +884,21 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 *funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).*
 
 1. QUEM ABRE CADA TELA: a lista de rotas por perfil. Tela nova precisa entrar aqui (rota fora da lista é só do admin) e no menu (components/shell/navegacao.ts). _(linha 19)_
-2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 50)_
-3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 101)_
-4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 112)_
-5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 123)_
-6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 131)_
-7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 137)_
-8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 148)_
-9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 157)_
-10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 181)_
-11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 192)_
-12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 218)_
-13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 236)_
-14. Nomes das ações na tabela de permissões de /acessos. _(linha 257)_
-15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 273)_
-16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 306)_
+2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 52)_
+3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 103)_
+4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 114)_
+5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 125)_
+6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 133)_
+7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 139)_
+8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 150)_
+9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 159)_
+10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 183)_
+11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 194)_
+12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 220)_
+13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 238)_
+14. Nomes das ações na tabela de permissões de /acessos. _(linha 260)_
+15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 276)_
+16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 309)_
 
 ### `lib/preferencias.ts`
 *hook que devolve a densidade das tabelas escolhida pela pessoa logada (confortável ou compacta).*
@@ -1025,4 +1042,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-116 arquivos mapeados, 539 pontos vitais.
+119 arquivos mapeados, 544 pontos vitais.

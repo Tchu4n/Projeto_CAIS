@@ -7,7 +7,7 @@
    Contexto: §3 (perfis), §10 (anatomia: menu sempre no mesmo lugar) e §8/§15
    (mapa e organograma de telas).
    ============================================================================ */
-import { LayoutDashboard, Building2, Users, GraduationCap, FolderKanban, Palette, Gauge, KeyRound, BookOpenCheck, ListChecks } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, GraduationCap, FolderKanban, Palette, Gauge, KeyRound, BookOpenCheck, ListChecks, Award } from 'lucide-react';
 import type { Perfil } from '@/lib/tipos';
 
 // [PV-1] O MENU LATERAL: grupos, rótulos, ícones, endereços e quais perfis veem cada item. Tela nova precisa ser registrada aqui (e em lib/permissoes.ts, que é quem barra o acesso).
@@ -43,6 +43,8 @@ export const NAVEGACAO: {
     { href: '/trilhas', rotulo: 'Trilhas', icone: GraduationCap, perfis: ['admin'] },
     // A empresa gerencia as trilhas do time (criar, escolher quem recebe, ver o progresso de cada pessoa).
     { href: '/trilhas', rotulo: 'Trilhas do time', icone: GraduationCap, perfis: ['empresa'] },
+    // Quem concluiu o quê: o admin vê todos os certificados e a empresa os do time dela.
+    { href: '/certificados/emitidos', rotulo: 'Certificados', icone: Award, perfis: ['admin', 'empresa'] },
     { href: '/carga', rotulo: 'Carga da equipe', icone: Gauge, perfis: ['admin'] },
     // [PV-2] A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional).
     { href: '/projetos', rotulo: 'Projetos', icone: FolderKanban, perfis: ['admin', 'empresa'] },

@@ -2,6 +2,12 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Certificados: verificação pública e lista de emitidos (13/10/2026)
+- Criado: a página PÚBLICA /verificar (sem login; também com ?codigo=) que confere o código e mostra nome, trilha e data; components/certificados/VerificarCodigo.tsx; a lista /certificados/emitidos (admin vê todos, empresa só o time dela nas trilhas que enxerga, com busca por pessoa, trilha ou código); `verificarCodigo` e `certificadosEmitidos` em lib/certificados.ts (9 casos novos, 26 no total); item de menu "Certificados" (admin e empresa); 5 casos novos em lib/permissoes.casos.ts; testes/navegador/h07-certificados-lista-e-verificacao.mjs.
+- Modificado: a folha do certificado ganhou "Confira em /verificar" e um link para a conferência já preenchida.
+- Observação: a conferência é SIMULADA (roda nos dados deste navegador); com a API da PROGLOGIC vira uma consulta ao servidor (TODO(API) em lib/certificados.ts).
+- Removido: nada.
+
 ## Certificados das trilhas (13/10/2026)
 - Criado: lib/certificados.ts (quem tem direito, dados do certificado e o código de verificação CAIS-AAAA-XXXXXXXX, tudo calculado do progresso, sem guardar nada) com lib/certificados.casos.ts (17 casos); a página /certificados/[trilhaId] (folha A4 deitada para imprimir ou salvar em PDF pelo navegador); a rota /certificados em lib/permissoes.ts (empresa e profissional); testes/navegador/h06-certificados.mjs.
 - Modificado: Minhas trilhas ganhou a seção "Seus certificados" e o detalhe da trilha concluída o botão "Ver certificado"; o certificado fica liberado mesmo com a trilha obrigatória pendente; o CSS de impressão (app/globals.css) esconde menu, topo e botões; o layout ganhou a classe raiz-shell.
