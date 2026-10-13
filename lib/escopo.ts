@@ -188,3 +188,17 @@ export function colaboradoresDaEmpresa(empresaId: string, dados: Dados): Pessoa[
   const ids = new Set(dados.alocacoes.filter((a) => projetos.has(a.projetoId)).map((a) => a.pessoaId));
   return dados.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo' && ids.has(p.id));
 }
+
+// [PV-10] QUEM PODE RETIRAR PESSOAS DO TIME DE UMA TRILHA: a empresa, só nas trilhas de alcance "empresa" que são DELA (as que ela criou e as que a coordenação publicou para ela). Quem já concluiu não pode ser retirado (a tela desabilita). TODO(PROGLOGIC): confirmar.
+/**
+ * Diz se a sessão pode retirar (e devolver) pessoas do público de uma trilha de alcance "empresa".
+ * @param sessao - quem está logado.
+ * @param t - a trilha.
+ * @param dados - todos os dados.
+ * @returns true se for uma empresa e a trilha for de alcance "empresa" para ela.
+ * @example podeAjustarTime({ pessoaId: 'pes_marcos', perfil: 'empresa' }, trilhaDaVertice, dados) // true
+ */
+export function podeAjustarTime(sessao: SessaoEscopo, t: Trilha, dados: Dados): boolean {
+  const empresaId = empresaDaSessao(sessao, dados);
+  return !!empresaId && t.alcance === 'empresa' && t.empresaId === empresaId;
+}

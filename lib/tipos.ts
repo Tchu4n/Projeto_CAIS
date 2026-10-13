@@ -139,6 +139,12 @@ export interface Trilha {
    * TODO(PROGLOGIC): confirmar que a empresa pode criar trilhas próprias para o time dela.
    */
   donaEmpresaId?: string;
+  /**
+   * Só alcance 'empresa': pessoas que a EMPRESA retirou do público da trilha (por exemplo, quem não precisa cumpri-la).
+   * Entrar de volta é tirar o id desta lista. Opcional: dados antigos não têm. Quem já concluiu não pode ser retirado.
+   * TODO(PROGLOGIC): confirmar que a empresa pode retirar pessoas de uma trilha publicada pela coordenação.
+   */
+  excluidosIds?: string[];
   /** Rascunho não aparece para ninguém além do admin (e da empresa dona). */
   status: 'rascunho' | 'publicada';
   /**

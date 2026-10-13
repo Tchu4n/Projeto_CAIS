@@ -27,7 +27,7 @@ import { ArrowUp, ArrowDown, Trash2, Plus, Check, Send, Undo2, GripVertical, Loc
 import { useDados, Trilha } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { useAuth } from '@/lib/auth';
-import { colaboradoresDaEmpresa, empresaDaSessao, podeEditarTrilha } from '@/lib/escopo';
+import { colaboradoresDaEmpresa, empresaDaSessao, podeAjustarTime, podeEditarTrilha } from '@/lib/escopo';
 import { publicoDaTrilha, situacaoNaTrilha } from '@/lib/metricas';
 import { TIPOS_ETAPA, ALCANCE, TENTATIVAS_PADRAO, problemasDoQuiz } from '@/lib/trilhas';
 import EditorConteudoEtapa from '@/components/trilhas/EditorConteudoEtapa';
@@ -90,6 +90,18 @@ export default function EditorTrilha() {
   const ehEmpresa = sessao?.perfil === 'empresa';
   const minhaEmpresa = sessao ? empresaDaSessao(sessao, d) : undefined;
   const editavel = sessao ? podeEditarTrilha(sessao, t, d) : false;
+  // A empresa pode retirar (e devolver) pessoas do time em trilha de alcance "empresa", mesmo sem poder editar a trilha.
+  const ajustavel = sessao ? podeAjustarTime(sessao, t, d) : false;
+  /**
+   * Retira ou devolve uma pessoa do público da trilha.
+   * GRAVA: a lista excluidosIds da trilha (só pessoas que ainda não concluíram).
+   * @param pessoaId - a pessoa.
+   * @param recebe - true devolve ao público; false retira.
+   */
+  const ajustarPessoa = (pessoaId: string, recebe: boolean) => {
+    const atuais = t.excluidosIds ?? [];
+    d.salvar('trilhas', { ...t, excluidosIds: recebe ? atuais.filter((x) => x !== pessoaId) : [...new Set([...atuais, pessoaId])] });
+  };
   // Trilha só para acompanhar não tem a aba Etapas: abre direto no Progresso.
   const abaAtiva = !editavel && aba === 'etapas' ? 'progresso' : aba;
 
@@ -429,16 +441,23 @@ export default function EditorTrilha() {
             </Card>}
 
             <Card>
-              <CardTitulo titulo={t.alcance === 'profissional' ? 'Escolha as pessoas' : 'Quem vai receber'} descricao={`${publico.length} pessoa(s) no público desta trilha.`} />
+              {/* O administrador vê quantas pessoas a empresa retirou do time (a lista de recebedores já descontou). */}
+              {!ajustavel && (t.excluidosIds?.length ?? 0) > 0 && <div className="p-3 pb-0"><Aviso tipo="info">A empresa retirou {t.excluidosIds!.length} pessoa(s) do time desta trilha.</Aviso></div>}
+              <CardTitulo titulo={t.alcance === 'profissional' || ajustavel ? 'Escolha as pessoas' : 'Quem vai receber'} descricao={ajustavel ? `${publico.length} pessoa(s) recebem esta trilha. Desmarque quem não precisa cumpri-la.` : `${publico.length} pessoa(s) no público desta trilha.`} />
               {/* Lista com altura máxima (max-h-[420px]) que rola por dentro,
                 * para não esticar o cartão com muitas pessoas.
                 * Alcance "profissional": mostra TODOS os profissionais com
                 * checkbox para escolher. Outros alcances: só quem já está no
                 * público, sem checkbox (a regra decide, não o admin). */}
               <ul className="rolagem max-h-[420px] divide-y divide-borda overflow-y-auto p-2">
-                {(t.alcance === 'profissional' ? profissionais : profissionais.filter((p) => publico.includes(p.id))).map((p) => (
+                {(t.alcance === 'profissional' || ajustavel ? profissionais : profissionais.filter((p) => publico.includes(p.id))).map((p) => (
                   <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
-                    {t.alcance === 'profissional' ? (
+                    {ajustavel ? (
+                      // GRAVA: desmarcar retira a pessoa do time (excluidosIds); marcar devolve. Quem já concluiu fica
+                      // marcado e travado: retirar apagaria o progresso e o certificado dela.
+                      <Checkbox id={`p-${p.id}`} label="" checked={publico.includes(p.id)} disabled={situacaoNaTrilha(t, p.id) === 'concluida'}
+                        aria-label={`Receber a trilha: ${p.nome}`} onChange={(e) => ajustarPessoa(p.id, e.target.checked)} />
+                    ) : t.alcance === 'profissional' ? (
                       // GRAVA: marcar adiciona o id em pessoaIds; desmarcar
                       // tira (filter). label vazio + aria-label: o nome já
                       // aparece ao lado, mas o leitor de tela precisa do rótulo.

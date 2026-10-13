@@ -22,7 +22,8 @@ import { diasEntre, hojeISO, somaDias } from './utils.ts';
  *   empresas e todos os profissionais"), menos as inativas;
  * - profissional: só as pessoas escolhidas em `pessoaIds`;
  * - empresa: quem está alocado em algum projeto daquela empresa E as pessoas de
- *   perfil Empresa vinculadas a ela (`pessoa.empresaId`), menos as inativas.
+ *   perfil Empresa vinculadas a ela (`pessoa.empresaId`), menos as inativas e menos quem a
+ *   empresa retirou (`t.excluidosIds`).
  * O administrador nunca entra no público: ele opera o programa, não cumpre trilha.
  * @param t - a trilha.
  * @param d - todos os dados (vindos de `useDados()`).
@@ -41,8 +42,9 @@ export function publicoDaTrilha(t: Trilha, d: Dados): string[] {
   const alocados = d.alocacoes.filter((a) => projetos.has(a.projetoId)).map((a) => a.pessoaId);
   // Parte 2: as contas da própria empresa (perfil Empresa com o vínculo).
   const daEmpresa = ativas.filter((p) => p.perfil === 'empresa' && p.empresaId === t.empresaId).map((p) => p.id);
-  // O Set tira repetidos (a mesma pessoa pode estar em dois projetos da empresa).
-  return [...new Set([...alocados, ...daEmpresa])];
+  // O Set tira repetidos (a mesma pessoa pode estar em dois projetos da empresa). Quem a própria empresa retirou
+  // (excluidosIds) fica de fora: some do progresso, da lista e do certificado.
+  return [...new Set([...alocados, ...daEmpresa])].filter((id) => !t.excluidosIds?.includes(id));
 }
 
 // [PV-2] Quando a pessoa está não iniciada, em andamento ou concluída numa trilha (pelo número de etapas concluídas).

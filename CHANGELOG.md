@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Empresa ajusta o time das trilhas (13/10/2026)
+- Criado: `excluidosIds` em Trilha (lib/tipos.ts) e `podeAjustarTime` em lib/escopo.ts; 7 casos novos em lib/permissoes.casos.ts; testes/navegador/h08-empresa-ajusta-time.mjs.
+- Modificado: numa trilha de alcance "empresa" (a que a empresa criou ou a que o administrador publicou para ela), a empresa pode desmarcar quem não precisa cumprir a trilha e marcar de novo para devolver; a pessoa retirada sai do público (progresso, painel e certificado). Quem já concluiu fica marcado e travado, para não perder o progresso e o certificado. O administrador vê um aviso com quantas pessoas a empresa retirou. A regra mora em `publicoDaTrilha` (lib/metricas.ts), então os números do administrador também descontam.
+- Removido: nada.
+
 ## Certificados: verificação pública e lista de emitidos (13/10/2026)
 - Criado: a página PÚBLICA /verificar (sem login; também com ?codigo=) que confere o código e mostra nome, trilha e data; components/certificados/VerificarCodigo.tsx; a lista /certificados/emitidos (admin vê todos, empresa só o time dela nas trilhas que enxerga, com busca por pessoa, trilha ou código); `verificarCodigo` e `certificadosEmitidos` em lib/certificados.ts (9 casos novos, 26 no total); item de menu "Certificados" (admin e empresa); 5 casos novos em lib/permissoes.casos.ts; testes/navegador/h07-certificados-lista-e-verificacao.mjs.
 - Modificado: a folha do certificado ganhou "Confira em /verificar" e um link para a conferência já preenchida.

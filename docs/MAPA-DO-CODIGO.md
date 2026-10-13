@@ -173,14 +173,14 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 1. O EDITOR DE TRILHA: toda mudança é salva na hora, sem botão Salvar. Publicar só é liberado sem pendências. Abas: Etapas, Público e regras, Progresso. _(linha 46)_
 2. QUEM EDITA E QUEM SÓ ACOMPANHA: o admin edita todas; a empresa edita só as trilhas que ela criou e, nas que o administrador publicou para ela, só vê quem recebe e o progresso (decisão em lib/escopo.ts, podeEditarTrilha). _(linha 88)_
-3. O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar. _(linha 96)_
-4. A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição. _(linha 133)_
-5. AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts). _(linha 156)_
-6. A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API). _(linha 180)_
-7. O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). _(linha 403)_
-8. O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). _(linha 417)_
-9. A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha. _(linha 482)_
-10. A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. _(linha 502)_
+3. O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar. _(linha 108)_
+4. A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição. _(linha 145)_
+5. AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts). _(linha 168)_
+6. A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API). _(linha 192)_
+7. O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). _(linha 415)_
+8. O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). _(linha 429)_
+9. A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha. _(linha 501)_
+10. A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. _(linha 521)_
 
 ### `app/(sistema)/trilhas/page.tsx`
 *a lista de trilhas de onboarding em cartões, com filtro por alcance/rascunho e o botão "Nova trilha".*
@@ -852,33 +852,34 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 7. QUAIS TRILHAS A EMPRESA VÊ: as que ela criou e as que o administrador publicou para a empresa dela. Admin vê todas; profissional não abre o editor. TODO(PROGLOGIC): confirmar. _(linha 136)_
 8. QUEM PODE EDITAR A TRILHA: o admin edita qualquer uma; a empresa só as que ela criou (as publicadas pelo admin ela só acompanha). _(linha 163)_
 9. OS COLABORADORES DA EMPRESA: quem ela pode escolher para as trilhas dela = profissionais ativos alocados em algum projeto dela. _(linha 177)_
+10. QUEM PODE RETIRAR PESSOAS DO TIME DE UMA TRILHA: a empresa, só nas trilhas de alcance "empresa" que são DELA (as que ela criou e as que a coordenação publicou para ela). Quem já concluiu não pode ser retirado (a tela desabilita). TODO(PROGLOGIC): confirmar. _(linha 192)_
 
 ### `lib/metricas.ts`
 *funções puras que calculam as entregas por projeto (painel da empresa), público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.*
 
 1. QUEM RECEBE CADA TRILHA: geral = todos os profissionais e empresas ativos; da empresa = alocados nos projetos dela e as contas da própria empresa; do profissional = os escolhidos. Muda os números do admin. _(linha 18)_
-2. Quando a pessoa está não iniciada, em andamento ou concluída numa trilha (pelo número de etapas concluídas). _(linha 48)_
-3. O PRAZO DA TRILHA por pessoa: a data mais recente entre a publicação e a entrada da pessoa, mais os dias. prazoDias 0 = prazo indeterminado (sem data). TODO(PROGLOGIC): confirmar de onde conta. _(linha 92)_
-4. Quantos dias antes do fim o prazo vira "perto" (aviso âmbar): 3. _(linha 116)_
-5. Classifica o prazo em no prazo, perto (3 dias ou menos) ou vencido. É o que pinta o selo de prazo das trilhas. _(linha 120)_
-6. O que as telas do profissional mostram de cada trilha (progresso, próxima etapa, prazo). A ordem: abertas por prazo mais curto, concluídas por último. _(linha 154)_
-7. Andamento do projeto: tarefa "pronta" = está na ÚLTIMA lista do quadro; "atrasada" = não pronta e com prazo vencido. Mesma regra do quadro e dos painéis. _(linha 196)_
-8. Em quais listas a empresa pode aprovar uma entrega: as DUAS últimas (Revisão e Pronto no quadro padrão); em quadro curto, só a última. _(linha 216)_
-9. ENTREGAS DO PAINEL DA EMPRESA: aprovadas (a empresa aprovou) × aguardando a aprovação dela × em produção. Mudar aqui muda o gráfico e os números. _(linha 233)_
-10. Janela de "Próximas entregas" da Visão geral do projeto: 14 dias. _(linha 254)_
-11. Nome de cada perfil em português (Administrador, Empresa, Profissional) usado em menus, tabelas e etiquetas. _(linha 278)_
-12. Nomes e cores dos status de empresa (Em negociação, Ativa, Encerrada), usados em /empresas e no cabeçalho do painel da empresa. _(linha 282)_
-13. Nomes e cores dos status de projeto (Planejado, Em andamento, Pausado, Concluído). _(linha 295)_
-14. Nomes e cores das prioridades de tarefa (Baixa, Média, Alta). _(linha 300)_
-15. Por quantos dias uma tarefa concluída ainda aparece em "Concluídas recentemente" de Minhas tarefas: 7. _(linha 311)_
-16. Os grupos de Minhas tarefas: Atrasadas, Hoje, Esta semana (até domingo), Depois e Concluídas recentemente. É aqui que se muda o agrupamento. _(linha 339)_
-17. O histórico de entregas do profissional: tarefas concluídas por semana, nas últimas N semanas ou nas semanas do período do filtro. _(linha 428)_
-18. Trilhas concluídas no período (cada pessoa que terminou uma trilha conta uma vez, pela data concluidaEm). Alimenta o painel do admin. _(linha 507)_
-19. "Turma: evolução ao longo do tempo" do painel do admin: trilhas concluídas por semana do período. _(linha 529)_
-20. Tarefas concluídas no período somadas por empresa (painel do admin). _(linha 546)_
-21. Entregas aprovadas pela empresa num projeto dentro do período (painel da empresa). _(linha 568)_
-22. Os atalhos do filtro de período (7, 30 e 90 dias, este mês): é aqui que se muda o que cada atalho significa. _(linha 586)_
-23. Descobre qual atalho do filtro um período da URL representa (para marcar a opção certa ao abrir um link compartilhado). _(linha 608)_
+2. Quando a pessoa está não iniciada, em andamento ou concluída numa trilha (pelo número de etapas concluídas). _(linha 50)_
+3. O PRAZO DA TRILHA por pessoa: a data mais recente entre a publicação e a entrada da pessoa, mais os dias. prazoDias 0 = prazo indeterminado (sem data). TODO(PROGLOGIC): confirmar de onde conta. _(linha 94)_
+4. Quantos dias antes do fim o prazo vira "perto" (aviso âmbar): 3. _(linha 118)_
+5. Classifica o prazo em no prazo, perto (3 dias ou menos) ou vencido. É o que pinta o selo de prazo das trilhas. _(linha 122)_
+6. O que as telas do profissional mostram de cada trilha (progresso, próxima etapa, prazo). A ordem: abertas por prazo mais curto, concluídas por último. _(linha 156)_
+7. Andamento do projeto: tarefa "pronta" = está na ÚLTIMA lista do quadro; "atrasada" = não pronta e com prazo vencido. Mesma regra do quadro e dos painéis. _(linha 198)_
+8. Em quais listas a empresa pode aprovar uma entrega: as DUAS últimas (Revisão e Pronto no quadro padrão); em quadro curto, só a última. _(linha 218)_
+9. ENTREGAS DO PAINEL DA EMPRESA: aprovadas (a empresa aprovou) × aguardando a aprovação dela × em produção. Mudar aqui muda o gráfico e os números. _(linha 235)_
+10. Janela de "Próximas entregas" da Visão geral do projeto: 14 dias. _(linha 256)_
+11. Nome de cada perfil em português (Administrador, Empresa, Profissional) usado em menus, tabelas e etiquetas. _(linha 280)_
+12. Nomes e cores dos status de empresa (Em negociação, Ativa, Encerrada), usados em /empresas e no cabeçalho do painel da empresa. _(linha 284)_
+13. Nomes e cores dos status de projeto (Planejado, Em andamento, Pausado, Concluído). _(linha 297)_
+14. Nomes e cores das prioridades de tarefa (Baixa, Média, Alta). _(linha 302)_
+15. Por quantos dias uma tarefa concluída ainda aparece em "Concluídas recentemente" de Minhas tarefas: 7. _(linha 313)_
+16. Os grupos de Minhas tarefas: Atrasadas, Hoje, Esta semana (até domingo), Depois e Concluídas recentemente. É aqui que se muda o agrupamento. _(linha 341)_
+17. O histórico de entregas do profissional: tarefas concluídas por semana, nas últimas N semanas ou nas semanas do período do filtro. _(linha 430)_
+18. Trilhas concluídas no período (cada pessoa que terminou uma trilha conta uma vez, pela data concluidaEm). Alimenta o painel do admin. _(linha 509)_
+19. "Turma: evolução ao longo do tempo" do painel do admin: trilhas concluídas por semana do período. _(linha 531)_
+20. Tarefas concluídas no período somadas por empresa (painel do admin). _(linha 548)_
+21. Entregas aprovadas pela empresa num projeto dentro do período (painel da empresa). _(linha 570)_
+22. Os atalhos do filtro de período (7, 30 e 90 dias, este mês): é aqui que se muda o que cada atalho significa. _(linha 588)_
+23. Descobre qual atalho do filtro um período da URL representa (para marcar a opção certa ao abrir um link compartilhado). _(linha 610)_
 
 ### `lib/permissoes.ts`
 *funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).*
@@ -972,11 +973,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 4. Tipos de conteúdo de uma etapa de trilha. Tipo novo exige: ícone e rótulo em lib/trilhas.ts e tratamento em components/trilhas/ConteudoEtapa.tsx. _(linha 87)_
 5. Formato de uma etapa: conteúdo (texto e endereço), quiz (perguntas, notaMinima, tentativasMax de 1 a 10) e se trava a próxima (obrigatoria). _(linha 103)_
 6. Formato de uma trilha: alcance, status, prazoDias (0 = prazo indeterminado), etapas e o progresso de cada pessoa (concluidas, nota, tentativas, concluidaEm). _(linha 124)_
-7. Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts. _(linha 183)_
-8. Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts). _(linha 210)_
-9. Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API). _(linha 243)_
-10. Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto). _(linha 264)_
-11. Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage. _(linha 296)_
+7. Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts. _(linha 189)_
+8. Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts). _(linha 216)_
+9. Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API). _(linha 249)_
+10. Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto). _(linha 270)_
+11. Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage. _(linha 302)_
 
 ### `lib/toast.tsx`
 *mostra pequenos avisos no canto da tela ("Empresa salva.", "Algo deu errado") que somem sozinhos.*
@@ -1042,4 +1043,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-119 arquivos mapeados, 544 pontos vitais.
+119 arquivos mapeados, 545 pontos vitais.

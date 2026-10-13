@@ -11,7 +11,7 @@ import {
   podeAcessar, podeFazer, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO,
   ROTAS_POR_PERFIL, ROTULO_DAS_ROTAS, ROTULO_DAS_ACOES, TODAS_AS_ACOES, rotasDoPerfil, permissaoDaAcao, mudancaDeAcesso,
 } from './permissoes.ts';
-import { colaboradoresDaEmpresa, podeEditarTrilha, podeVerTrilha, trilhasVisiveis, projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
+import { colaboradoresDaEmpresa, podeAjustarTime, podeEditarTrilha, podeVerTrilha, trilhasVisiveis, projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
 import { publicoDaTrilha } from './metricas.ts';
 import type { Dados, Pessoa, Tarefa } from './tipos.ts';
 
@@ -96,6 +96,13 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'Marcos edita a trilha que a Vértice criou', obtido: podeEditarTrilha(marcos, trilhaDaVertice, comTrilhas), esperado: true },
   { porque: 'Patrícia só acompanha a trilha que o admin fez para a Aurora (não edita)', obtido: podeEditarTrilha(patricia, trilhaDoAdminParaAurora, comTrilhas), esperado: false },
   { porque: 'admin edita qualquer trilha', obtido: podeEditarTrilha(admin, trilhaDaVertice, comTrilhas), esperado: true },
+  { porque: 'público da trilha da Vértice inclui Ana e Bruno (alocados) e o Marcos', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados).sort().join(','), esperado: 'pes_ana,pes_bruno,pes_marcos' },
+  { porque: 'a empresa retirou a Ana: ela sai do público da trilha da Vértice', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice', excluidosIds: ['pes_ana'] }, dados).sort().join(','), esperado: 'pes_bruno,pes_marcos' },
+  { porque: 'retirar não afeta trilha geral (excluidosIds só vale no alcance empresa)', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), excluidosIds: ['pes_ana'] }, dados).includes('pes_ana'), esperado: true },
+  { porque: 'Marcos pode ajustar o time numa trilha de alcance empresa da Vértice', obtido: podeAjustarTime(marcos, { ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados), esperado: true },
+  { porque: 'Marcos NÃO ajusta o time da trilha da Aurora', obtido: podeAjustarTime(marcos, { ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_aurora' }, dados), esperado: false },
+  { porque: 'Marcos NÃO ajusta trilha geral (não tem time)', obtido: podeAjustarTime(marcos, trilhaGeral('publicada'), dados), esperado: false },
+  { porque: 'admin não usa o ajuste de time (ele edita a trilha inteira)', obtido: podeAjustarTime(admin, { ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados), esperado: false },
   { porque: 'colaboradores da Vértice = Ana e Bruno (alocados no projeto dela)', obtido: ids(colaboradoresDaEmpresa('emp_vertice', dados)), esperado: 'pes_ana,pes_bruno' },
   { porque: 'colaboradores da Aurora = só a Carla', obtido: ids(colaboradoresDaEmpresa('emp_aurora', dados)), esperado: 'pes_carla' },
   { porque: 'admin abre /certificados/emitidos', obtido: podeAcessar('admin', '/certificados/emitidos'), esperado: true },
