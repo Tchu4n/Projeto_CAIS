@@ -38,6 +38,13 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 6. A LINHA DE UMA PESSOA: nome, área e limite semanal, as células por semana e a quebra por projeto (uma sub-linha por alocação). _(linha 203)_
 7. O PAINEL LATERAL DE UMA SEMANA: pico e nível do semáforo, a ocupação de cada dia útil e as alocações ativas, com o link para a equipe do projeto. _(linha 270)_
 
+### `app/(sistema)/certificados/[trilhaId]/page.tsx`
+*a folha do certificado de conclusão de uma trilha, da pessoa logada, pronta para imprimir ou salvar em PDF pelo navegador (botão "Imprimir ou salvar em PDF").*
+
+1. O CABEÇALHO DO CERTIFICADO: o nome do programa que emite. _(linha 76)_
+2. OS TEXTOS DO CERTIFICADO: título, a frase de abertura e a de conclusão. Mude aqui para trocar o texto oficial. _(linha 81)_
+3. A ASSINATURA: hoje só o nome do papel (coordenação do programa). Para uma assinatura de verdade, troque por uma imagem aqui. TODO(PROGLOGIC): confirmar quem assina. _(linha 96)_
+
 ### `app/(sistema)/design-system/page.tsx`
 *a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.*
 
@@ -804,6 +811,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 11. A semana vale pelo PICO (o dia mais cheio), não pela média. Também calcula as horas proporcionais por projeto. Mudar aqui muda todos os níveis do semáforo. _(linha 287)_
 12. A sugestão de "usar dd/mm como início" do modal de alocação: primeira data em que a carga nova cabe sem passar de 100% em nenhum dia útil. _(linha 378)_
 
+### `lib/certificados.ts`
+*funções puras que dizem quem tem direito a certificado e montam os dados dele (nome, trilha, data, carga, nota e o código de verificação). Nada é armazenado: o certificado é CALCULADO do progresso.*
+
+1. COMO O CÓDIGO DE VERIFICAÇÃO É FEITO: prefixo "CAIS", ano da conclusão e 8 caracteres de um resumo (hash) de trilha + pessoa + data. Mudar o prefixo ou a receita muda TODOS os códigos já emitidos. TODO(API): o back-end passa a gerar e guardar o código (e a validar na página pública). _(linha 32)_
+2. QUEM TEM DIREITO A CERTIFICADO: a trilha precisa estar PUBLICADA, a pessoa no público dela e com TODAS as etapas concluídas (e a trilha ter ao menos uma etapa). Trilha despublicada ou excluída tira o certificado da lista. _(linha 62)_
+
 ### `lib/convite.ts`
 *monta o link de convite de uma pessoa e copia texto para a área de transferência com tratamento de erro.*
 
@@ -1012,4 +1025,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-114 arquivos mapeados, 534 pontos vitais.
+116 arquivos mapeados, 539 pontos vitais.

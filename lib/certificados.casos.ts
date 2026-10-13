@@ -22,6 +22,7 @@ const trilha = (id: string, status: Trilha['status'], progresso: Trilha['progres
   etapas: Array.from({ length: etapas }, (_, i) => ({ id: `e${i}`, titulo: `e${i}`, tipo: 'texto' as const, obrigatoria: true, notaMinima: 0 })),
   progresso,
 });
+/** Empresa de teste (só id e nome fantasia importam). */
 const empresa = (id: string, nomeFantasia: string) => ({
   id, razaoSocial: nomeFantasia, nomeFantasia, cnpj: '', segmento: '', porte: '', site: '', cep: '', logradouro: '', numero: '',
   cidadeUf: '', contatoNome: '', contatoEmail: '', contatoTelefone: '', contatoCargo: '', status: 'ativa' as const, dataEntrada: '2026-01-01',
