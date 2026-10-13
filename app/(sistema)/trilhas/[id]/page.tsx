@@ -26,6 +26,8 @@ import { useState } from 'react';
 import { ArrowUp, ArrowDown, Trash2, Plus, Check, Send, Undo2, GripVertical, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDados, Trilha } from '@/lib/store';
 import { useToast } from '@/lib/toast';
+import { useAuth } from '@/lib/auth';
+import { colaboradoresDaEmpresa, empresaDaSessao, podeEditarTrilha } from '@/lib/escopo';
 import { publicoDaTrilha, situacaoNaTrilha } from '@/lib/metricas';
 import { TIPOS_ETAPA, ALCANCE, TENTATIVAS_PADRAO, problemasDoQuiz } from '@/lib/trilhas';
 import EditorConteudoEtapa from '@/components/trilhas/EditorConteudoEtapa';
@@ -54,6 +56,7 @@ export default function EditorTrilha() {
   // o [id] do caminho já pronto (notas-next16 §2).
   const { id } = useParams<{ id: string }>();
   const d = useDados();
+  const { sessao } = useAuth();
   const router = useRouter();
   const avisar = useToast();
   // Aba ativa. Aqui fica só no estado (não vai para a URL, diferente da
@@ -82,7 +85,15 @@ export default function EditorTrilha() {
       acao={<Button onClick={() => router.push('/trilhas')}>Voltar às trilhas</Button>} /></div>
   );
 
-  // [PV-2] O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar.
+  // [PV-2] QUEM EDITA E QUEM SÓ ACOMPANHA: o admin edita todas; a empresa edita só as trilhas que ela criou e, nas que o administrador publicou para ela, só vê quem recebe e o progresso (decisão em lib/escopo.ts, podeEditarTrilha).
+  // Só o perfil Empresa muda a tela: o admin segue com o editor completo.
+  const ehEmpresa = sessao?.perfil === 'empresa';
+  const minhaEmpresa = sessao ? empresaDaSessao(sessao, d) : undefined;
+  const editavel = sessao ? podeEditarTrilha(sessao, t, d) : false;
+  // Trilha só para acompanhar não tem a aba Etapas: abre direto no Progresso.
+  const abaAtiva = !editavel && aba === 'etapas' ? 'progresso' : aba;
+
+  // [PV-3] O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar.
   // Toda edição salva na hora (sem botão "Salvar")
   /**
    * Junta as mudanças com a trilha atual e salva.
@@ -119,7 +130,7 @@ export default function EditorTrilha() {
     [e[i], e[i + dir]] = [e[i + dir], e[i]];
     atualizar({ etapas: e });
   };
-  // [PV-3] A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição.
+  // [PV-4] A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição.
   /**
    * Leva a etapa da posição `origem` para a posição de inserção `destino` (usado ao soltar).
    * `destino` conta as posições ENTRE as etapas da lista original: 0 = antes da primeira,
@@ -142,7 +153,7 @@ export default function EditorTrilha() {
   /** Limpa o estado do arrastar (no fim de qualquer arrasto, solto ou cancelado com Esc). */
   const fimDoArrasto = () => { setArrastando(null); setAlvo(null); setPegaPelaAlca(null); };
 
-  // [PV-4] AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts).
+  // [PV-5] AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts).
   // Pendências que impedem publicar. Cada linha vira o texto do problema
   // quando a condição é verdadeira, ou `false` quando está tudo certo; o
   // .filter(Boolean) final deixa só os textos.
@@ -161,9 +172,12 @@ export default function EditorTrilha() {
   // está alocado em projetos daquela empresa; profissional = os escolhidos.
   const publico = publicoDaTrilha(t, d);
   // Profissionais ativos: opções da escolha "a dedo" (alcance profissional).
-  const profissionais = d.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo');
+  // A empresa só escolhe entre os colaboradores dela (alocados nos projetos dela); o admin, entre todos.
+  const profissionais = ehEmpresa && minhaEmpresa
+    ? colaboradoresDaEmpresa(minhaEmpresa, d)
+    : d.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo');
 
-  // [PV-5] A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API).
+  // [PV-6] A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API).
   /**
    * Tenta publicar a trilha.
    * Com pendências: leva para a aba onde está o problema (Público e regras
@@ -195,7 +209,7 @@ export default function EditorTrilha() {
       <CabecalhoPagina trilha={[{ rotulo: 'Trilhas', href: '/trilhas' }]}
         titulo={<span className="flex flex-wrap items-center gap-3">{t.titulo || 'Sem título'}{t.status === 'rascunho' ? <Etiqueta tom="aviso">Rascunho</Etiqueta> : <Etiqueta tom="sucesso" ponto>Publicada</Etiqueta>}</span>}
         descricao={<span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-sucesso" aria-hidden />Alterações salvas automaticamente</span>}
-        acao={<>
+        acao={!editavel ? undefined : <>
           <Button variante="fantasma" onClick={() => setConfirmarExclusao(true)}><Trash2 className="h-4 w-4" aria-hidden />Excluir</Button>
           {/* Publicada → botão "Despublicar" (GRAVA: volta para rascunho).
             * Rascunho → botão "Publicar" (função publicar, acima). */}
@@ -205,18 +219,20 @@ export default function EditorTrilha() {
         </>} />
 
       {/* Em rascunho, lista as pendências antes da pessoa tentar publicar. */}
-      {t.status === 'rascunho' && problemas.length > 0 && (
+      {t.status === 'rascunho' && problemas.length > 0 && editavel && (
         <div className="mb-5"><Aviso tipo="aviso" titulo="Antes de publicar">{problemas.join(' ')}</Aviso></div>
       )}
 
-      <Abas rotulo="Seções da trilha" ativa={aba} onChange={setAba}
-        abas={[{ id: 'etapas', rotulo: 'Etapas', contagem: t.etapas.length }, { id: 'publico', rotulo: 'Público e regras', contagem: publico.length }, { id: 'progresso', rotulo: 'Progresso' }]} />
+      {!editavel && <div className="mb-5"><Aviso tipo="info">Esta trilha foi publicada pela coordenação do programa. Você acompanha quem recebe e o progresso de cada pessoa do seu time.</Aviso></div>}
 
-      <div className="mt-6" role="tabpanel" id={`painel-${aba}`} aria-labelledby={`aba-${aba}`}>
+      <Abas rotulo="Seções da trilha" ativa={abaAtiva} onChange={setAba}
+        abas={[...(editavel ? [{ id: 'etapas' as const, rotulo: 'Etapas', contagem: t.etapas.length }] : []), { id: 'publico' as const, rotulo: editavel ? 'Público e regras' : 'Quem recebe', contagem: publico.length }, { id: 'progresso' as const, rotulo: 'Progresso' }]} />
+
+      <div className="mt-6" role="tabpanel" id={`painel-${abaAtiva}`} aria-labelledby={`aba-${abaAtiva}`}>
         {/* ABA ETAPAS: título/descrição, lista de etapas e ajuda lateral.
           * lg:grid-cols-[1fr_300px]: no desktop, conteúdo + coluna fixa de
           * 300 px; no celular, uma coluna só. */}
-        {aba === 'etapas' && (
+        {abaAtiva === 'etapas' && (
           <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
             <div className="space-y-4">
               <Card className="space-y-4 p-5">
@@ -379,24 +395,26 @@ export default function EditorTrilha() {
 
         {/* ABA PÚBLICO E REGRAS: alcance, empresa, prazo e a lista de quem
           * recebe (§4: o admin define quem recebe, quando abre e até quando). */}
-        {aba === 'publico' && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="space-y-5 p-5">
+        {abaAtiva === 'publico' && (
+          <div className={cx('grid gap-6', editavel && 'lg:grid-cols-2')}>
+            {editavel && <Card className="space-y-5 p-5">
               <div>
                 <p className="mb-2 text-[13px] font-medium text-tinta">Quem recebe</p>
-                {/* [PV-6] O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). */}
-                <Segmentado rotulo="Alcance da trilha" valor={t.alcance} onChange={(a) => atualizar({ alcance: a })}
-                  opcoes={[{ valor: 'geral', rotulo: 'Geral' }, { valor: 'empresa', rotulo: 'Empresa' }, { valor: 'profissional', rotulo: 'Profissional' }]} />
+                {/* [PV-7] O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). */}
+                <Segmentado rotulo="Alcance da trilha" valor={t.alcance} onChange={(a) => atualizar({ alcance: a, ...(a === 'empresa' && ehEmpresa && minhaEmpresa ? { empresaId: minhaEmpresa } : {}) })}
+                  opcoes={ehEmpresa
+                    ? [{ valor: 'empresa', rotulo: 'Time todo' }, { valor: 'profissional', rotulo: 'Pessoas escolhidas' }]
+                    : [{ valor: 'geral', rotulo: 'Geral' }, { valor: 'empresa', rotulo: 'Empresa' }, { valor: 'profissional', rotulo: 'Profissional' }]} />
                 <p className="mt-2 flex items-center gap-2 text-[13px] text-tinta-suave"><span className="h-2.5 w-2.5 rounded-full" style={{ background: ALCANCE[t.alcance].cor }} aria-hidden />{ALCANCE[t.alcance].descricao}</p>
               </div>
               {/* Só no alcance "empresa". Empresas encerradas não aparecem
                 * como opção (não recebem trilha nova). */}
-              {t.alcance === 'empresa' && (
+              {t.alcance === 'empresa' && !ehEmpresa && (
                 <Select label="Empresa" required placeholder="Selecione a empresa" value={t.empresaId} onChange={(e) => atualizar({ empresaId: e.target.value })}
                   hint="Recebem a trilha todas as pessoas alocadas em projetos desta empresa."
                   opcoes={d.empresas.filter((e) => e.status !== 'encerrada').map((e) => ({ valor: e.id, rotulo: e.nomeFantasia }))} />
               )}
-              {/* [PV-7] O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). */}
+              {/* [PV-8] O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). */}
               {/* Prazo (decisão da PROGLOGIC, 09/10/2026): indeterminado ou com os dias definidos pelo administrador,
                 * em geral a pedido da empresa. prazoDias 0 = indeterminado (a trilha não vence para ninguém).
                 * SIMULADO: "Quando abre" tem uma opção só e não faz nada (onChange vazio).
@@ -408,7 +426,7 @@ export default function EditorTrilha() {
                 <Select label="Quando abre" value="entrada" onChange={() => {}} opcoes={[{ valor: 'entrada', rotulo: 'Na entrada da pessoa' }]} hint="Data marcada chega com a API." />
               </div>
               <Aviso tipo="info">Uma pessoa pode receber trilhas das três camadas ao mesmo tempo.</Aviso>
-            </Card>
+            </Card>}
 
             <Card>
               <CardTitulo titulo={t.alcance === 'profissional' ? 'Escolha as pessoas' : 'Quem vai receber'} descricao={`${publico.length} pessoa(s) no público desta trilha.`} />
@@ -431,6 +449,7 @@ export default function EditorTrilha() {
                     <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-tinta">{p.nome}</span><span className="block text-[12px] text-tinta-suave">{p.area} · {p.nivel}</span></span>
                   </li>
                 ))}
+                {t.alcance === 'profissional' && profissionais.length === 0 && <li className="px-3 py-8 text-center text-sm text-tinta-suave">Nenhum colaborador alocado nos seus projetos ainda. Aloque pessoas em um projeto para poder escolhê-las aqui.</li>}
                 {publico.length === 0 && t.alcance !== 'profissional' && <li className="px-3 py-8 text-center text-sm text-tinta-suave">{t.alcance === 'empresa' ? 'Escolha uma empresa com pessoas alocadas.' : 'Nenhum profissional ativo.'}</li>}
               </ul>
             </Card>
@@ -439,10 +458,10 @@ export default function EditorTrilha() {
 
         {/* ABA PROGRESSO: tabela por pessoa do público. Rascunho ou público
           * vazio → estado vazio explicando por que não há o que mostrar. */}
-        {aba === 'progresso' && (
+        {abaAtiva === 'progresso' && (
           <Card>
             {t.status === 'rascunho' || publico.length === 0 ? (
-              <EstadoVazio icone={<Send className="h-6 w-6" />} titulo="Sem progresso para mostrar" descricao="O progresso aparece quando a trilha é publicada para um público." acao={t.status === 'rascunho' ? <Button onClick={publicar}>Publicar trilha</Button> : undefined} />
+              <EstadoVazio icone={<Send className="h-6 w-6" />} titulo="Sem progresso para mostrar" descricao="O progresso aparece quando a trilha é publicada para um público." acao={t.status === 'rascunho' && editavel ? <Button onClick={publicar}>Publicar trilha</Button> : undefined} />
             ) : (
               <Tabela rotulo="Progresso por pessoa">
                 <thead><tr><Th>Pessoa</Th><Th>Situação</Th><Th className="w-1/3">Progresso</Th><Th>Nota do quiz</Th></tr></thead>
@@ -460,7 +479,7 @@ export default function EditorTrilha() {
                     // % de etapas concluídas. Math.max(1, ...) evita dividir
                     // por zero numa trilha sem etapas.
                     const pct = ((pr?.concluidas ?? 0) / Math.max(1, t.etapas.length)) * 100;
-                    // [PV-8] A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha.
+                    // [PV-9] A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha.
                     // Nota mínima mais alta entre os quizzes da trilha (0 se
                     // não houver quiz). Nota abaixo dela aparece em vermelho.
                     const minimo = Math.max(0, ...t.etapas.filter((e) => e.tipo === 'quiz').map((e) => e.notaMinima));
@@ -480,7 +499,7 @@ export default function EditorTrilha() {
         )}
       </div>
 
-      {/* [PV-9] A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. */}
+      {/* [PV-10] A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. */}
       {/* Confirmação de exclusão. APAGA: d.remover('trilhas') remove a trilha
         * e, junto, o progresso das pessoas (que fica dentro dela).
         * NAVEGA: depois volta para /trilhas. Não tem desfazer. */}

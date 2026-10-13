@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Trilhas da empresa (13/10/2026)
+- Criado: `donaEmpresaId` em Trilha (lib/tipos.ts); em lib/escopo.ts, `empresaDaSessao`, `trilhasVisiveis`, `podeVerTrilha`, `podeEditarTrilha` e `colaboradoresDaEmpresa`; item de menu "Trilhas do time" (empresa); 12 casos novos em lib/permissoes.casos.ts; `testes/navegador/h03-trilhas-da-empresa.mjs`.
+- Modificado: a empresa abre /trilhas e /trilhas/[id], mas só as trilhas dela (as que criou e as que o administrador fez para ela; outra pela URL cai em /sem-permissao). Cria trilha (nasce para o time todo), escolhe o alcance "Time todo" ou "Pessoas escolhidas" (só entre quem está alocado nos projetos dela), edita, publica e exclui as que criou; as do administrador ela só acompanha (quem recebe e progresso por pessoa). O painel da empresa ganhou "Ver quem" em cada trilha, com o nome e a situação (concluiu, em andamento, não iniciou). A busca do topo respeita o mesmo escopo.
+- Removido: nada.
+
 ## Correções do H01 (branch `fix/h01-correcoes`)
 - Criado: `primeiroDiaUtil` (lib/carga.ts) e 3 casos novos; tokens `--color-marca-clara` e `--color-veu` (app/globals.css); `testes/navegador/h02-correcoes-h01.mjs`.
 - Modificado: `cargaDaPessoa` usa o primeiro dia útil a partir de hoje (sábado e domingo olham a segunda), então a carga não zera no fim de semana; o filtro "Personalizado" acompanha a URL (botão Voltar); Elisa (e qualquer profissional com a trilha pendente) abrindo projeto de fora pela URL vai para /sem-permissao; `dark:text-[#14161F]`, `#B9A7FF` e o fundo do modal passam a usar tokens; o `themeColor` ganhou o comentário da exceção.

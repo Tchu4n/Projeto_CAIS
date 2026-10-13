@@ -32,7 +32,8 @@ export const ROTAS_POR_PERFIL: Record<string, readonly Perfil[]> = {
   // TODO(PROGLOGIC): confirmar
   '/empresas': ['admin'],
   '/pessoas': ['admin'],
-  '/trilhas': ['admin'],
+  // A empresa cria e acompanha as trilhas do time dela (só as dela: lib/escopo.ts, trilhasVisiveis).
+  '/trilhas': ['admin', 'empresa'],
   '/design-system': ['admin'],
   '/carga': ['admin'],
   '/acessos': ['admin'],

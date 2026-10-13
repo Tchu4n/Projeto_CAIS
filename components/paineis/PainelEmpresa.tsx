@@ -19,8 +19,8 @@ import { useMemo } from 'react';
 import { BookOpenCheck, CircleAlert, FolderKanban, PackageCheck, Users } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
-import { alocacoesVisiveis, projetosVisiveis, tarefasVisiveis } from '@/lib/escopo';
-import { aprovadasNoPeriodo, colunaAceitaAprovacao, dentroDoPeriodo, entregasDoProjeto, progressoProjeto, resumoTrilha, ROTULO_STATUS_EMPRESA, ROTULO_STATUS_PROJETO, TOM_STATUS_EMPRESA, TOM_STATUS_PROJETO } from '@/lib/metricas';
+import { alocacoesVisiveis, projetosVisiveis, tarefasVisiveis, trilhasVisiveis } from '@/lib/escopo';
+import { aprovadasNoPeriodo, colunaAceitaAprovacao, dentroDoPeriodo, entregasDoProjeto, progressoProjeto, publicoDaTrilha, resumoTrilha, situacaoNaTrilha, ROTULO_STATUS_EMPRESA, ROTULO_STATUS_PROJETO, TOM_STATUS_EMPRESA, TOM_STATUS_PROJETO } from '@/lib/metricas';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Avatar, EstadoVazio, Etiqueta, Progresso } from '@/components/ui/basicos';
 import { BarraEmpilhada, Legenda, COR_GRAFICO } from '@/components/ui/Graficos';
@@ -59,11 +59,9 @@ export default function PainelEmpresa() {
   const feitas = entregues.filter((t) => !!t.aprovadaEm && dentroDoPeriodo(t.aprovadaEm, periodo))
     .sort((a, b) => b.aprovadaEm!.localeCompare(a.aprovadaEm!));
 
-  // [PV-3] QUAIS TRILHAS aparecem em "Trilha do time": só as publicadas, com alcance "empresa" e da empresa desta pessoa.
-  // Trilhas da empresa (alcance "empresa", publicadas): o progresso do time dela (§6).
-  const trilhasDaEmpresa = pronto && pessoa?.empresaId
-    ? d.trilhas.filter((t) => t.status === 'publicada' && t.alcance === 'empresa' && t.empresaId === pessoa.empresaId)
-    : [];
+  // [PV-3] QUAIS TRILHAS aparecem em "Trilha do time": as publicadas que a empresa criou ou que o administrador fez para ela (lib/escopo.ts, trilhasVisiveis).
+  // Trilhas do time (publicadas): o progresso de cada uma, com o nome de quem concluiu, está em andamento ou não iniciou (§6).
+  const trilhasDaEmpresa = pronto ? trilhasVisiveis(sessao!, d).filter((t) => t.status === 'publicada') : [];
 
   const primeiroNome = sessao?.nome.split(' ')[0] ?? '';
 
@@ -226,13 +224,15 @@ export default function PainelEmpresa() {
 
         {/* [PV-7] O PROGRESSO DA TRILHA do time: concluíram, em andamento e não iniciaram, por trilha da empresa (resumoTrilha). */}
         {/* 4) Progresso da trilha do time */}
-        <Bloco titulo="Trilha do time" estado={estado} acao={<VerTodas href="/minhas-trilhas" rotulo="Minha trilha" />}>
+        <Bloco titulo="Trilha do time" estado={estado} acao={<VerTodas href="/trilhas" rotulo="Trilhas do time" />}>
           {trilhasDaEmpresa.length === 0 ? (
-            <EstadoVazio icone={<BookOpenCheck className="h-6 w-6" aria-hidden />} titulo="Nenhuma trilha da sua empresa publicada" descricao="Quando a coordenação publicar a trilha com as regras da sua empresa, o progresso do time aparece aqui." />
+            <EstadoVazio icone={<BookOpenCheck className="h-6 w-6" aria-hidden />} titulo="Nenhuma trilha da sua empresa publicada" descricao="Crie uma trilha em Trilhas do time (ou aguarde a da coordenação): o progresso e o nome de cada pessoa aparecem aqui." />
           ) : (
             <ul className="space-y-4">
               {trilhasDaEmpresa.map((t) => {
                 const r = resumoTrilha(t, d);
+                // QUEM está em cada situação: nomes por situação, para a empresa saber a quem cobrar.
+                const nomes = publicoDaTrilha(t, d).map((id) => ({ pessoa: d.pessoa(id), situacao: situacaoNaTrilha(t, id) })).filter((x) => x.pessoa);
                 const seg = [
                   { rotulo: 'Concluíram', valor: r.concluida, cor: COR_GRAFICO.concluida },
                   { rotulo: 'Em andamento', valor: r.andamento, cor: COR_GRAFICO.andamento },
@@ -244,6 +244,21 @@ export default function PainelEmpresa() {
                     {/* Barra (role="img" com resumo) + legenda com os números em texto. */}
                     <BarraEmpilhada segmentos={seg} />
                     <Legenda itens={seg} />
+                    {/* NAVEGA: o link "Abrir a trilha" vai para /trilhas/[id]. A lista mostra QUEM está em cada situação. */}
+                    {nomes.length > 0 && (
+                      <details className="rounded-lg border border-borda bg-fundo/50 px-3 py-2 text-[13px]">
+                        <summary className="cursor-pointer font-medium text-primaria">Ver quem</summary>
+                        <ul className="mt-2 space-y-1.5">
+                          {nomes.map(({ pessoa: p, situacao }) => (
+                            <li key={p!.id} className="flex items-center justify-between gap-2">
+                              <span className="flex min-w-0 items-center gap-2"><Avatar nome={p!.nome} tamanho={22} /><span className="truncate text-tinta">{p!.nome}</span></span>
+                              {situacao === 'concluida' ? <Etiqueta tom="sucesso" ponto>Concluiu</Etiqueta> : situacao === 'andamento' ? <Etiqueta tom="primaria" ponto>Em andamento</Etiqueta> : <Etiqueta tom="neutro" ponto>Não iniciou</Etiqueta>}
+                            </li>
+                          ))}
+                        </ul>
+                        <Link href={`/trilhas/${t.id}`} className="mt-2 inline-block text-[12px] font-semibold text-primaria hover:underline">Abrir a trilha</Link>
+                      </details>
+                    )}
                   </li>
                 );
               })}

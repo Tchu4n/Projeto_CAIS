@@ -67,9 +67,9 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 38)_
 2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 69)_
 3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 96)_
-4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 121)_
-5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 136)_
-6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 166)_
+4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 124)_
+5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 139)_
+6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 169)_
 
 ### `app/(sistema)/minhas-tarefas/page.tsx`
 *as tarefas em que a pessoa logada é responsável, de todos os projetos, agrupadas por prazo (Atrasadas, Hoje, Esta semana, Depois) e as concluídas recentemente (recolhidas), com filtros de projeto e prioridade. Clicar abre o detalhe da tarefa por cima da lista (?tarefa= na URL, como no quadro).*
@@ -158,22 +158,23 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/trilhas/[id]/page.tsx`
 *o editor de uma trilha: etapas, público e regras, progresso por pessoa, publicar/despublicar e excluir.*
 
-1. O EDITOR DE TRILHA: toda mudança é salva na hora, sem botão Salvar. Publicar só é liberado sem pendências. Abas: Etapas, Público e regras, Progresso. _(linha 44)_
-2. O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar. _(linha 85)_
-3. A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição. _(linha 122)_
-4. AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts). _(linha 145)_
-5. A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API). _(linha 166)_
-6. O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). _(linha 387)_
-7. O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). _(linha 399)_
-8. A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha. _(linha 463)_
-9. A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. _(linha 483)_
+1. O EDITOR DE TRILHA: toda mudança é salva na hora, sem botão Salvar. Publicar só é liberado sem pendências. Abas: Etapas, Público e regras, Progresso. _(linha 46)_
+2. QUEM EDITA E QUEM SÓ ACOMPANHA: o admin edita todas; a empresa edita só as trilhas que ela criou e, nas que o administrador publicou para ela, só vê quem recebe e o progresso (decisão em lib/escopo.ts, podeEditarTrilha). _(linha 88)_
+3. O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar. _(linha 96)_
+4. A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição. _(linha 133)_
+5. AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts). _(linha 156)_
+6. A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API). _(linha 180)_
+7. O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). _(linha 403)_
+8. O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). _(linha 417)_
+9. A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha. _(linha 482)_
+10. A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. _(linha 502)_
 
 ### `app/(sistema)/trilhas/page.tsx`
 *a lista de trilhas de onboarding em cartões, com filtro por alcance/rascunho e o botão "Nova trilha".*
 
-1. O FILTRO DA LISTA: Todas, Gerais, Da empresa, Do profissional (pelo alcance) ou Rascunhos (pelo status). _(linha 48)_
-2. A TRILHA NOVA: nasce como rascunho, alcance geral e prazo de 7 dias; abre o editor, que salva sozinho. TODO(API): POST. _(linha 54)_
-3. O TEXTO "QUEM RECEBE" do cartão: o nome da empresa, "N pessoa(s)" ou "Todos", conforme o alcance. _(linha 99)_
+1. O FILTRO DA LISTA: Todas, Gerais, Da empresa, Do profissional (pelo alcance) ou Rascunhos (pelo status). _(linha 55)_
+2. A TRILHA NOVA: nasce como rascunho, alcance geral e prazo de 7 dias; abre o editor, que salva sozinho. TODO(API): POST. _(linha 61)_
+3. O TEXTO "QUEM RECEBE" do cartão: o nome da empresa, "N pessoa(s)" ou "Todos", conforme o alcance. _(linha 111)_
 
 ### `app/globals.css`
 
@@ -430,11 +431,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 1. O QUE É ENTREGUE E APROVADA (decisão da PROGLOGIC, 09/10/2026): entregue = tarefa em Revisão ou Pronto; aprovada = a empresa registrou a aprovação no detalhe da tarefa. _(linha 51)_
 2. AS ÚLTIMAS ENTREGAS do período: aprovadas com data dentro do filtro, as mais recentes primeiro. _(linha 57)_
-3. QUAIS TRILHAS aparecem em "Trilha do time": só as publicadas, com alcance "empresa" e da empresa desta pessoa. _(linha 62)_
-4. O ANDAMENTO dos projetos da empresa: percentual pronto, tarefas prontas e atrasadas (progressoProjeto, lib/metricas.ts). Cada linha leva à ficha do projeto. _(linha 84)_
-5. AS HORAS DO TIME: a empresa vê as horas semanais de cada pessoa NO PROJETO DELA (decisão da PROGLOGIC, 09/10/2026), nunca a soma nem os outros projetos da pessoa. O recorte vem de alocacoesVisiveis (lib/escopo.ts). _(linha 117)_
-6. AS ENTREGAS por projeto: aprovadas × aguardando a aprovação da empresa × em produção (entregasDoProjeto), a lista "Aguardando a sua aprovação" (até 4) e as últimas entregas do período (até 4). _(linha 150)_
-7. O PROGRESSO DA TRILHA do time: concluíram, em andamento e não iniciaram, por trilha da empresa (resumoTrilha). _(linha 227)_
+3. QUAIS TRILHAS aparecem em "Trilha do time": as publicadas que a empresa criou ou que o administrador fez para ela (lib/escopo.ts, trilhasVisiveis). _(linha 62)_
+4. O ANDAMENTO dos projetos da empresa: percentual pronto, tarefas prontas e atrasadas (progressoProjeto, lib/metricas.ts). Cada linha leva à ficha do projeto. _(linha 82)_
+5. AS HORAS DO TIME: a empresa vê as horas semanais de cada pessoa NO PROJETO DELA (decisão da PROGLOGIC, 09/10/2026), nunca a soma nem os outros projetos da pessoa. O recorte vem de alocacoesVisiveis (lib/escopo.ts). _(linha 115)_
+6. AS ENTREGAS por projeto: aprovadas × aguardando a aprovação da empresa × em produção (entregasDoProjeto), a lista "Aguardando a sua aprovação" (até 4) e as últimas entregas do período (até 4). _(linha 148)_
+7. O PROGRESSO DA TRILHA do time: concluíram, em andamento e não iniciaram, por trilha da empresa (resumoTrilha). _(linha 225)_
 
 ### `components/paineis/PainelProfissional.tsx`
 *o painel do perfil Profissional com os quatro blocos do §6: minhas trilhas e progresso, minhas tarefas e prazos, minha carga da semana e meu histórico de entregas; saudação com o primeiro nome e a data de hoje.*
@@ -580,8 +581,8 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 *a lista (agrupada) de telas que aparecem no menu lateral, com endereço, rótulo, ícone e os perfis que enxergam cada item.*
 
 1. O MENU LATERAL: grupos, rótulos, ícones, endereços e quais perfis veem cada item. Tela nova precisa ser registrada aqui (e em lib/permissoes.ts, que é quem barra o acesso). _(linha 13)_
-2. A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional). _(linha 45)_
-3. A empresa abre a mesma tela de Minhas trilhas, só com outro nome no menu ("Trilha da empresa"). Para mudar o nome que ela vê, é aqui. _(linha 50)_
+2. A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional). _(linha 47)_
+3. A empresa abre a mesma tela de Minhas trilhas, só com outro nome no menu ("Trilha da empresa"). Para mudar o nome que ela vê, é aqui. _(linha 52)_
 
 ### `components/shell/Pagina.tsx`
 *cabeçalho da página (trilha de navegação, título, descrição e ação principal) e a barra de filtros que fica acima do conteúdo.*
@@ -794,6 +795,9 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 4. Quais tarefas cada perfil vê (as dos projetos visíveis). TODO(PROGLOGIC): confirmar se o profissional vê as tarefas dos colegas. _(linha 65)_
 5. Quais empresas cada perfil vê (a empresa vê a própria; o profissional, as dos projetos dele). TODO(PROGLOGIC): confirmar. _(linha 90)_
 6. Quais pessoas cada perfil vê (busca do topo e listas). TODO(PROGLOGIC): confirmar se a empresa vê nome e contato dos profissionais alocados. _(linha 109)_
+7. QUAIS TRILHAS A EMPRESA VÊ: as que ela criou e as que o administrador publicou para a empresa dela. Admin vê todas; profissional não abre o editor. TODO(PROGLOGIC): confirmar. _(linha 136)_
+8. QUEM PODE EDITAR A TRILHA: o admin edita qualquer uma; a empresa só as que ela criou (as publicadas pelo admin ela só acompanha). _(linha 163)_
+9. OS COLABORADORES DA EMPRESA: quem ela pode escolher para as trilhas dela = profissionais ativos alocados em algum projeto dela. _(linha 177)_
 
 ### `lib/metricas.ts`
 *funções puras que calculam as entregas por projeto (painel da empresa), público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.*
@@ -826,21 +830,21 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 *funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).*
 
 1. QUEM ABRE CADA TELA: a lista de rotas por perfil. Tela nova precisa entrar aqui (rota fora da lista é só do admin) e no menu (components/shell/navegacao.ts). _(linha 19)_
-2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 47)_
-3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 97)_
-4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 108)_
-5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 119)_
-6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 127)_
-7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 133)_
-8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 144)_
-9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 153)_
-10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 168)_
-11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 179)_
-12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 205)_
-13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 223)_
-14. Nomes das ações na tabela de permissões de /acessos. _(linha 243)_
-15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 258)_
-16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 291)_
+2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 48)_
+3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 98)_
+4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 109)_
+5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 120)_
+6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 128)_
+7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 134)_
+8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 145)_
+9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 154)_
+10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 169)_
+11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 180)_
+12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 206)_
+13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 224)_
+14. Nomes das ações na tabela de permissões de /acessos. _(linha 244)_
+15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 259)_
+16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 292)_
 
 ### `lib/preferencias.ts`
 *hook que devolve a densidade das tabelas escolhida pela pessoa logada (confortável ou compacta).*
@@ -914,11 +918,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 4. Tipos de conteúdo de uma etapa de trilha. Tipo novo exige: ícone e rótulo em lib/trilhas.ts e tratamento em components/trilhas/ConteudoEtapa.tsx. _(linha 87)_
 5. Formato de uma etapa: conteúdo (texto e endereço), quiz (perguntas, notaMinima, tentativasMax de 1 a 10) e se trava a próxima (obrigatoria). _(linha 103)_
 6. Formato de uma trilha: alcance, status, prazoDias (0 = prazo indeterminado), etapas e o progresso de cada pessoa (concluidas, nota, tentativas, concluidaEm). _(linha 124)_
-7. Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts. _(linha 177)_
-8. Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts). _(linha 204)_
-9. Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API). _(linha 237)_
-10. Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto). _(linha 258)_
-11. Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage. _(linha 290)_
+7. Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts. _(linha 183)_
+8. Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts). _(linha 210)_
+9. Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API). _(linha 243)_
+10. Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto). _(linha 264)_
+11. Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage. _(linha 296)_
 
 ### `lib/toast.tsx`
 *mostra pequenos avisos no canto da tela ("Empresa salva.", "Algo deu errado") que somem sozinhos.*
@@ -984,4 +988,4 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 ---
 
-110 arquivos mapeados, 523 pontos vitais.
+110 arquivos mapeados, 527 pontos vitais.

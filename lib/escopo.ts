@@ -6,7 +6,7 @@
    Contexto: §3 (Perfis), §5 (quem vê o quê nos projetos) e §7 (segurança é do back-end).
    ============================================================================ */
 
-import type { Alocacao, Dados, Empresa, Perfil, Pessoa, Projeto, Tarefa } from './tipos.ts';
+import type { Alocacao, Dados, Empresa, Perfil, Pessoa, Projeto, Tarefa, Trilha } from './tipos.ts';
 
 /*
  * ⚠️ ATENÇÃO: isto é CONVENIÊNCIA DE INTERFACE. Filtrar aqui evita mostrar
@@ -120,4 +120,71 @@ export function pessoasVisiveis(sessao: SessaoEscopo, dados: Dados): Pessoa[] {
   const ids = new Set(alocacoesVisiveis(sessao, dados).map((a) => a.pessoaId));
   ids.add(sessao.pessoaId);
   return dados.pessoas.filter((p) => ids.has(p.id));
+}
+
+/**
+ * Id da empresa da sessão (só o perfil Empresa tem; admin e profissional devolvem undefined).
+ * @param sessao - quem está logado.
+ * @param dados - todos os dados.
+ * @returns o id da empresa vinculada, ou undefined.
+ */
+export function empresaDaSessao(sessao: SessaoEscopo, dados: Dados): string | undefined {
+  if (sessao.perfil !== 'empresa') return undefined;
+  return dados.pessoas.find((p) => p.id === sessao.pessoaId)?.empresaId || undefined;
+}
+
+// [PV-7] QUAIS TRILHAS A EMPRESA VÊ: as que ela criou e as que o administrador publicou para a empresa dela. Admin vê todas; profissional não abre o editor. TODO(PROGLOGIC): confirmar.
+/**
+ * Trilhas que a sessão enxerga no editor (/trilhas): admin todas; empresa as que ela criou
+ * (donaEmpresaId) e as de alcance "empresa" feitas para ela; profissional nenhuma.
+ * @param sessao - quem está logado.
+ * @param dados - todos os dados.
+ * @returns as trilhas visíveis.
+ * @example trilhasVisiveis({ pessoaId: 'pes_marcos', perfil: 'empresa' }, dados) // só as da Vértice
+ */
+export function trilhasVisiveis(sessao: SessaoEscopo, dados: Dados): Trilha[] {
+  if (sessao.perfil === 'admin') return dados.trilhas;
+  const empresaId = empresaDaSessao(sessao, dados);
+  if (!empresaId) return [];
+  return dados.trilhas.filter((t) => t.donaEmpresaId === empresaId || (t.alcance === 'empresa' && t.empresaId === empresaId));
+}
+
+/**
+ * Diz se a sessão pode abrir a trilha (usado no /trilhas/[id] digitado na URL).
+ * @param sessao - quem está logado.
+ * @param trilhaId - id da trilha.
+ * @param dados - todos os dados.
+ * @returns true se a trilha está no escopo.
+ */
+export function podeVerTrilha(sessao: SessaoEscopo, trilhaId: string, dados: Dados): boolean {
+  return trilhasVisiveis(sessao, dados).some((t) => t.id === trilhaId);
+}
+
+// [PV-8] QUEM PODE EDITAR A TRILHA: o admin edita qualquer uma; a empresa só as que ela criou (as publicadas pelo admin ela só acompanha).
+/**
+ * Diz se a sessão pode editar (publicar e excluir) a trilha.
+ * @param sessao - quem está logado.
+ * @param t - a trilha.
+ * @param dados - todos os dados.
+ * @returns true se pode editar.
+ */
+export function podeEditarTrilha(sessao: SessaoEscopo, t: Trilha, dados: Dados): boolean {
+  if (sessao.perfil === 'admin') return true;
+  const empresaId = empresaDaSessao(sessao, dados);
+  return !!empresaId && t.donaEmpresaId === empresaId;
+}
+
+// [PV-9] OS COLABORADORES DA EMPRESA: quem ela pode escolher para as trilhas dela = profissionais ativos alocados em algum projeto dela.
+/**
+ * Profissionais ativos que a empresa pode colocar nas trilhas dela: quem está alocado
+ * em algum projeto da empresa (o mesmo critério do alcance "empresa").
+ * @param empresaId - id da empresa.
+ * @param dados - todos os dados.
+ * @returns as pessoas, sem repetição.
+ * @example colaboradoresDaEmpresa('emp_vertice', dados).map((p) => p.nome)
+ */
+export function colaboradoresDaEmpresa(empresaId: string, dados: Dados): Pessoa[] {
+  const projetos = new Set(dados.projetos.filter((p) => p.empresaId === empresaId).map((p) => p.id));
+  const ids = new Set(dados.alocacoes.filter((a) => projetos.has(a.projetoId)).map((a) => a.pessoaId));
+  return dados.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo' && ids.has(p.id));
 }

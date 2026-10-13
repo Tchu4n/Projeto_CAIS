@@ -41,6 +41,8 @@ export const NAVEGACAO: {
   // depois de "Minhas tarefas" para o Profissional (só um deles aparece por perfil).
   { grupo: 'Programa', itens: [
     { href: '/trilhas', rotulo: 'Trilhas', icone: GraduationCap, perfis: ['admin'] },
+    // A empresa gerencia as trilhas do time (criar, escolher quem recebe, ver o progresso de cada pessoa).
+    { href: '/trilhas', rotulo: 'Trilhas do time', icone: GraduationCap, perfis: ['empresa'] },
     { href: '/carga', rotulo: 'Carga da equipe', icone: Gauge, perfis: ['admin'] },
     // [PV-2] A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional).
     { href: '/projetos', rotulo: 'Projetos', icone: FolderKanban, perfis: ['admin', 'empresa'] },

@@ -11,7 +11,7 @@ import {
   podeAcessar, podeFazer, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO,
   ROTAS_POR_PERFIL, ROTULO_DAS_ROTAS, ROTULO_DAS_ACOES, TODAS_AS_ACOES, rotasDoPerfil, permissaoDaAcao, mudancaDeAcesso,
 } from './permissoes.ts';
-import { projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
+import { colaboradoresDaEmpresa, podeEditarTrilha, podeVerTrilha, trilhasVisiveis, projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
 import { publicoDaTrilha } from './metricas.ts';
 import type { Dados, Pessoa, Tarefa } from './tipos.ts';
 
@@ -71,6 +71,10 @@ const trilhaGeral = (status: 'publicada' | 'rascunho', alcance: 'geral' | 'profi
   ],
   progresso: { pes_ana: { concluidas: 3 }, pes_bruno: { concluidas: 1 }, pes_carla: { concluidas: 2 } },
 });
+// Trilha criada pela empresa (dona = Vértice) e trilha feita pelo admin para a Aurora.
+const trilhaDaVertice = { ...trilhaGeral('publicada', 'profissional'), id: 'tri_v', empresaId: 'emp_vertice', donaEmpresaId: 'emp_vertice', pessoaIds: ['pes_ana'] };
+const trilhaDoAdminParaAurora = { ...trilhaGeral('publicada'), id: 'tri_a', alcance: 'empresa' as const, empresaId: 'emp_aurora' };
+const comTrilhas: Dados = { ...dados, trilhas: [trilhaGeral('publicada'), trilhaDaVertice, trilhaDoAdminParaAurora] };
 /** Os dados de teste com UMA trilha (para os casos da trilha obrigatória). */
 const comTrilha = (t: ReturnType<typeof trilhaGeral>): Dados => ({ ...dados, trilhas: [t] });
 
@@ -82,6 +86,18 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'empresa abre /projetos/prj_x (prefixo /projetos)', obtido: podeAcessar('empresa', '/projetos/prj_x'), esperado: true },
   { porque: 'profissional abre /minhas-tarefas', obtido: podeAcessar('profissional', '/minhas-tarefas'), esperado: true },
   { porque: 'empresa NÃO abre /minhas-tarefas', obtido: podeAcessar('empresa', '/minhas-tarefas'), esperado: false },
+  { porque: 'empresa abre /trilhas (cria e acompanha as do time)', obtido: podeAcessar('empresa', '/trilhas/tri_x'), esperado: true },
+  { porque: 'profissional NÃO abre /trilhas', obtido: podeAcessar('profissional', '/trilhas'), esperado: false },
+  { porque: 'trilhas visíveis: admin vê as 3', obtido: ids(trilhasVisiveis(admin, comTrilhas)), esperado: 'tri_a,tri_v,tri_x' },
+  { porque: 'trilhas visíveis: Marcos (Vértice) vê só a que a empresa criou', obtido: ids(trilhasVisiveis(marcos, comTrilhas)), esperado: 'tri_v' },
+  { porque: 'trilhas visíveis: Patrícia (Aurora) vê a que o admin fez para a Aurora', obtido: ids(trilhasVisiveis(patricia, comTrilhas)), esperado: 'tri_a' },
+  { porque: 'trilhas visíveis: profissional não vê nenhuma no editor', obtido: ids(trilhasVisiveis(ana, comTrilhas)), esperado: '' },
+  { porque: 'Marcos NÃO abre a trilha da Aurora pela URL', obtido: podeVerTrilha(marcos, 'tri_a', comTrilhas), esperado: false },
+  { porque: 'Marcos edita a trilha que a Vértice criou', obtido: podeEditarTrilha(marcos, trilhaDaVertice, comTrilhas), esperado: true },
+  { porque: 'Patrícia só acompanha a trilha que o admin fez para a Aurora (não edita)', obtido: podeEditarTrilha(patricia, trilhaDoAdminParaAurora, comTrilhas), esperado: false },
+  { porque: 'admin edita qualquer trilha', obtido: podeEditarTrilha(admin, trilhaDaVertice, comTrilhas), esperado: true },
+  { porque: 'colaboradores da Vértice = Ana e Bruno (alocados no projeto dela)', obtido: ids(colaboradoresDaEmpresa('emp_vertice', dados)), esperado: 'pes_ana,pes_bruno' },
+  { porque: 'colaboradores da Aurora = só a Carla', obtido: ids(colaboradoresDaEmpresa('emp_aurora', dados)), esperado: 'pes_carla' },
   { porque: 'empresa abre /minhas-trilhas', obtido: podeAcessar('empresa', '/minhas-trilhas'), esperado: true },
   { porque: 'admin NÃO abre /minhas-tarefas (é só do profissional)', obtido: podeAcessar('admin', '/minhas-tarefas'), esperado: false },
   { porque: 'rota não listada vale só para admin (profissional)', obtido: podeAcessar('profissional', '/qualquer-coisa'), esperado: false },
@@ -133,7 +149,7 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'permissaoDaAcao: empresa comenta = condicional (só no projeto que enxerga)', obtido: permissaoDaAcao('empresa', 'comentar_tarefa'), esperado: 'condicional' },
   { porque: 'permissaoDaAcao: empresa move tarefa = nao', obtido: permissaoDaAcao('empresa', 'mover_tarefa'), esperado: 'nao' },
   { porque: 'profissional → empresa: deixa de ver /minhas-tarefas', obtido: mudancaDeAcesso('profissional', 'empresa').deixaDeVer.join(','), esperado: '/minhas-tarefas' },
-  { porque: 'profissional → empresa: não passa a ver nenhuma tela nova', obtido: mudancaDeAcesso('profissional', 'empresa').passaAVer.join(','), esperado: '' },
+  { porque: 'profissional → empresa: passa a ver só /trilhas (as trilhas do time)', obtido: mudancaDeAcesso('profissional', 'empresa').passaAVer.join(','), esperado: '/trilhas' },
   { porque: 'empresa → admin: passa a ver as telas de cadastro', obtido: mudancaDeAcesso('empresa', 'admin').passaAVer.includes('/pessoas'), esperado: true },
   { porque: 'admin → profissional: perde criar_tarefa e não ganha ação nenhuma', obtido: mudancaDeAcesso('admin', 'profissional').perde.includes('criar_tarefa') && mudancaDeAcesso('admin', 'profissional').ganha.length === 0, esperado: true },
   { porque: 'sem nenhuma trilha, nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_bruno', dados), esperado: false },

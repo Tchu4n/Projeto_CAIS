@@ -22,6 +22,8 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Plus, GraduationCap, Layers, Users, Clock } from 'lucide-react';
 import { useDados } from '@/lib/store';
+import { useAuth } from '@/lib/auth';
+import { empresaDaSessao, trilhasVisiveis } from '@/lib/escopo';
 import { resumoTrilha } from '@/lib/metricas';
 import { ALCANCE } from '@/lib/trilhas';
 import { CabecalhoPagina, BarraFiltros } from '@/components/shell/Pagina';
@@ -41,15 +43,20 @@ import type { Trilha } from '@/lib/tipos';
  */
 export default function Trilhas() {
   const d = useDados();
+  const { sessao } = useAuth();
   const router = useRouter();
+  // A empresa só enxerga (e cria) as trilhas do time dela; o admin vê todas (lib/escopo.ts).
+  const ehEmpresa = sessao?.perfil === 'empresa';
+  const minhaEmpresa = sessao ? empresaDaSessao(sessao, d) : undefined;
+  const visiveis = useMemo(() => (sessao ? trilhasVisiveis(sessao, d) : []), [sessao, d]);
   // Filtro escolhido no seletor: todas, um dos três alcances ou só rascunhos.
   const [filtro, setFiltro] = useState<'todas' | Trilha['alcance'] | 'rascunho'>('todas');
 
   // [PV-1] O FILTRO DA LISTA: Todas, Gerais, Da empresa, Do profissional (pelo alcance) ou Rascunhos (pelo status).
   // "todas" deixa passar tudo; "rascunho" olha o status; os demais valores
   // ("geral", "empresa", "profissional") comparam com o alcance da trilha.
-  const lista = useMemo(() => d.trilhas.filter((t) =>
-    filtro === 'todas' ? true : filtro === 'rascunho' ? t.status === 'rascunho' : t.alcance === filtro), [d.trilhas, filtro]);
+  const lista = useMemo(() => visiveis.filter((t) =>
+    filtro === 'todas' ? true : filtro === 'rascunho' ? t.status === 'rascunho' : t.alcance === filtro), [visiveis, filtro]);
 
   // [PV-2] A TRILHA NOVA: nasce como rascunho, alcance geral e prazo de 7 dias; abre o editor, que salva sozinho. TODO(API): POST.
   /**
@@ -58,8 +65,11 @@ export default function Trilhas() {
    * no editor, que salva sozinho a cada mudança.
    */
   const nova = () => {
-    // novoId('tri') gera um id único com prefixo (ex.: "tri_x8k2...").
-    const t: Trilha = { id: novoId('tri'), titulo: 'Nova trilha', descricao: '', alcance: 'geral', empresaId: '', pessoaIds: [], status: 'rascunho', prazoDias: 7, etapas: [], progresso: {} };
+    // Empresa sem vínculo não cria (o botão nem aparece, mas a função se protege).
+    if (ehEmpresa && !minhaEmpresa) return;
+    // novoId('tri') gera um id único com prefixo (ex.: "tri_x8k2..."). A trilha da empresa nasce para o time
+    // todo (alcance 'empresa') e marcada com a empresa dona; a do admin nasce geral.
+    const t: Trilha = { id: novoId('tri'), titulo: 'Nova trilha', descricao: '', alcance: ehEmpresa ? 'empresa' : 'geral', empresaId: ehEmpresa ? minhaEmpresa! : '', ...(ehEmpresa ? { donaEmpresaId: minhaEmpresa } : {}), pessoaIds: [], status: 'rascunho', prazoDias: 7, etapas: [], progresso: {} };
     // GRAVA: a nova trilha na store (e no localStorage, pela store).
     // TODO(API): vira um POST para a API da PROGLOGIC (a store cuida disso).
     d.salvar('trilhas', t);
@@ -69,13 +79,15 @@ export default function Trilhas() {
 
   return (
     <div className="mx-auto max-w-[1400px] p-4 sm:p-6 lg:p-8">
-      <CabecalhoPagina titulo="Trilhas" descricao="Uma trilha, três formas de atribuir. Quem decide o alcance é o administrador, na hora de publicar."
+      <CabecalhoPagina titulo="Trilhas" descricao={ehEmpresa ? 'As trilhas do seu time: crie, escolha quem recebe e acompanhe o progresso de cada pessoa.' : 'Uma trilha, três formas de atribuir. Quem decide o alcance é o administrador, na hora de publicar.'}
         acao={<Button onClick={nova}><Plus className="h-4 w-4" aria-hidden />Nova trilha</Button>} />
 
       {/* Filtro sempre acima do conteúdo (§10). */}
       <BarraFiltros>
         <Segmentado rotulo="Filtrar trilhas" valor={filtro} onChange={setFiltro}
-          opcoes={[{ valor: 'todas', rotulo: 'Todas' }, { valor: 'geral', rotulo: 'Gerais' }, { valor: 'empresa', rotulo: 'Da empresa' }, { valor: 'profissional', rotulo: 'Do profissional' }, { valor: 'rascunho', rotulo: 'Rascunhos' }]} />
+          opcoes={ehEmpresa
+            ? [{ valor: 'todas', rotulo: 'Todas' }, { valor: 'empresa', rotulo: 'Time todo' }, { valor: 'profissional', rotulo: 'Pessoas escolhidas' }, { valor: 'rascunho', rotulo: 'Rascunhos' }]
+            : [{ valor: 'todas', rotulo: 'Todas' }, { valor: 'geral', rotulo: 'Gerais' }, { valor: 'empresa', rotulo: 'Da empresa' }, { valor: 'profissional', rotulo: 'Do profissional' }, { valor: 'rascunho', rotulo: 'Rascunhos' }]} />
       </BarraFiltros>
 
       {/* Estados da tela (§13): carregando → esqueletos; vazio → explica e
@@ -84,7 +96,7 @@ export default function Trilhas() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((i) => <Esqueleto key={i} className="h-56 rounded-2xl" />)}</div>
       ) : lista.length === 0 ? (
         <div className="rounded-2xl border border-borda bg-superficie">
-          <EstadoVazio icone={<GraduationCap className="h-6 w-6" />} titulo="Nenhuma trilha aqui" descricao="Crie uma trilha, monte as etapas e escolha o público na hora de publicar."
+          <EstadoVazio icone={<GraduationCap className="h-6 w-6" />} titulo="Nenhuma trilha aqui" descricao={ehEmpresa ? 'Crie uma trilha para o seu time, monte as etapas e escolha quem recebe.' : 'Crie uma trilha, monte as etapas e escolha o público na hora de publicar.'}
             acao={<Button onClick={nova}><Plus className="h-4 w-4" />Nova trilha</Button>} />
         </div>
       ) : (

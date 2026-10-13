@@ -27,7 +27,7 @@ import Sidebar from '@/components/shell/Sidebar';
 import Topbar from '@/components/shell/Topbar';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
-import { podeVerProjeto } from '@/lib/escopo';
+import { podeVerProjeto, podeVerTrilha } from '@/lib/escopo';
 import { podeAcessar, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO } from '@/lib/permissoes';
 import TrilhaPendente from '@/components/shell/TrilhaPendente';
 import { CaisMark } from '@/components/CaisLogo';
@@ -115,6 +115,9 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     else {
       const idProjeto = caminho.split('/')[1] === 'projetos' ? caminho.split('/')[2] : undefined;
       if (idProjeto && dados.pronto && !dados.erro && dados.projeto(idProjeto) && !podeVerProjeto(sessao, idProjeto, dados)) router.replace('/sem-permissao');
+      // NAVEGA: o mesmo para trilha: a empresa só abre as dela (/trilhas/<id>); o admin abre todas.
+      const idTrilha = caminho.split('/')[1] === 'trilhas' ? caminho.split('/')[2] : undefined;
+      if (idTrilha && dados.pronto && !dados.erro && dados.trilhas.some((t) => t.id === idTrilha) && !podeVerTrilha(sessao, idTrilha, dados)) router.replace('/sem-permissao');
     }
   }, [pronto, sessao, router, caminho, dados]);
 

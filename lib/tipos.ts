@@ -133,7 +133,13 @@ export interface Trilha {
   empresaId: string;
   /** Preenchido só quando alcance = 'profissional'. */
   pessoaIds: string[];
-  /** Rascunho não aparece para ninguém além do admin. */
+  /**
+   * Preenchido quando a trilha foi criada por uma EMPRESA (id da empresa dona). Só a dona edita; trilhas
+   * criadas pelo administrador não têm este campo. Opcional: dados antigos não têm.
+   * TODO(PROGLOGIC): confirmar que a empresa pode criar trilhas próprias para o time dela.
+   */
+  donaEmpresaId?: string;
+  /** Rascunho não aparece para ninguém além do admin (e da empresa dona). */
   status: 'rascunho' | 'publicada';
   /**
    * Prazo para concluir, em dias, definido pelo administrador (em geral a pedido da empresa).

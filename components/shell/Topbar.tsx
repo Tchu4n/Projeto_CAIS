@@ -23,7 +23,7 @@ import { Avatar, Etiqueta } from '@/components/ui/basicos';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { useToast } from '@/lib/toast';
-import { empresasVisiveis, pessoasVisiveis, projetosVisiveis, tarefasVisiveis } from '@/lib/escopo';
+import { empresasVisiveis, pessoasVisiveis, projetosVisiveis, tarefasVisiveis, trilhasVisiveis } from '@/lib/escopo';
 import { podeAcessar } from '@/lib/permissoes';
 import type { Perfil } from '@/lib/tipos';
 import { cx, hojeISO, normalizar, dataCurta } from '@/lib/utils';
@@ -104,7 +104,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
       ...projetosVisiveis(sessao, dados).filter((p) => m(p.nome)).map((p) => ({ id: p.id, tipo: 'Projeto', titulo: p.nome, sub: dados.empresa(p.empresaId)?.nomeFantasia ?? '', href: `/projetos/${p.id}`, icone: FolderKanban })),
       ...(podeAcessar(perfil, '/empresas') ? empresasVisiveis(sessao, dados) : []).filter((e) => m(e.nomeFantasia) || m(e.razaoSocial) || m(e.cnpj)).map((e) => ({ id: e.id, tipo: 'Empresa', titulo: e.nomeFantasia, sub: e.cnpj, href: `/empresas?abrir=${e.id}`, icone: Building2 })),
       ...(podeAcessar(perfil, '/pessoas') ? pessoasVisiveis(sessao, dados) : []).filter((p) => m(p.nome) || m(p.email)).map((p) => ({ id: p.id, tipo: 'Pessoa', titulo: p.nome, sub: p.email, href: `/pessoas?abrir=${p.id}`, icone: Users })),
-      ...(podeAcessar(perfil, '/trilhas') ? dados.trilhas : []).filter((t) => m(t.titulo)).map((t) => ({ id: t.id, tipo: 'Trilha', titulo: t.titulo, sub: `${t.etapas.length} etapas`, href: `/trilhas/${t.id}`, icone: GraduationCap })),
+      ...(podeAcessar(perfil, '/trilhas') ? trilhasVisiveis(sessao, dados) : []).filter((t) => m(t.titulo)).map((t) => ({ id: t.id, tipo: 'Trilha', titulo: t.titulo, sub: `${t.etapas.length} etapas`, href: `/trilhas/${t.id}`, icone: GraduationCap })),
     ].slice(0, 8);
   }, [busca, dados, sessao]);
 
