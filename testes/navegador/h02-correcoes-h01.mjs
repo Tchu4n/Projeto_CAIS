@@ -34,6 +34,7 @@ await ir('/painel?de=2026-01-01&ate=2026-01-31', 2000);
 c('período personalizado da URL abre os campos de data', (await campos()) >= 2, String(await campos()));
 // O que o botão Voltar faz: a URL muda por fora (aqui, navegação do próprio Next para o painel sem ?de=&ate=,
 // que equivale ao atalho de 30 dias). Os campos de data precisam fechar.
+// NAVEGA: troca a URL do painel pelo roteador do Next (as duas chamadas abaixo).
 await ev(`window.next.router.push('/painel')`);
 await espera(1500);
 c('URL muda por fora para um atalho → os campos de data fecham', (await campos()) === 0, String(await campos()));
