@@ -10,6 +10,7 @@
 import { Card, Etiqueta, Progresso } from "@/components/ui/basicos";
 import { BarraEmpilhada, Legenda, type Segmento } from "@/components/ui/Graficos";
 import CabecalhoSecao from "./CabecalhoSecao";
+import CargaEmRolagem from "./CargaEmRolagem";
 
 // [PV-1] A LISTA do que a empresa vê no painel dela (§6), lida pelo leitor de tela no lugar da prévia ilustrada.
 // O que a empresa vê no painel dela (§6).
@@ -30,6 +31,7 @@ const ENTREGAS: Segmento[] = [
 // [PV-3] A seção "Para sua empresa" (id empresa): o texto à esquerda e a prévia decorativa do painel à direita.
 /**
  * Seção "Para sua empresa". Server Component.
+ * As barras e os percentuais da prévia carregam conforme a pessoa desce a página (CargaEmRolagem).
  * A prévia do painel é decorativa: fica com aria-hidden e o leitor de tela
  * recebe, no lugar, o parágrafo e a lista que descrevem o que a empresa vê.
  * A legenda "Imagem ilustrativa, com dados fictícios" fica FORA do aria-hidden,
@@ -60,6 +62,7 @@ export default function ParaSuaEmpresa() {
 
         <figure>
           {/* Prévia do painel. aria-hidden: é só ilustração; o texto ao lado já descreve tudo. */}
+          <CargaEmRolagem>
           <div aria-hidden="true" className="rounded-2xl border border-borda bg-fundo p-4 shadow-card sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <p className="font-space text-base font-semibold text-tinta">Painel da empresa</p>
@@ -69,8 +72,8 @@ export default function ParaSuaEmpresa() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <Card className="p-4">
                 <p className="text-[13px] font-medium text-tinta-suave">Projeto A</p>
-                <p className="mt-1 font-space text-2xl font-semibold text-tinta">72%</p>
-                <div className="mt-3">
+                <p className="mt-1 font-space text-2xl font-semibold text-tinta"><span data-contar="72">72%</span></p>
+                <div data-carga className="mt-3 overflow-hidden rounded-full">
                   <Progresso valor={72} tom="primaria" fino />
                 </div>
                 <div className="mt-3">
@@ -79,8 +82,8 @@ export default function ParaSuaEmpresa() {
               </Card>
               <Card className="p-4">
                 <p className="text-[13px] font-medium text-tinta-suave">Projeto B</p>
-                <p className="mt-1 font-space text-2xl font-semibold text-tinta">35%</p>
-                <div className="mt-3">
+                <p className="mt-1 font-space text-2xl font-semibold text-tinta"><span data-contar="35">35%</span></p>
+                <div data-carga className="mt-3 overflow-hidden rounded-full">
                   <Progresso valor={35} tom="aviso" fino />
                 </div>
                 <div className="mt-3">
@@ -91,7 +94,7 @@ export default function ParaSuaEmpresa() {
 
             <Card className="mt-4 p-4">
               <p className="text-[13px] font-medium text-tinta-suave">Entregas</p>
-              <div className="mt-3">
+              <div data-carga className="mt-3 overflow-hidden rounded-full">
                 <BarraEmpilhada segmentos={ENTREGAS} altura={12} />
               </div>
               <div className="mt-3">
@@ -101,11 +104,12 @@ export default function ParaSuaEmpresa() {
 
             <Card className="mt-4 p-4">
               <p className="text-[13px] font-medium text-tinta-suave">Trilha do time</p>
-              <div className="mt-3">
+              <div data-carga className="mt-3 overflow-hidden rounded-full">
                 <Progresso valor={60} tom="sucesso" />
               </div>
             </Card>
           </div>
+          </CargaEmRolagem>
           <figcaption className="mt-3 text-center text-[13px] text-tinta-suave">
             Imagem ilustrativa, com dados fictícios.
           </figcaption>

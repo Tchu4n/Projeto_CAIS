@@ -245,6 +245,19 @@ body {
   [data-revelar="esconde"].passo-linha::before { transform: scaleX(0); }
   [data-revelar="mostra"].passo-linha::before { transform: scaleX(1); }
 }
+/* Barras da prévia do painel (components/home/CargaEmRolagem.tsx): uma "cortina" com a cor da trilha cobre a parte
+ * ainda não carregada, da posição --carga (0 a 1, escrita pelo script ao rolar) até a ponta direita. Sem script, --carga vale 1 (barra cheia). */
+[data-carga] { position: relative; }
+[data-carga]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: calc(var(--carga, 1) * 100%);
+  background: var(--superficie-alt);
+  pointer-events: none;
+}
 /* Cartões da homepage erguem um pouco ao passar o mouse. */
 .cartao-erguido { transition: transform 200ms ease-out, box-shadow 200ms ease-out; }
 .cartao-erguido:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14); }

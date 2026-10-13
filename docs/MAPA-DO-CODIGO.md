@@ -331,12 +331,17 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. A CHAMADA PRINCIPAL da homepage (o único h1) e o texto de apoio logo abaixo. Mude aqui para trocar a mensagem de abertura. _(linha 36)_
 2. OS DOIS BOTÕES da abertura: "Quero trazer minha empresa" rola até #participar (FormularioInteresse) e "Já tenho acesso" vai para /login. _(linha 46)_
 
+### `components/home/LinkRolar.tsx`
+*um link de âncora (#secao) que rola até a seção TODA vez que é clicado, inclusive quando a URL já termina na mesma âncora.*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
 ### `components/home/ParaSuaEmpresa.tsx`
 *explica o que a empresa vê no CAIS e mostra uma prévia ILUSTRATIVA do painel da empresa, com dados fictícios.*
 
-1. A LISTA do que a empresa vê no painel dela (§6), lida pelo leitor de tela no lugar da prévia ilustrada. _(linha 14)_
-2. OS NÚMEROS DA PRÉVIA do painel: dados FICTÍCIOS só para ilustrar (a legenda da imagem avisa isso). _(linha 23)_
-3. A seção "Para sua empresa" (id empresa): o texto à esquerda e a prévia decorativa do painel à direita. _(linha 30)_
+1. A LISTA do que a empresa vê no painel dela (§6), lida pelo leitor de tela no lugar da prévia ilustrada. _(linha 15)_
+2. OS NÚMEROS DA PRÉVIA do painel: dados FICTÍCIOS só para ilustrar (a legenda da imagem avisa isso). _(linha 24)_
+3. A seção "Para sua empresa" (id empresa): o texto à esquerda e a prévia decorativa do painel à direita. _(linha 31)_
 
 ### `components/home/Perfis.tsx`
 *três cards com os perfis do sistema (Administrador, Empresa e Profissional), destacando o da Empresa.*
@@ -360,6 +365,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 2. OS TEXTOS DA COLUNA "Com o CAIS" (§2). _(linha 22)_
 3. A seção "O programa" (id programa): título, descrição e as duas colunas. O id é o destino do link de secoes.ts. _(linha 32)_
 
+### `components/home/Revelar.tsx`
+*um envoltório que faz o conteúdo surgir (sobe e ganha opacidade) quando entra na tela durante a rolagem, com um atraso opcional para aparecer "um a um".*
+
+1. O QUANTO DO ITEM PRECISA APARECER para a animação disparar (15%) e a folga inferior da tela (10%). Aumente para animar só quando o item já estiver bem à vista. _(linha 23)_
+
 ### `components/home/RodapeHome.tsx`
 *faixa escura no fim da página com a logo, o nome do programa, os links das seções e o link "Entrar".*
 
@@ -380,6 +390,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 3. O BOTÃO DO TOPO: sem sessão mostra "Entrar" e leva a /login; com sessão mostra "Ir para o sistema" e leva a /painel. A home não redireciona quem já está logado. _(linha 51)_
 4. O menu do celular fecha com Esc (e devolve o foco ao botão que o abriu). _(linha 64)_
 5. Os links de seção no desktop (a partir de 768 px); no celular viram o menu que abre e fecha logo abaixo. A lista vem de ./secoes. _(linha 101)_
+
+### `components/home/VoltarAoTopo.tsx`
+*botão redondo fixo no canto inferior direito que aparece depois de descer a página, com um anel que mostra quanto da página já foi lida, e leva de volta ao início.*
+
+1. A PARTIR DE QUANTOS PIXELS DE ROLAGEM o botão "Voltar ao topo" aparece (400). Diminua para aparecer mais cedo. _(linha 14)_
 
 ### `components/input.tsx`
 *campo de texto com rótulo, ícone, estados (padrão, foco, sucesso, erro, desabilitado), mensagem de ajuda/erro e mostrar/ocultar senha.*
@@ -990,4 +1005,4 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 ---
 
-110 arquivos mapeados, 529 pontos vitais.
+113 arquivos mapeados, 531 pontos vitais.

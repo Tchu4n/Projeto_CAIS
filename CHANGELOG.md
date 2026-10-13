@@ -5,6 +5,7 @@ Cada entrada lista o que foi criado, modificado e removido.
 ## Homepage mais dinâmica (13/10/2026)
 - Criado: components/home/VoltarAoTopo.tsx (botão redondo no canto inferior direito, com anel de progresso da leitura, aparece após 400 px de rolagem), LinkRolar.tsx (o botão "Quero trazer minha empresa" rola TODA vez) e Revelar.tsx (itens sobem ao entrar na tela); testes/navegador/h05-home-dinamica.mjs.
 - Modificado: os passos de "Como funciona" aparecem um a um (círculo, depois a linha até o próximo); os cartões de Pilares e Perfis entram em sequência e erguem no hover; a abertura (Hero) entra em etapas. Tudo se desliga com prefers-reduced-motion.
+- Barras da prévia do painel (seção "Para sua empresa") e os percentuais 72% e 35% carregam conforme a pessoa desce e esvaziam ao subir (components/home/CargaEmRolagem.tsx).
 - Corrigido: o botão da abertura não rolava de novo depois de subir a página (o Link do Next não repete a mesma âncora).
 - Removido: nada.
 

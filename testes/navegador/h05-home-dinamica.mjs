@@ -50,5 +50,22 @@ await espera(3500);
 const passos = await ev(`[...document.querySelectorAll('#como-funciona ol > li')].map((li) => li.getAttribute('data-revelar'))`);
 c('os 4 passos de "Como funciona" foram revelados', passos.length === 4 && passos.every((p) => p === 'mostra' || p === null), JSON.stringify(passos));
 
+// 4) As barras da prévia do painel carregam enquanto a pessoa desce (e esvaziam ao subir).
+/** Cargas (0 a 1) das 4 barras e o texto dos dois percentuais. */
+const barras = () => ev(`({ cargas: [...document.querySelectorAll('#empresa [data-carga]')].map((b) => Number(b.style.getPropertyValue('--carga') || 1)), numeros: [...document.querySelectorAll('#empresa [data-contar]')].map((n) => n.textContent) })`);
+await ev(`window.scrollTo(0, document.getElementById('empresa').offsetTop - window.innerHeight * 0.9)`);
+await espera(600);
+const comeco = await barras();
+// Põe a primeira barra a 73% da altura da tela: no meio do caminho entre o início (92%) e o fim (55%).
+await ev(`window.scrollTo(0, window.scrollY + document.querySelector('#empresa [data-carga]').getBoundingClientRect().top - window.innerHeight * 0.73)`);
+await espera(600);
+const meio = await barras();
+await ev(`window.scrollTo(0, document.getElementById('empresa').offsetTop + 200)`);
+await espera(600);
+const fim = await barras();
+c('barras começam vazias quando a seção está entrando', comeco.cargas.every((x) => x < 0.3), JSON.stringify(comeco.cargas));
+c('as barras vão enchendo conforme desce', meio.cargas[0] > 0.2 && meio.cargas[0] < 0.8 && fim.cargas.every((x) => x === 1), `${comeco.cargas[0].toFixed(2)} → ${meio.cargas[0].toFixed(2)} → ${fim.cargas[0]}`);
+c('os percentuais contam até 72% e 35%', fim.numeros.join(',') === '72%,35%' && comeco.numeros[0] !== '72%', `${comeco.numeros} → ${fim.numeros}`);
+
 c.resumo();
 process.exit(process.exitCode ?? 0);
