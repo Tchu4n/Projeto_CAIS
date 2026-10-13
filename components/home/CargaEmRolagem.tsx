@@ -41,6 +41,7 @@ export default function CargaEmRolagem({ children }: { children: ReactNode }) {
       const topo = alvo.getBoundingClientRect().top / window.innerHeight;
       return Math.max(0, Math.min(1, (INICIO - topo) / (INICIO - FIM)));
     };
+    /** Recalcula --carga de cada barra e o texto de cada número, pela posição atual na tela. */
     const atualizar = () => {
       quadro = 0;
       el.querySelectorAll<HTMLElement>("[data-carga]").forEach((b) => b.style.setProperty("--carga", String(carga(b))));
@@ -48,6 +49,7 @@ export default function CargaEmRolagem({ children }: { children: ReactNode }) {
         n.textContent = `${Math.round(Number(n.dataset.contar) * carga(n))}%`;
       });
     };
+    /** Agenda UM recálculo por quadro, por maior que seja o número de eventos de rolagem. */
     const aoMudar = () => {
       if (!quadro) quadro = requestAnimationFrame(atualizar);
     };

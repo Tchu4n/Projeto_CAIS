@@ -32,12 +32,14 @@ export default function VoltarAoTopo() {
   // e a limpeza remove o ouvinte e cancela o quadro pendente.
   useEffect(() => {
     let quadro = 0;
+    /** Lê a rolagem e atualiza o anel de progresso e a visibilidade do botão. */
     const atualizar = () => {
       quadro = 0;
       const total = document.documentElement.scrollHeight - window.innerHeight;
       setProgresso(total > 0 ? Math.min(1, window.scrollY / total) : 0);
       setVisivel(window.scrollY > APARECE_APOS);
     };
+    /** Agenda UM cálculo por quadro, por maior que seja o número de eventos de rolagem. */
     const aoRolar = () => {
       if (!quadro) quadro = requestAnimationFrame(atualizar);
     };

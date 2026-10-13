@@ -309,6 +309,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 1. O CABEÇALHO PADRÃO das seções da homepage (rótulo, h2 e descrição). Mude aqui para mudar todas. _(linha 22)_
 
+### `components/home/CargaEmRolagem.tsx`
+*um envoltório que liga a rolagem da página ao preenchimento das barras (elementos com data-carga) e à contagem dos números (elementos com data-contar) dentro dele. Quanto mais o item sobe na tela, mais cheio ele fica; se a pessoa subir de novo, ele esvazia junto.*
+
+1. ONDE A CARGA COMEÇA E TERMINA: a barra começa a encher quando o topo dela passa de 92% da altura da tela e fica cheia quando chegou a 55%. Mude para encher mais cedo ou mais tarde. _(linha 14)_
+
 ### `components/home/ComoFunciona.tsx`
 *linha do tempo em 4 passos (Empresa, Projeto, Alocação, Tarefa) e o bloco "A trilha da sua empresa".*
 
@@ -1005,4 +1010,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-113 arquivos mapeados, 531 pontos vitais.
+114 arquivos mapeados, 532 pontos vitais.
