@@ -74,6 +74,8 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
   // ⚠️ ATENÇÃO: o mesmo 'mover_tarefa' é conferido em components/projetos/Quadro.tsx; as duas
   // telas precisam concordar, senão dá para mover pelo detalhe o que o quadro bloqueia.
   const podeEditar = !!sessao && podeFazer(sessao.perfil, 'editar_tarefa');
+  // Marcar/desmarcar item do checklist: admin em qualquer tarefa, profissional só nas próprias, empresa nunca.
+  const podeMarcar = !!sessao && podeFazer(sessao.perfil, 'marcar_checklist', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   const podeExcluir = !!sessao && podeFazer(sessao.perfil, 'excluir_tarefa');
   const podeMover = !!sessao && podeFazer(sessao.perfil, 'mover_tarefa', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   // Comentar: qualquer perfil que enxerga o projeto (escopo em lib/escopo.ts).
@@ -189,7 +191,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
               </div>
             )}
             <ul className="space-y-1">
-              {t.checklist.map((c) => !podeEditar ? (
+              {t.checklist.map((c) => !podeEditar && !podeMarcar ? (
                 // Somente leitura: ícone + texto; o estado (feito/pendente) vai também em texto para leitor de tela.
                 <li key={c.id} className="flex items-center gap-2.5 px-2 py-1.5 text-sm">
                   {c.feito ? <CheckSquare className="h-4 w-4 text-sucesso" aria-hidden /> : <Square className="h-4 w-4 text-tinta-fraca" aria-hidden />}
@@ -199,7 +201,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
               ) : (
                 // "group" permite que o botão de remover apareça só no hover da linha.
                 <li key={c.id} className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-superficie-alt">
-                  <input type="checkbox" checked={c.feito} id={c.id} className="h-4 w-4 accent-[var(--primaria)]"
+                  <input type="checkbox" checked={c.feito} id={c.id} className="h-4 w-4 accent-[var(--primaria)]" disabled={!podeMarcar}
                     // GRAVA: inverte o "feito" só deste item.
                     onChange={() => atualizar({ checklist: t.checklist.map((x) => x.id === c.id ? { ...x, feito: !x.feito } : x) })} />
                   <label htmlFor={c.id} className={cx('flex-1 cursor-pointer text-sm', c.feito ? 'text-tinta-suave line-through' : 'text-tinta')}>{c.texto}</label>
@@ -207,8 +209,8 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
                     * APAGA: remove o item do checklist. Invisível (opacity-0) até o
                     * mouse passar na linha ou o botão receber foco pelo teclado.
                     */}
-                  <button onClick={() => atualizar({ checklist: t.checklist.filter((x) => x.id !== c.id) })} aria-label={`Remover item ${c.texto}`}
-                    className="rounded p-1 text-tinta-fraca opacity-0 hover:text-erro focus:opacity-100 group-hover:opacity-100"><X className="h-3.5 w-3.5" /></button>
+                  {podeEditar && (<button onClick={() => atualizar({ checklist: t.checklist.filter((x) => x.id !== c.id) })} aria-label={`Remover item ${c.texto}`}
+                    className="rounded p-1 text-tinta-fraca opacity-0 hover:text-erro focus:opacity-100 group-hover:opacity-100"><X className="h-3.5 w-3.5" /></button>)}
                 </li>
               ))}
             </ul>

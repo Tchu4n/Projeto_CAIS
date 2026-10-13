@@ -508,13 +508,13 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 1. AS ETIQUETAS-ATALHO oferecidas no detalhe da tarefa; o campo "Nova etiqueta" cria outras. A cor de cada uma está em components/ui/basicos.tsx (FIXAS). _(linha 35)_
 2. AS PERMISSÕES DO DETALHE (editar, excluir, mover, comentar), todas por podeFazer (lib/permissoes.ts). Quem não pode editar vê os campos como texto. O "mover" precisa concordar com o Quadro. _(linha 72)_
-3. A APROVAÇÃO DA ENTREGA (decisão da PROGLOGIC, 09/10/2026): só a empresa dona do projeto aprova, e só com a tarefa em Revisão ou Pronto. Desfazer apaga a data e quem aprovou. _(linha 81)_
-4. QUEM ANEXA ARQUIVO: o administrador em qualquer tarefa, o profissional só nas próprias; a empresa só vê a lista. _(linha 97)_
-5. QUEM PODE SER RESPONSÁVEL: os alocados no projeto mais o responsável atual (mesmo que já tenha saído da equipe). _(linha 102)_
-6. O SALVAR DO DETALHE: não há botão Salvar; cada campo grava ao mudar. TODO(API): vira PATCH da tarefa. _(linha 106)_
-7. A SEÇÃO "Aprovação da entrega": aparece com a tarefa em Revisão ou Pronto (ou já aprovada). Só a empresa vê o botão; os outros perfis veem o estado. _(linha 224)_
-8. O STATUS é o "mover para..." do celular, no lugar de arrastar: o administrador sempre, o profissional só nas próprias tarefas. _(linha 288)_
-9. A EXCLUSÃO DA TAREFA: em dois passos, só para quem pode excluir; apaga também checklist e comentários. TODO(API): DELETE da tarefa. _(linha 344)_
+3. A APROVAÇÃO DA ENTREGA (decisão da PROGLOGIC, 09/10/2026): só a empresa dona do projeto aprova, e só com a tarefa em Revisão ou Pronto. Desfazer apaga a data e quem aprovou. _(linha 83)_
+4. QUEM ANEXA ARQUIVO: o administrador em qualquer tarefa, o profissional só nas próprias; a empresa só vê a lista. _(linha 99)_
+5. QUEM PODE SER RESPONSÁVEL: os alocados no projeto mais o responsável atual (mesmo que já tenha saído da equipe). _(linha 104)_
+6. O SALVAR DO DETALHE: não há botão Salvar; cada campo grava ao mudar. TODO(API): vira PATCH da tarefa. _(linha 108)_
+7. A SEÇÃO "Aprovação da entrega": aparece com a tarefa em Revisão ou Pronto (ou já aprovada). Só a empresa vê o botão; os outros perfis veem o estado. _(linha 226)_
+8. O STATUS é o "mover para..." do celular, no lugar de arrastar: o administrador sempre, o profissional só nas próprias tarefas. _(linha 290)_
+9. A EXCLUSÃO DA TAREFA: em dois passos, só para quem pode excluir; apaga também checklist e comentários. TODO(API): DELETE da tarefa. _(linha 346)_
 
 ### `components/projetos/Equipe.tsx`
 *a aba Equipe do projeto (tabela de alocações + modal para alocar/editar). Editar e remover alocação só aparecem para quem pode alocar (Admin). A Empresa aloca o time nos projetos dela e vê as horas por pessoa; só o admin vê o semáforo e as trilhas das pessoas (privacidade).*
@@ -831,20 +831,20 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 1. QUEM ABRE CADA TELA: a lista de rotas por perfil. Tela nova precisa entrar aqui (rota fora da lista é só do admin) e no menu (components/shell/navegacao.ts). _(linha 19)_
 2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 48)_
-3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 98)_
-4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 109)_
-5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 120)_
-6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 128)_
-7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 134)_
-8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 145)_
-9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 154)_
-10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 169)_
-11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 180)_
-12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 206)_
-13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 224)_
-14. Nomes das ações na tabela de permissões de /acessos. _(linha 244)_
-15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 259)_
-16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 292)_
+3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 99)_
+4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 110)_
+5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 121)_
+6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 129)_
+7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 135)_
+8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 146)_
+9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 155)_
+10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 179)_
+11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 190)_
+12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 216)_
+13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 234)_
+14. Nomes das ações na tabela de permissões de /acessos. _(linha 254)_
+15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 270)_
+16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 303)_
 
 ### `lib/preferencias.ts`
 *hook que devolve a densidade das tabelas escolhida pela pessoa logada (confortável ou compacta).*

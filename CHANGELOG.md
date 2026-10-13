@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Checklist da tarefa (13/10/2026)
+- Criado: ação `marcar_checklist` em lib/permissoes.ts (admin em qualquer tarefa, profissional só nas próprias, empresa nunca) com 6 casos novos; `testes/navegador/h04-checklist.mjs`.
+- Modificado: no detalhe da tarefa o profissional responsável passa a marcar e desmarcar os itens do checklist; adicionar e remover itens continua só do administrador; a empresa só vê (ela aprova a entrega). O quadro "O que cada perfil pode fazer" em /acessos ganhou a linha da ação.
+- Removido: nada.
+
 ## Trilhas da empresa (13/10/2026)
 - Criado: `donaEmpresaId` em Trilha (lib/tipos.ts); em lib/escopo.ts, `empresaDaSessao`, `trilhasVisiveis`, `podeVerTrilha`, `podeEditarTrilha` e `colaboradoresDaEmpresa`; item de menu "Trilhas do time" (empresa); 12 casos novos em lib/permissoes.casos.ts; `testes/navegador/h03-trilhas-da-empresa.mjs`.
 - Modificado: a empresa abre /trilhas e /trilhas/[id], mas só as trilhas dela (as que criou e as que o administrador fez para ela; outra pela URL cai em /sem-permissao). Cria trilha (nasce para o time todo), escolhe o alcance "Time todo" ou "Pessoas escolhidas" (só entre quem está alocado nos projetos dela), edita, publica e exclui as que criou; as do administrador ela só acompanha (quem recebe e progresso por pessoa). O painel da empresa ganhou "Ver quem" em cada trilha, com o nome e a situação (concluiu, em andamento, não iniciou). A busca do topo respeita o mesmo escopo.

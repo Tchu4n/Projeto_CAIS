@@ -83,13 +83,14 @@ export type Acao =
   | 'mover_tarefa'
   | 'comentar_tarefa'
   | 'anexar_arquivo'
+  | 'marcar_checklist'
   | 'aprovar_entrega';
 
 /** Informação extra que algumas ações precisam para decidir. */
 export interface ContextoAcao {
-  /** id da pessoa logada (para 'mover_tarefa' e 'anexar_arquivo'). */
+  /** id da pessoa logada (para 'mover_tarefa', 'anexar_arquivo' e 'marcar_checklist'). */
   pessoaId?: string;
-  /** id do responsável da tarefa (para 'mover_tarefa' e 'anexar_arquivo'). */
+  /** id do responsável da tarefa (para 'mover_tarefa', 'anexar_arquivo' e 'marcar_checklist'). */
   responsavelId?: string;
   /** true se a pessoa enxerga o projeto (para 'comentar_tarefa', 'alocar' e 'aprovar_entrega'; veja lib/escopo.ts). */
   enxergaProjeto?: boolean;
@@ -156,6 +157,15 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
     // só nas próprias; Empresa só vê (§5). Sem pessoaId ou responsavelId no contexto, nega (lado seguro).
     // TODO(PROGLOGIC): confirmar
     case 'anexar_arquivo':
+      if (perfil === 'admin') return true;
+      if (perfil === 'profissional') return !!contexto.pessoaId && contexto.pessoaId === contexto.responsavelId;
+      return false;
+
+    // Marcar e desmarcar os itens do checklist registra a EXECUÇÃO: admin em qualquer tarefa; profissional só nas próprias;
+    // a empresa nunca (ela aprova a entrega, e quem aprova não marca o que está sendo aprovado). Adicionar, editar e
+    // remover itens continua sendo 'editar_tarefa' (só admin). Sem pessoaId ou responsavelId, o profissional não marca.
+    // TODO(PROGLOGIC): confirmar
+    case 'marcar_checklist':
       if (perfil === 'admin') return true;
       if (perfil === 'profissional') return !!contexto.pessoaId && contexto.pessoaId === contexto.responsavelId;
       return false;
@@ -253,6 +263,7 @@ export const ROTULO_DAS_ACOES: Record<Acao, string> = {
   mover_tarefa: 'Mover tarefa de coluna',
   comentar_tarefa: 'Comentar em tarefa',
   anexar_arquivo: 'Anexar e remover arquivos da tarefa',
+  marcar_checklist: 'Marcar itens do checklist',
   aprovar_entrega: 'Aprovar a entrega de uma tarefa',
 };
 
@@ -261,7 +272,7 @@ export const ROTULO_DAS_ACOES: Record<Acao, string> = {
  * Todas as ações, na ordem em que aparecem na tabela de permissões.
  * ⚠️ ATENÇÃO: ação nova em `Acao` precisa entrar aqui e em ROTULO_DAS_ACOES (o TypeScript cobra o rótulo).
  */
-export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa', 'anexar_arquivo', 'aprovar_entrega'];
+export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa', 'anexar_arquivo', 'marcar_checklist', 'aprovar_entrega'];
 
 /**
  * Prefixos de rota que o perfil pode abrir (na ordem de ROTAS_POR_PERFIL).
@@ -294,6 +305,7 @@ export function permissaoDaAcao(perfil: Perfil, acao: Acao): 'sim' | 'nao' | 'co
 export const CONDICAO_DA_ACAO: Partial<Record<Acao, string>> = {
   mover_tarefa: 'só as próprias tarefas',
   anexar_arquivo: 'só as próprias tarefas',
+  marcar_checklist: 'só as próprias tarefas',
   alocar: 'só nos projetos da própria empresa',
   aprovar_entrega: 'só nos projetos da própria empresa',
   comentar_tarefa: 'só nos projetos que enxerga',
