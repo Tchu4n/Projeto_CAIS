@@ -160,7 +160,7 @@ export default function QuadroGeral({ projetos, tarefas, onAbrir, ordem, direcao
                   return (
                     <div key={t.id}>
                       {destacada && pos === alvo!.indice && t.id !== arrastando && <Espaco />}
-                      <CartaoTarefa tarefa={t} concluida={col.concluida} arrastando={arrastando === t.id} projetoNome={d.projeto(t.projetoId)?.nome}
+                      <CartaoTarefa tarefa={t} concluida={col.concluida} arrastando={arrastando === t.id} projetoNome={d.projeto(t.projetoId)?.nome} projetoCor={d.projeto(t.projetoId)?.cor}
                         arrastavel={pode(t.responsavelId)} cadeado={sessao?.perfil === 'profissional' && !pode(t.responsavelId)}
                         onAbrir={() => onAbrir(t.id)}
                         // dragstart: guarda o id; o setTimeout(0) deixa o navegador tirar a "foto" do cartão antes de apagá-lo.

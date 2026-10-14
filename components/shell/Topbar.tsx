@@ -1,12 +1,13 @@
 /* ============================================================================
    TOPBAR.TSX — BARRA DO TOPO DO SHELL
-   O que é: a faixa no alto de toda tela logada, com busca global (Ctrl+K),
+   O que é: a faixa no alto de toda tela logada, com busca global (Ctrl+K ou /),
    avisos (atrasos e sobrecarga), troca de tema e menu do perfil. Busca e avisos
-   só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts).
+   só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts);
+   a regra da busca mora em lib/busca.ts (projetos, tarefas, arquivos, empresas, pessoas e trilhas).
    No perfil Empresa, o nome da empresa aparece ao lado do avatar.
    Onde é usado: app/(sistema)/layout.tsx (em todas as telas logadas).
    Depende de: lib/auth (useAuth), lib/store (useDados), lib/toast (useToast),
-   lib/escopo (filtros por sessão), lib/permissoes (podeAcessar), lib/utils, next/navigation (useRouter), next/link, lucide-react,
+   lib/busca (buscarGlobal, placeholderDaBusca), lib/escopo (tarefas dos avisos), lib/permissoes (podeAcessar), lib/utils, next/navigation (useRouter), next/link, lucide-react,
    components/ThemeToggle, components/ui/Menu e components/ui/basicos (Avatar, Etiqueta).
    Contexto: §10 (anatomia: topo com busca, avisos e perfil), §5 (aviso de
    carga acima de 40 h: "é aviso, não bloqueio") e §15 (shell da aplicação).
@@ -16,21 +17,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, Menu as MenuIcone, Search, LogOut, RotateCcw, UserRound, Building2, Users, FolderKanban, GraduationCap, Clock, Gauge } from 'lucide-react';
+import { Bell, Menu as MenuIcone, Search, LogOut, RotateCcw, UserRound, Building2, Users, FolderKanban, GraduationCap, Clock, Gauge, ListChecks, Paperclip, type LucideIcon } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import Menu, { ItemMenu } from '@/components/ui/Menu';
 import { Avatar, Etiqueta } from '@/components/ui/basicos';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { useToast } from '@/lib/toast';
-import { empresasVisiveis, pessoasVisiveis, projetosVisiveis, tarefasVisiveis, trilhasVisiveis } from '@/lib/escopo';
+import { tarefasVisiveis } from '@/lib/escopo';
+import { buscarGlobal, placeholderDaBusca, MINIMO_DE_LETRAS, type TipoBusca } from '@/lib/busca';
 import { podeAcessar } from '@/lib/permissoes';
 import type { Perfil } from '@/lib/tipos';
-import { cx, hojeISO, normalizar, dataCurta } from '@/lib/utils';
+import { cx, hojeISO, dataCurta } from '@/lib/utils';
 
 // [PV-1] O nome do perfil mostrado na etiqueta do topo (Administrador, Empresa, Profissional).
 /** Nome de cada perfil, em português, para a Etiqueta ao lado do nome. */
 const NOME_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
+
+/**
+ * Ícone de cada tipo de resultado da busca. O tipo também aparece escrito na linha: cor e ícone nunca vão sozinhos.
+ * ⚠️ ATENÇÃO: tipo novo em lib/busca.ts (TIPOS_DE_BUSCA) precisa de um ícone aqui; o TypeScript cobra.
+ */
+const ICONE_DO_TIPO: Record<TipoBusca, LucideIcon> = {
+  Projeto: FolderKanban, Tarefa: ListChecks, Arquivo: Paperclip, Empresa: Building2, Pessoa: Users, Trilha: GraduationCap, 'Minha trilha': GraduationCap,
+};
 
 /**
  * Topo da aplicação: busca, avisos e o seu perfil (§10).
@@ -60,15 +70,23 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   const [sel, setSel] = useState(0);
   // Referência ao campo, para o atalho conseguir focá-lo.
   const campo = useRef<HTMLInputElement>(null);
+  // Cronômetro que esconde a lista depois que o campo perde o foco (ver onBlur). Guardado para poder ser
+  // cancelado: quem volta ao campo antes dos 150 ms (ex.: Ctrl+K logo depois de escolher um resultado) não pode perder a lista.
+  const fecharEm = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Roda ao sair da tela (limpeza): cancela o cronômetro pendente para não mexer em estado de componente desmontado.
+  useEffect(() => () => clearTimeout(fecharEm.current), []);
 
   // Atalho de teclado da busca. Roda uma vez, quando o Topbar aparece ([]);
   // a limpeza remove o ouvinte quando ele sai da tela.
   useEffect(() => {
-    // [PV-3] Os atalhos da busca: Ctrl+K (Cmd+K no Mac) sempre, e a barra "/" fora de campos de texto. Para mudar o atalho, é aqui.
+    // [PV-3] Os atalhos da busca: Ctrl+K (Cmd+K no Mac) fora de janelas abertas, e a barra "/" fora de campos de texto e de janelas. Para mudar o atalho, é aqui.
     const onKey = (e: KeyboardEvent) => {
       const alvo = e.target as HTMLElement;
-      // Está digitando num campo? Então "/" é só uma barra, não um atalho.
-      const digitando = ['INPUT', 'TEXTAREA', 'SELECT'].includes(alvo.tagName);
+      // Janela (modal) aberta: o foco fica preso nela e a lista da busca apareceria ATRÁS do fundo escuro, sem dar para clicar.
+      // Então o atalho não faz nada (e o navegador segue com o comportamento dele).
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      // Está digitando num campo? Então "/" é só uma barra, não um atalho (isContentEditable cobre editores de texto).
+      const digitando = ['INPUT', 'TEXTAREA', 'SELECT'].includes(alvo.tagName) || alvo.isContentEditable;
       // Ctrl+K (Cmd+K no Mac) funciona sempre; "/" só fora de campos de texto.
       if ((e.key === 'k' && (e.ctrlKey || e.metaKey)) || (e.key === '/' && !digitando)) {
         // Impede a ação padrão do navegador (Ctrl+K em alguns navegadores vai para a barra de endereço).
@@ -80,33 +98,23 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  // [PV-4] A BUSCA GLOBAL: só a partir de 2 letras, no máximo 8 resultados, em projetos, empresas, pessoas e trilhas, respeitando o que o perfil pode ver. TODO(API): vira chamada ao servidor.
+  // [PV-4] A BUSCA GLOBAL: a regra inteira está em lib/busca.ts (buscarGlobal): a partir de 2 letras, até 10 resultados repartidos entre projetos, tarefas, arquivos, empresas, pessoas e trilhas, só do que o perfil abre. Aqui só se liga o resultado à tela; o ícone de cada tipo está em ICONE_DO_TIPO. TODO(API): vira chamada ao servidor.
   // Resultados da busca: recalcula só quando o texto ou os dados mudam (useMemo).
-  // ESCOPO: cada tipo só entra se o perfil PODE abrir a tela dele (podeAcessar) e,
-  // dentro do tipo, só o que lib/escopo.ts deixa a sessão ver. Assim a busca nunca
-  // sugere um link que levaria a /sem-permissao nem revela dado de outra empresa.
+  // ESCOPO: lib/busca.ts só devolve o que o perfil abre (podeAcessar, lib/escopo.ts e a trava da trilha
+  // obrigatória), então a busca nunca sugere um link que levaria a /sem-permissao nem revela dado de outra empresa.
+  // Sem sessão não há escopo; com a store ainda carregando ou com erro, não há dado confiável para buscar:
+  // a lista mostra esses estados (abaixo) em vez de "Nada encontrado".
   // TODO(API): hoje a busca roda no navegador sobre a store; com a API da
   // PROGLOGIC vira uma chamada ao servidor (com debounce para não chamar a cada letra).
-  const resultados = useMemo(() => {
-    // normalizar tira acentos e maiúsculas: "sao" encontra "São".
-    const q = normalizar(busca.trim());
-    // Menos de 2 letras: não busca (1 letra traria quase tudo).
-    if (q.length < 2) return [];
-    // Sem sessão não há escopo: não mostra nada (o layout já teria redirecionado).
-    if (!sessao) return [];
-    const perfil = sessao.perfil;
-    // Atalho: "este texto contém o que foi buscado?".
-    const m = (s: string) => normalizar(s).includes(q);
-    // Junta os quatro tipos num formato único { tipo, titulo, sub, href, icone }
-    // e mostra no máximo 8. Empresas e pessoas não têm página própria: o
-    // "?abrir=<id>" pede à lista que abra o modal daquele item.
-    return [
-      ...projetosVisiveis(sessao, dados).filter((p) => m(p.nome)).map((p) => ({ id: p.id, tipo: 'Projeto', titulo: p.nome, sub: dados.empresa(p.empresaId)?.nomeFantasia ?? '', href: `/projetos/${p.id}`, icone: FolderKanban })),
-      ...(podeAcessar(perfil, '/empresas') ? empresasVisiveis(sessao, dados) : []).filter((e) => m(e.nomeFantasia) || m(e.razaoSocial) || m(e.cnpj)).map((e) => ({ id: e.id, tipo: 'Empresa', titulo: e.nomeFantasia, sub: e.cnpj, href: `/empresas?abrir=${e.id}`, icone: Building2 })),
-      ...(podeAcessar(perfil, '/pessoas') ? pessoasVisiveis(sessao, dados) : []).filter((p) => m(p.nome) || m(p.email)).map((p) => ({ id: p.id, tipo: 'Pessoa', titulo: p.nome, sub: p.email, href: `/pessoas?abrir=${p.id}`, icone: Users })),
-      ...(podeAcessar(perfil, '/trilhas') ? trilhasVisiveis(sessao, dados) : []).filter((t) => m(t.titulo)).map((t) => ({ id: t.id, tipo: 'Trilha', titulo: t.titulo, sub: `${t.etapas.length} etapas`, href: `/trilhas/${t.id}`, icone: GraduationCap })),
-    ].slice(0, 8);
-  }, [busca, dados, sessao]);
+  const resposta = useMemo(
+    () => (sessao && dados.pronto && !dados.erro ? buscarGlobal(busca, sessao, dados) : { itens: [], total: 0 }),
+    [busca, dados, sessao],
+  );
+  const resultados = resposta.itens;
+  // Destaque efetivo: o índice guardado pode ter ficado além do fim se a lista encolheu (dados mudaram).
+  const ativo = Math.max(0, Math.min(sel, resultados.length - 1));
+  // A lista abre com o campo focado e a partir de 2 letras (MINIMO_DE_LETRAS, lib/busca.ts).
+  const listaAberta = focado && busca.trim().length >= MINIMO_DE_LETRAS;
 
   // [PV-5] Ao escolher um resultado ou aviso: limpa a busca e navega para o endereço. Empresas e pessoas abrem a ficha com ?abrir=<id>.
   // NAVEGA: limpa a busca, tira o foco do campo (fecha a lista) e vai para o resultado.
@@ -152,45 +160,71 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
       {/* Busca global: Ctrl+K ou "/" focam o campo; resultados aparecem a partir de 2 letras. */}
       <div className="relative max-w-md flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tinta-fraca" aria-hidden />
-        <input ref={campo} type="search" value={busca} placeholder="Buscar projeto, empresa, pessoa…"
-          // role="combobox" + aria-expanded/aria-controls: o leitor de tela entende
-          // que o campo abre uma lista de sugestões.
-          aria-label="Busca global" role="combobox" aria-expanded={focado && resultados.length > 0} aria-controls="busca-resultados"
+        {/* [PV-7] O TEXTO DO CAMPO DE BUSCA: vem de placeholderDaBusca (lib/busca.ts), por perfil, e só promete o que o perfil acha (empresa e pessoa são só do administrador). */}
+        <input ref={campo} type="search" value={busca} placeholder={placeholderDaBusca(sessao?.perfil)} autoComplete="off"
+          // role="combobox" + aria-expanded/aria-controls/aria-activedescendant: o leitor de tela entende que o
+          // campo abre uma lista de sugestões e qual delas está destacada (as setas não movem o foco real).
+          aria-label="Busca global" role="combobox" aria-autocomplete="list" aria-expanded={listaAberta && resultados.length > 0} aria-controls="busca-resultados"
+          aria-activedescendant={listaAberta && resultados.length > 0 ? `busca-op-${ativo}` : undefined}
           // Ao digitar, o destaque volta para o 1º resultado.
           onChange={(e) => { setBusca(e.target.value); setSel(0); }}
           // onBlur espera 150 ms para esconder a lista: dá tempo de o clique no resultado acontecer.
-          onFocus={() => setFocado(true)} onBlur={() => setTimeout(() => setFocado(false), 150)}
+          // onFocus cancela esse cronômetro: voltar ao campo antes dos 150 ms não pode esconder a lista que acabou de abrir.
+          onFocus={() => { clearTimeout(fecharEm.current); setFocado(true); }}
+          onBlur={() => { fecharEm.current = setTimeout(() => setFocado(false), 150); }}
           // Teclado na busca: ↓/↑ movem o destaque sem passar das pontas, Enter abre o
           // resultado destacado e Esc limpa o texto e sai do campo.
+          // isComposing: Enter que confirma uma letra acentuada (teclado de celular, IME) não deve abrir o resultado.
           onKeyDown={(e) => {
-            if (e.key === 'ArrowDown') { e.preventDefault(); setSel((s) => Math.min(s + 1, resultados.length - 1)); }
-            if (e.key === 'ArrowUp') { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
-            if (e.key === 'Enter' && resultados[sel]) ir(resultados[sel].href);
+            if (e.key === 'ArrowDown') { e.preventDefault(); setSel(Math.min(ativo + 1, resultados.length - 1)); }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setSel(Math.max(ativo - 1, 0)); }
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing && listaAberta && resultados[ativo]) ir(resultados[ativo].href);
             if (e.key === 'Escape') { setBusca(''); campo.current?.blur(); }
           }}
           className="h-10 w-full rounded-xl border border-borda bg-fundo pl-9 pr-12 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:outline-none focus:ring-4 focus:ring-primaria/20" />
         {/* Dica visual do atalho (escondida no celular, onde não há teclado físico). */}
         <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded-md border border-borda px-1.5 text-[11px] text-tinta-fraca sm:block">Ctrl K</kbd>
 
-        {/* Lista de resultados: só com o campo focado e 2+ letras digitadas. */}
-        {focado && busca.trim().length >= 2 && (
-          <div id="busca-resultados" role="listbox" className="animate-modal-in absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-xl border border-borda bg-superficie p-1.5 shadow-card">
-            {/* Nenhum resultado: diz o que foi buscado, em vez de uma caixa vazia. */}
-            {resultados.length === 0 ? (
-              <p className="px-3 py-4 text-center text-sm text-tinta-suave">Nada encontrado para “{busca}”.</p>
-            ) : resultados.map((r, i) => (
-              <button key={r.tipo + r.id} role="option" aria-selected={i === sel} onMouseDown={(e) => e.preventDefault()} onClick={() => ir(r.href)} onMouseEnter={() => setSel(i)}
-                // onMouseDown + preventDefault (linha acima): o clique não tira o foco do campo
-                // antes de o onClick rodar. onMouseEnter sincroniza o destaque com o mouse.
-                className={cx('flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left', i === sel && 'bg-superficie-alt')}>
-                <r.icone className="h-4 w-4 shrink-0 text-tinta-fraca" aria-hidden />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-tinta">{r.titulo}</span>
-                  <span className="block truncate text-[12px] text-tinta-suave">{r.sub}</span>
-                </span>
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-tinta-fraca">{r.tipo}</span>
-              </button>
-            ))}
+        {/* Lista de resultados: só com o campo focado e 2+ letras digitadas.
+          * No celular (abaixo de sm) o campo é estreito, então a lista é "fixed" e ocupa a largura da tela
+          * (inset-x-3, logo abaixo do topo de 4 rem); de sm para cima volta a ser "absolute" na largura do campo.
+          * max-h + rolagem: com muitos resultados a lista rola por dentro, nunca passa da janela. */}
+        {listaAberta && (
+          <div className="animate-modal-in rolagem fixed inset-x-3 top-[4.25rem] z-50 max-h-[70vh] overflow-y-auto rounded-xl border border-borda bg-superficie p-1.5 shadow-card sm:absolute sm:inset-x-0 sm:top-full sm:mt-2">
+            {/* Estados da lista (§13): carregando e erro vêm antes de "nada encontrado", para não afirmar o que não se sabe. */}
+            {!dados.pronto ? (
+              <p role="status" className="px-3 py-4 text-center text-sm text-tinta-suave">Carregando os dados…</p>
+            ) : dados.erro ? (
+              <p role="status" className="px-3 py-4 text-center text-sm text-tinta-suave">Não foi possível ler os dados para buscar. Use “Tentar de novo” na tela.</p>
+            ) : resultados.length === 0 ? (
+              // Nenhum resultado: diz o que foi buscado e como tentar de novo, em vez de uma caixa vazia.
+              <p role="status" className="px-3 py-4 text-center text-sm text-tinta-suave">Nada encontrado para “{busca.trim()}”. Confira a grafia ou tente outra palavra.</p>
+            ) : (
+              <>
+                <div id="busca-resultados" role="listbox" aria-label="Resultados da busca">
+                  {resultados.map((r, i) => {
+                    const Icone = ICONE_DO_TIPO[r.tipo];
+                    return (
+                      <button key={r.tipo + r.id} id={`busca-op-${i}`} role="option" aria-selected={i === ativo} tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => ir(r.href)} onMouseEnter={() => setSel(i)}
+                        // onMouseDown + preventDefault (linha acima): o clique não tira o foco do campo
+                        // antes de o onClick rodar. onMouseEnter sincroniza o destaque com o mouse.
+                        className={cx('flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left', i === ativo && 'bg-superficie-alt')}>
+                        <Icone className="h-4 w-4 shrink-0 text-tinta-fraca" aria-hidden />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-tinta">{r.titulo}</span>
+                          <span className="block truncate text-[12px] text-tinta-suave">{r.sub}</span>
+                        </span>
+                        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-tinta-fraca">{r.tipo}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Havia mais do que cabe na lista: avisa e diz como achar o resto (digitar mais). */}
+                {resposta.total > resultados.length && (
+                  <p className="px-3 pb-1.5 pt-2 text-[12px] text-tinta-suave">Mostrando {resultados.length} de {resposta.total}. Digite mais letras para refinar.</p>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -269,7 +303,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
                   <UserRound aria-hidden />
                   Meu perfil
                 </Link>
-                {/* [PV-7] O item "Restaurar dados de demonstração" do menu do perfil: volta ao seed e APAGA o que foi editado. Só existe no protótipo. */}
+                {/* [PV-8] O item "Restaurar dados de demonstração" do menu do perfil: volta ao seed e APAGA o que foi editado. Só existe no protótipo. */}
                 {/* APAGA: descarta tudo o que foi criado ou alterado no protótipo.
                  * GRAVA: recoloca os dados de demonstração originais (seed) na store, que os
                  * salva no localStorage. Depois fecha o menu e confirma com um aviso (toast).
@@ -277,7 +311,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
                 <ItemMenu icone={<RotateCcw />} onClick={() => { dados.restaurarDemonstracao(); fechar(); avisar('Dados de demonstração restaurados.'); }}>
                   Restaurar dados de demonstração
                 </ItemMenu>
-                {/* [PV-8] O item "Sair": apaga a sessão e vai para /login (replace, para o Voltar não reabrir a tela de dentro). */}
+                {/* [PV-9] O item "Sair": apaga a sessão e vai para /login (replace, para o Voltar não reabrir a tela de dentro). */}
                 {/* APAGA: sair() remove a sessão salva (localStorage e sessionStorage).
                  * NAVEGA: replace('/login') vai para o login (a raiz "/" agora é a homepage)
                  * sem deixar a tela atual no histórico do "voltar". */}

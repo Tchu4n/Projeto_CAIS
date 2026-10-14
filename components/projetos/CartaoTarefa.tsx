@@ -4,7 +4,7 @@
    pode ser arrastado por quem pode mover a tarefa; os outros veem um cadeado.
    Onde é usado: components/projetos/Quadro.tsx e QuadroGeral.tsx (um cartão por tarefa da lista).
    Depende de: lucide-react (ícones), components/ui/basicos (Avatar,
-               EtiquetaTarefa), lib/store (useDados, Tarefa) e lib/utils
+               EtiquetaTarefa), ./MarcadorProjeto (faixa e bolinha do projeto), lib/store (useDados, Tarefa) e lib/utils
                (cx, dataCurta, diasEntre, hojeISO).
    Contexto: §5 Projetos (tarefa: responsável, prazo, etiquetas, checklist,
              comentários; kanban com três estados de arrastar).
@@ -15,6 +15,7 @@ import { DragEvent } from 'react';
 import { Clock, CheckSquare, MessageSquare, AlignLeft, CircleCheck, Lock } from 'lucide-react';
 import { Avatar, EtiquetaTarefa } from '@/components/ui/basicos';
 import { useDados, Tarefa } from '@/lib/store';
+import { FaixaProjeto, MarcadorProjeto } from './MarcadorProjeto';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 
 // [PV-1] O CARTÃO DO QUADRO: etiquetas, título e selos (prazo, checklist, aprovada, comentários, responsável). Não arrasta sozinho: repassa os eventos ao Quadro.
@@ -34,12 +35,15 @@ import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
  * @param onDragEnd chamado quando o arraste termina (soltou ou cancelou).
  * @param destaque true por alguns segundos quando OUTRA pessoa mexeu no cartão (tempo real, G02).
  * @param projetoNome nome do projeto, no quadro geral (components/projetos/QuadroGeral.tsx).
+ * @param projetoCor chave da cor do projeto (`projeto.cor`): desenha a faixa lateral e a bolinha ao lado do nome (só no quadro geral).
  * @returns o cartão clicável e arrastável.
  */
-export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd, destaque = false, projetoNome }: {
+export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd, destaque = false, projetoNome, projetoCor }: {
   tarefa: Tarefa; concluida: boolean; arrastando: boolean; arrastavel: boolean; cadeado: boolean; destaque?: boolean;
   /** Nome do projeto, mostrado acima do título (só no quadro geral, onde há cartões de vários projetos). */
   projetoNome?: string;
+  /** Chave da cor do projeto, para a faixa lateral e a bolinha do quadro geral (sem ela o cartão fica como no quadro de um projeto). */
+  projetoCor?: string;
   onAbrir: () => void; onDragStart: (e: DragEvent) => void; onDragEnd: () => void;
 }) {
   const d = useDados();
@@ -81,7 +85,7 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAbrir(); } }}
       role="button"
       tabIndex={0}
-      aria-label={`${tarefa.titulo}. ${prazoTexto}.${tarefa.aprovadaEm ? ' Entrega aprovada pela empresa.' : ''} Responsável: ${resp?.nome ?? 'ninguém'}.${cadeado ? ' Só o responsável pode mover.' : ''}`}
+      aria-label={`${tarefa.titulo}.${projetoNome ? ` Projeto: ${projetoNome}.` : ''} ${prazoTexto}.${tarefa.aprovadaEm ? ' Entrega aprovada pela empresa.' : ''} Responsável: ${resp?.nome ?? 'ninguém'}.${cadeado ? ' Só o responsável pode mover.' : ''}`}
       /*
        * cursor-grab/active:cursor-grabbing: mãozinha de "pegar" o cartão (só se for arrastável;
        * senão cursor-pointer, porque o cartão continua clicável).
@@ -90,8 +94,11 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
        * (rotate + opacity-40): é o estado "arrastando" pedido na §5.
        */
       className={cx(
-        'group select-none rounded-xl border border-borda bg-superficie p-3 shadow-[0_1px_0_rgba(20,22,31,0.06)] transition-[box-shadow,transform,opacity,border-color] duration-150',
+        // relative + overflow-hidden: a faixa do projeto (absolute) fica dentro do cartão e acompanha o canto arredondado.
+        'group relative select-none overflow-hidden rounded-xl border border-borda bg-superficie p-3 shadow-[0_1px_0_rgba(20,22,31,0.06)] transition-[box-shadow,transform,opacity,border-color] duration-150',
         arrastavel ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
+        // Folga extra à esquerda para o texto não encostar na faixa colorida.
+        projetoCor && 'pl-4',
         'hover:border-primaria/40 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60',
         arrastando && 'rotate-[1.5deg] opacity-40',
         // Destaque do tempo real: anel roxo; o pulso só acontece com motion-safe (quem pediu menos
@@ -99,12 +106,18 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
         destaque && 'ring-2 ring-primaria motion-safe:animate-pulse'
       )}
     >
+      {/* [PV-4] A IDENTIDADE DO PROJETO NO CARTÃO (só no quadro geral): faixa lateral na cor do projeto + bolinha e nome escrito acima do título. A cor vem de projeto.cor (cores.ts, corIdentidade); o nome fica sempre escrito porque dois projetos podem ter a mesma cor. */}
+      {projetoCor && <FaixaProjeto cor={projetoCor} />}
       {/* Etiquetas só aparecem se a tarefa tiver alguma (não deixa faixa vazia). */}
       {tarefa.etiquetas.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1">{tarefa.etiquetas.map((e) => <EtiquetaTarefa key={e} nome={e} compacta />)}</div>
       )}
-      {/* No quadro geral, o projeto da tarefa fica acima do título. */}
-      {projetoNome && <p className="mb-0.5 truncate text-[11px] font-semibold uppercase tracking-wide text-tinta-suave">{projetoNome}</p>}
+      {/* No quadro geral, o projeto da tarefa fica acima do título: bolinha colorida + nome (o nome trunca, a bolinha não). */}
+      {projetoNome && (
+        <p className="mb-0.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-tinta-suave">
+          {projetoCor && <MarcadorProjeto cor={projetoCor} className="h-2 w-2" />}<span className="min-w-0 truncate">{projetoNome}</span>
+        </p>
+      )}
       {/* Título fica mais apagado quando a tarefa já está concluída. */}
       <p className={cx('text-sm font-medium leading-snug text-tinta', concluida && 'text-tinta-suave')}>{tarefa.titulo}</p>
 
@@ -120,7 +133,7 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
             <CheckSquare className="h-3 w-3" aria-hidden />{feitos}/{tarefa.checklist.length}
           </span>
         )}
-        {/* [PV-4] O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. */}
+        {/* [PV-5] O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. */}
         {/* Selo "Aprovada": a empresa aprovou a entrega (ícone + texto, nunca só a cor). */}
         {tarefa.aprovadaEm && (
           <span className="inline-flex items-center gap-1 rounded-md bg-sucesso/12 px-1.5 py-0.5 text-[11px] font-semibold text-sucesso" title={`Aprovada pela empresa em ${dataCurta(tarefa.aprovadaEm)}`}>

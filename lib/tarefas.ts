@@ -2,8 +2,8 @@
    TAREFAS: FILTRO, ORDENAÇÃO E LISTAS UNIFICADAS
    O que é: funções puras para a visão geral de tarefas (/projetos?visao=tarefas) e para o quadro de cada
    projeto: filtrar por projeto, colaborador, prioridade e etiqueta; ordenar por prazo, prioridade,
-   responsável ou título; e juntar as listas de vários projetos pelo NOME (A fazer, Fazendo, ...).
-   Onde é usado: components/projetos/VisaoTarefas.tsx, QuadroGeral.tsx, Quadro.tsx (ordenação),
+   responsável ou título; e juntar as listas de vários projetos pelo NOME (A fazer, Fazendo, ...) e contar as tarefas de cada projeto (legenda).
+   Onde é usado: components/projetos/VisaoTarefas.tsx (legenda dos projetos), QuadroGeral.tsx, Quadro.tsx (ordenação),
    app/(sistema)/projetos/[id]/page.tsx (filtro e ordem da ficha) e lib/tarefas.casos.ts (testes com Node).
    Depende de: tipos de lib/tipos.ts e normalizar de lib/utils.ts (sem React, para rodar em Node).
    Contexto: §5 (Projetos: quadro, lista e cronograma) e pedido de 14/10/2026 (visão geral das tarefas).
@@ -135,4 +135,25 @@ export function colunasUnificadas(projetos: Projeto[]): ColunaUnificada[] {
  */
 export function colunaDaTarefa(colunas: ColunaUnificada[], t: Tarefa): ColunaUnificada | undefined {
   return colunas.find((c) => c.porProjeto[t.projetoId] === t.colunaId);
+}
+
+// [PV-4] A CONTAGEM DA LEGENDA DE PROJETOS: quantas tarefas cada projeto tem DENTRO dos outros filtros (colaborador, prioridade, etiqueta). Projeto sem tarefa aparece com 0, na ordem recebida.
+/** Quantidade de tarefas de um projeto (uma linha da legenda). */
+export interface ContagemProjeto {
+  projetoId: string;
+  total: number;
+}
+
+/**
+ * Conta as tarefas de cada projeto, para o número ao lado do nome na legenda da visão geral.
+ * Percorre as tarefas uma vez só; projeto sem tarefa fica com 0 e a ordem dos projetos é mantida.
+ * @param projetos - os projetos da legenda, na ordem em que devem aparecer.
+ * @param tarefas - as tarefas já filtradas (sem o filtro de projeto, senão só um projeto teria número).
+ * @returns uma linha por projeto, com o total.
+ * @example contarPorProjeto([portal, estoque], tarefas) // [{ projetoId: 'prj_portal', total: 14 }, { projetoId: 'prj_estoque', total: 7 }]
+ */
+export function contarPorProjeto(projetos: Projeto[], tarefas: Tarefa[]): ContagemProjeto[] {
+  const total = new Map<string, number>();
+  for (const t of tarefas) total.set(t.projetoId, (total.get(t.projetoId) ?? 0) + 1);
+  return projetos.map((p) => ({ projetoId: p.id, total: total.get(p.id) ?? 0 }));
 }

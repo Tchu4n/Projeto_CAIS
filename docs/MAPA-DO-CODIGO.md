@@ -539,10 +539,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `components/projetos/CartaoTarefa.tsx`
 *o cartão de uma tarefa dentro de uma lista do quadro kanban. Só pode ser arrastado por quem pode mover a tarefa; os outros veem um cadeado.*
 
-1. O CARTÃO DO QUADRO: etiquetas, título e selos (prazo, checklist, aprovada, comentários, responsável). Não arrasta sozinho: repassa os eventos ao Quadro. _(linha 20)_
-2. QUANDO O PRAZO É "ATRASADO" E "PERTO": atrasada = prazo vencido e fora da última lista; perto = vence hoje ou nos próximos 2 dias. _(linha 50)_
-3. AS CORES DO SELO DE PRAZO, por prioridade: concluída (verde), atrasada (vermelho), perto (âmbar) e normal (cinza). O texto do selo segue a mesma ordem. _(linha 56)_
-4. O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. _(linha 123)_
+1. O CARTÃO DO QUADRO: etiquetas, título e selos (prazo, checklist, aprovada, comentários, responsável). Não arrasta sozinho: repassa os eventos ao Quadro. _(linha 21)_
+2. QUANDO O PRAZO É "ATRASADO" E "PERTO": atrasada = prazo vencido e fora da última lista; perto = vence hoje ou nos próximos 2 dias. _(linha 54)_
+3. AS CORES DO SELO DE PRAZO, por prioridade: concluída (verde), atrasada (vermelho), perto (âmbar) e normal (cinza). O texto do selo segue a mesma ordem. _(linha 60)_
+4. A IDENTIDADE DO PROJETO NO CARTÃO (só no quadro geral): faixa lateral na cor do projeto + bolinha e nome escrito acima do título. A cor vem de projeto.cor (cores.ts, corIdentidade); o nome fica sempre escrito porque dois projetos podem ter a mesma cor. _(linha 109)_
+5. O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. _(linha 136)_
 
 ### `components/projetos/ControlesTarefas.tsx`
 *dois controles das tarefas usados na ficha do projeto e na visão geral: "Ordenar por" (critério e sentido) e a faixa de colaboradores (um avatar por pessoa; clicar filtra).*
@@ -554,6 +555,7 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 1. AS CORES DE FUNDO DO QUADRO (roxo, verde, âmbar, azul, rosa, tinta): nome, gradiente e cor sólida. Renomear ou apagar uma chave manda os projetos que a usam para o roxo. _(linha 10)_
 2. O PLANO B DA COR: chave desconhecida cai no roxo, para o quadro nunca ficar sem fundo. _(linha 33)_
+3. A COR DE IDENTIDADE DO PROJETO na visão geral das tarefas (bolinha, faixa do cartão, chip da legenda): a cor sólida do quadro, menos o 'tinta', que some no tema escuro e usa o cinza de texto secundário. _(linha 46)_
 
 ### `components/projetos/DetalheTarefa.tsx`
 *o painel (modal) com todos os dados de uma tarefa. Admin edita na hora; os outros perfis veem os campos como TEXTO somente leitura (a regra está em lib/permissoes.ts). Comentar fica liberado a quem enxerga o projeto; comentário de quem é do perfil Empresa ganha a etiqueta "Empresa". A empresa aprova a entrega (tarefa em Revisão ou Pronto) numa seção própria.*
@@ -591,6 +593,16 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 5. QUEM PODE SER LÍDER: profissionais com status ativo. _(linha 92)_
 6. A CRIAÇÃO DO PROJETO: nasce como Planejado com as 4 listas padrão (COLUNAS_PADRAO, lib/seed.ts) e abre direto na aba Equipe. TODO(API): POST do projeto. _(linha 115)_
 
+### `components/projetos/LegendaProjetos.tsx`
+*a legenda da visão geral das tarefas: um chip por projeto (cor + nome + quantas tarefas), que também é filtro: clicar liga ou desliga aquele projeto.*
+
+1. A LEGENDA DOS PROJETOS: um chip por projeto em escopo (bolinha na cor do projeto, nome e contagem). Marcado = projeto no filtro (borda na cor dele, fundo leve e um ✓, para não depender só da cor). Sem nenhum marcado, todos os projetos aparecem nas vistas. _(linha 18)_
+
+### `components/projetos/MarcadorProjeto.tsx`
+*as peças visuais que identificam o PROJETO de uma tarefa na visão geral: a bolinha colorida e a faixa lateral do cartão, mais o ajudante que entrega a cor do projeto como variável CSS.*
+
+1. COMO A COR DO PROJETO CLAREIA NO TEMA ESCURO: `--cor-vis` é a cor do projeto no tema claro e a mesma cor misturada com 30% de branco no escuro (para a bolinha, a faixa e a borda não sumirem no fundo escuro). Para clarear mais ou menos, mude o 30%. _(linha 16)_
+
 ### `components/projetos/Quadro.tsx`
 *o quadro kanban de um projeto (listas + cartões com arrastar e soltar), com o indicador "Ao vivo" e o destaque do cartão que outra pessoa mexeu (tempo real simulado, G02). Respeita o perfil: só quem pode mover arrasta, e os botões de criar cartão/lista e de editar lista só existem para quem pode usá-los.*
 
@@ -612,20 +624,23 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 2. A SOLTURA NO QUADRO GERAL: confere a permissão, acha a lista de mesmo nome no projeto do cartão (se não existir, avisa e não move) e grava com moverTarefa. Na ordem automática, soltar na mesma lista não faz nada. _(linha 93)_
 
 ### `components/projetos/VisaoTarefas.tsx`
-*a visão geral das tarefas em /projetos?visao=tarefas: quadro, lista e cronograma com as tarefas de VÁRIOS projetos juntas, com filtro por projeto (um, vários ou todos), colaborador, prioridade e etiqueta, ordenação do quadro e um resumo (total, em aberto, concluídas e atrasadas).*
+*a visão geral das tarefas em /projetos?visao=tarefas: quadro, lista e cronograma com as tarefas de VÁRIOS projetos juntas, com filtro por projeto (um, vários ou todos), colaborador, prioridade e etiqueta, ordenação do quadro e um resumo (total, em aberto, concluídas e atrasadas). Uma legenda de projetos (cor + nome + contagem) diferencia os projetos e funciona como filtro.*
 
-1. OS PARÂMETROS DA URL da visão geral: vista, projeto (ids separados por vírgula), empresa, resp, prior, etiq, ordem, dir e tarefa. Tudo vai na URL (replace, sem encher o histórico) para o link poder ser compartilhado; valor inválido é ignorado. _(linha 35)_
-2. AS OPÇÕES DOS FILTROS saem das tarefas que existem nos projetos escolhidos: só aparece colaborador e etiqueta que tem tarefa. _(linha 75)_
+1. OS PARÂMETROS DA URL da visão geral: vista, projeto (ids separados por vírgula), empresa, resp, prior, etiq, ordem, dir e tarefa. Tudo vai na URL (replace, sem encher o histórico) para o link poder ser compartilhado; valor inválido é ignorado. _(linha 37)_
+2. AS OPÇÕES DOS FILTROS saem das tarefas que existem nos projetos escolhidos: só aparece colaborador e etiqueta que tem tarefa. _(linha 77)_
+3. A LEGENDA DOS PROJETOS: só aparece com 2 ou mais projetos para escolher (com um só não há o que diferenciar). Os chips usam a cor do projeto (projeto.cor) e ligam o mesmo filtro ?projeto= do menu "Projetos". _(linha 173)_
 
 ### `components/projetos/Vistas.tsx`
 *as vistas alternativas ao quadro: Lista (tabela) e Cronograma (barras no tempo).*
 
-1. A COR DO STATUS nas vistas: a última lista é sempre verde; as demais usam as 3 primeiras cores de TONS_COLUNA (components/ui/Graficos.tsx). _(linha 23)_
-2. A VISTA EM LISTA: a mesma tarefa em tabela, ordenável por prazo (padrão), prioridade e status. Clicar na linha abre o detalhe. _(linha 40)_
-3. A ORDEM DE PRIORIDADE ao ordenar: alta primeiro, depois média e baixa. _(linha 57)_
-4. O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular. _(linha 136)_
-5. A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos. _(linha 162)_
-6. O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo. _(linha 209)_
+1. A COR DO STATUS nas vistas: a última lista é sempre verde; as demais usam as 3 primeiras cores de TONS_COLUNA (components/ui/Graficos.tsx). _(linha 25)_
+2. A VISTA EM LISTA: a mesma tarefa em tabela, ordenável por prazo (padrão), prioridade e status. Clicar na linha abre o detalhe. _(linha 42)_
+3. A ORDEM DE PRIORIDADE ao ordenar: alta primeiro, depois média e baixa. _(linha 59)_
+4. A IDENTIDADE DO PROJETO NA LISTA: bolinha na cor do projeto + nome escrito. A bolinha é decorativa (aria-hidden); o nome desambigua projetos de mesma cor. _(linha 101)_
+5. O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular. _(linha 139)_
+6. A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos. _(linha 165)_
+7. A LINHA DE ENTREGA: roxa na ficha de um projeto; na visão geral cada projeto ganha a sua, na cor dele, com uma etiqueta "Entrega" + nome (cor nunca sozinha). _(linha 207)_
+8. O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo. _(linha 219)_
 
 ### `components/RecuperarSenhaForm.tsx`
 *o cartão da tela /recuperar-senha. Passo 1: e-mail. Passo 2: "e-mail enviado" (com o botão de demonstração que abre o link). Passo 3: nova senha e confirmação, com as regras em tempo real.*
@@ -665,16 +680,17 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 5. Como o item ativo do menu é marcado: o endereço atual é o do item ou uma subpágina dele (/projetos/x mantém "Projetos" destacado). _(linha 72)_
 
 ### `components/shell/Topbar.tsx`
-*a faixa no alto de toda tela logada, com busca global (Ctrl+K), avisos (atrasos e sobrecarga), troca de tema e menu do perfil. Busca e avisos só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts). No perfil Empresa, o nome da empresa aparece ao lado do avatar.*
+*a faixa no alto de toda tela logada, com busca global (Ctrl+K ou /), avisos (atrasos e sobrecarga), troca de tema e menu do perfil. Busca e avisos só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts); a regra da busca mora em lib/busca.ts (projetos, tarefas, arquivos, empresas, pessoas e trilhas). No perfil Empresa, o nome da empresa aparece ao lado do avatar.*
 
-1. O nome do perfil mostrado na etiqueta do topo (Administrador, Empresa, Profissional). _(linha 31)_
-2. No perfil Empresa, o nome fantasia da empresa aparece ao lado do avatar, para o cliente ver em nome de quem está no sistema. _(linha 45)_
-3. Os atalhos da busca: Ctrl+K (Cmd+K no Mac) sempre, e a barra "/" fora de campos de texto. Para mudar o atalho, é aqui. _(linha 67)_
-4. A BUSCA GLOBAL: só a partir de 2 letras, no máximo 8 resultados, em projetos, empresas, pessoas e trilhas, respeitando o que o perfil pode ver. TODO(API): vira chamada ao servidor. _(linha 83)_
-5. Ao escolher um resultado ou aviso: limpa a busca e navega para o endereço. Empresas e pessoas abrem a ficha com ?abrir=<id>. _(linha 111)_
-6. OS AVISOS DO SINO: tarefa atrasada (para todos os perfis, só nos projetos que a pessoa vê) e profissional acima do limite de horas (só para o admin). Aviso novo entra aqui. _(linha 115)_
-7. O item "Restaurar dados de demonstração" do menu do perfil: volta ao seed e APAGA o que foi editado. Só existe no protótipo. _(linha 272)_
-8. O item "Sair": apaga a sessão e vai para /login (replace, para o Voltar não reabrir a tela de dentro). _(linha 280)_
+1. O nome do perfil mostrado na etiqueta do topo (Administrador, Empresa, Profissional). _(linha 33)_
+2. No perfil Empresa, o nome fantasia da empresa aparece ao lado do avatar, para o cliente ver em nome de quem está no sistema. _(linha 55)_
+3. Os atalhos da busca: Ctrl+K (Cmd+K no Mac) fora de janelas abertas, e a barra "/" fora de campos de texto e de janelas. Para mudar o atalho, é aqui. _(linha 82)_
+4. A BUSCA GLOBAL: a regra inteira está em lib/busca.ts (buscarGlobal): a partir de 2 letras, até 10 resultados repartidos entre projetos, tarefas, arquivos, empresas, pessoas e trilhas, só do que o perfil abre. Aqui só se liga o resultado à tela; o ícone de cada tipo está em ICONE_DO_TIPO. TODO(API): vira chamada ao servidor. _(linha 101)_
+5. Ao escolher um resultado ou aviso: limpa a busca e navega para o endereço. Empresas e pessoas abrem a ficha com ?abrir=<id>. _(linha 119)_
+6. OS AVISOS DO SINO: tarefa atrasada (para todos os perfis, só nos projetos que a pessoa vê) e profissional acima do limite de horas (só para o admin). Aviso novo entra aqui. _(linha 123)_
+7. O TEXTO DO CAMPO DE BUSCA: vem de placeholderDaBusca (lib/busca.ts), por perfil, e só promete o que o perfil acha (empresa e pessoa são só do administrador). _(linha 163)_
+8. O item "Restaurar dados de demonstração" do menu do perfil: volta ao seed e APAGA o que foi editado. Só existe no protótipo. _(linha 306)_
+9. O item "Sair": apaga a sessão e vai para /login (replace, para o Voltar não reabrir a tela de dentro). _(linha 314)_
 
 ### `components/shell/TrilhaPendente.tsx`
 *tela mostrada no lugar de uma rota bloqueada enquanto o profissional tem trilha obrigatória pendente, com botão para a trilha.*
@@ -829,6 +845,14 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 9. Abre a sessão SEM pedir senha: só pode ser usada depois de uma prova de identidade (hoje, o fim do primeiro acesso por convite). _(linha 291)_
 10. Logout: apaga a sessão dos dois armazenamentos. TODO(API): avisar a API para invalidar o token. _(linha 333)_
 
+### `lib/busca.ts`
+*função pura que, dado o texto digitado e a sessão, devolve os resultados da busca do topo (projetos, tarefas, arquivos, empresas, pessoas e trilhas) já filtrados pelo escopo de quem está logado.*
+
+1. OS TIPOS DE RESULTADO e a ordem em que aparecem na lista. Tipo novo entra aqui, em montarCandidatos e no mapa de ícones do Topbar. _(linha 23)_
+2. OS LIMITES DA BUSCA: mínimo de letras para buscar e máximo de resultados na lista. A lista reparte as vagas entre os tipos para nenhum sumir. _(linha 49)_
+3. O TEXTO DO CAMPO DE BUSCA por perfil: precisa prometer só o que o perfil consegue achar. Mudou os tipos em montarCandidatos? Ajuste aqui. _(linha 55)_
+4. A BUSCA GLOBAL: junta tudo o que a sessão abre, filtra pelo texto (todas as palavras, sem acento) e reparte as vagas da lista entre os tipos. TODO(API): vira chamada ao servidor. _(linha 156)_
+
 ### `lib/carga.ts`
 *a regra do semáforo de carga em funções puras: quanto da semana de cada pessoa está ocupado, dia a dia, levando em conta QUANDO cada alocação acontece (e não só se ela existe).*
 
@@ -969,11 +993,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 11. As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts. _(linha 386)_
 
 ### `lib/tarefas.ts`
-*funções puras para a visão geral de tarefas (/projetos?visao=tarefas) e para o quadro de cada projeto: filtrar por projeto, colaborador, prioridade e etiqueta; ordenar por prazo, prioridade, responsável ou título; e juntar as listas de vários projetos pelo NOME (A fazer, Fazendo, ...).*
+*funções puras para a visão geral de tarefas (/projetos?visao=tarefas) e para o quadro de cada projeto: filtrar por projeto, colaborador, prioridade e etiqueta; ordenar por prazo, prioridade, responsável ou título; e juntar as listas de vários projetos pelo NOME (A fazer, Fazendo, ...) e contar as tarefas de cada projeto (legenda).*
 
 1. OS CRITÉRIOS DE ORDEM do quadro e o texto de cada um no seletor "Ordenar por". Critério novo entra aqui, em CRITERIOS_ORDEM e no switch de `ordenarTarefas`. _(linha 15)_
 2. COMO OS FILTROS SE COMBINAM: todos ao mesmo tempo (e), cada um só vale se estiver preenchido. O de projeto aceita vários. _(linha 79)_
 3. COMO AS LISTAS DOS PROJETOS SE JUNTAM no quadro geral: pelo NOME (sem acento nem maiúscula). A lista que é a última de algum projeto ("Pronto") vai sempre para o fim. Lista com nome próprio de um só projeto vira coluna extra. _(linha 107)_
+4. A CONTAGEM DA LEGENDA DE PROJETOS: quantas tarefas cada projeto tem DENTRO dos outros filtros (colaborador, prioridade, etiqueta). Projeto sem tarefa aparece com 0, na ordem recebida. _(linha 140)_
 
 ### `lib/tema.ts`
 *o ÚNICO lugar que sabe ler, aplicar e gravar o tema do CAIS, e o hook useTema() que mantém todos os botões de tema sincronizados.*
@@ -1069,4 +1094,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-123 arquivos mapeados, 555 pontos vitais.
+126 arquivos mapeados, 568 pontos vitais.

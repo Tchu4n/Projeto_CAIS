@@ -1,7 +1,7 @@
 /* ============================================================================
    CORES.TS
    O que é: a paleta de fundos que o usuário escolhe para o quadro de um projeto.
-   Onde é usado: components/projetos/Quadro.tsx (fundo do kanban),
+   Onde é usado: components/projetos/Quadro.tsx (fundo do kanban), MarcadorProjeto.tsx (cor de identidade do projeto),
                  components/projetos/FormProjeto.tsx (seletor "Fundo do quadro")
                  e app/(sistema)/projetos/page.tsx (capa dos cartões de projeto).
    Depende de: nada (só constantes de cor).
@@ -42,3 +42,18 @@ export const CORES_QUADRO: Record<string, { nome: string; fundo: string; solida:
  * corQuadro('inexistente').nome // 'Roxo maré'
  */
 export const corQuadro = (c: string) => CORES_QUADRO[c] ?? CORES_QUADRO.roxo;
+
+// [PV-3] A COR DE IDENTIDADE DO PROJETO na visão geral das tarefas (bolinha, faixa do cartão, chip da legenda): a cor sólida do quadro, menos o 'tinta', que some no tema escuro e usa o cinza de texto secundário.
+/**
+ * Cor que identifica um projeto na visão geral das tarefas (/projetos?visao=tarefas).
+ * É a mesma família do fundo do quadro do projeto (`solida`), para o projeto ser reconhecido nos dois lugares.
+ * O 'tinta' é quase preto e sumiria sobre o fundo do tema escuro, então vira `var(--tinta-suave)` (token que troca com o tema).
+ * Chave desconhecida cai no roxo, como em `corQuadro`.
+ * ⚠️ ATENÇÃO: o valor vai para a variável CSS `--cor-projeto` de MarcadorProjeto.tsx; quem usa a variável clareia a cor no tema escuro.
+ * @param c chave da cor salva no projeto (ex.: 'verde').
+ * @returns uma cor CSS (hex da paleta ou var(--token)).
+ * @example
+ * corIdentidade('verde') // '#047857'
+ * corIdentidade('tinta') // 'var(--tinta-suave)'
+ */
+export const corIdentidade = (c: string) => (c === 'tinta' ? 'var(--tinta-suave)' : corQuadro(c).solida);

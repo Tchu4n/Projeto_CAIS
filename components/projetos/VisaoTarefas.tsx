@@ -2,11 +2,12 @@
    VISAOTAREFAS.TSX
    O que é: a visão geral das tarefas em /projetos?visao=tarefas: quadro, lista e cronograma com as tarefas
    de VÁRIOS projetos juntas, com filtro por projeto (um, vários ou todos), colaborador, prioridade e
-   etiqueta, ordenação do quadro e um resumo (total, em aberto, concluídas e atrasadas).
+   etiqueta, ordenação do quadro e um resumo (total, em aberto, concluídas e atrasadas). Uma legenda de projetos
+   (cor + nome + contagem) diferencia os projetos e funciona como filtro.
    Onde é usado: app/(sistema)/projetos/page.tsx (alternativa à grade de projetos).
    Depende de: next/navigation (useSearchParams, useRouter), lib/store (useDados), lib/auth, lib/escopo
    (projetosVisiveis, empresasVisiveis, tarefasVisiveis), lib/tarefas, lib/metricas (rótulos de prioridade),
-   ./QuadroGeral, ./Vistas, ./DetalheTarefa, ./ControlesTarefas e components/ui/.
+   ./QuadroGeral, ./Vistas, ./DetalheTarefa, ./ControlesTarefas, ./LegendaProjetos e components/ui/.
    Contexto: §5 (quadro, lista e cronograma) e pedido de 14/10/2026 (visão geral das tarefas para a empresa).
    ============================================================================ */
 "use client";
@@ -18,7 +19,7 @@ import { useDados } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 import { empresasVisiveis, projetosVisiveis, tarefasVisiveis } from '@/lib/escopo';
 import { ROTULO_PRIORIDADE } from '@/lib/metricas';
-import { colunaDaTarefa, colunasUnificadas, ehCriterioOrdem, filtrarTarefas, type CriterioOrdem, type Direcao } from '@/lib/tarefas';
+import { colunaDaTarefa, colunasUnificadas, contarPorProjeto, ehCriterioOrdem, filtrarTarefas, type CriterioOrdem, type Direcao } from '@/lib/tarefas';
 import { cx, hojeISO } from '@/lib/utils';
 import Button from '@/components/button';
 import Menu, { ItemMenu } from '@/components/ui/Menu';
@@ -28,6 +29,7 @@ import QuadroGeral from './QuadroGeral';
 import DetalheTarefa from './DetalheTarefa';
 import { VistaLista, VistaCronograma } from './Vistas';
 import { ControleOrdem, FaixaColaboradores } from './ControlesTarefas';
+import LegendaProjetos from './LegendaProjetos';
 
 /** As três formas de ver as tarefas (§5), como em /projetos/[id]. */
 type Vista = 'quadro' | 'lista' | 'cronograma';
@@ -76,6 +78,11 @@ export default function VisaoTarefas() {
   const colaboradores = useMemo(() => [...new Set(dosProjetos.map((t) => t.responsavelId))].map((id) => d.pessoa(id)).filter(Boolean).map((p) => ({ id: p!.id, nome: p!.nome })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')), [dosProjetos, d]);
   const etiquetas = useMemo(() => [...new Set(dosProjetos.flatMap((t) => t.etiquetas))].sort(), [dosProjetos]);
   const filtradas = useMemo(() => filtrarTarefas(dosProjetos, { responsavelId: resp, prioridade: prior, etiqueta: etiq }), [dosProjetos, resp, prior, etiq]);
+
+  // Contagem da legenda: tarefas de cada projeto já com colaborador, prioridade e etiqueta aplicados, mas SEM o filtro de projeto (senão só o projeto escolhido teria número).
+  const contagens = useMemo(() => contarPorProjeto(opcoesProjeto, filtrarTarefas(doEscopo, { responsavelId: resp, prioridade: prior, etiqueta: etiq })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [doEscopo, visiveis, empresaId, resp, prior, etiq]);
 
   // Resumo do que está sendo feito e do que está pendente (sobre as tarefas à vista).
   const resumo = useMemo(() => {
@@ -163,6 +170,8 @@ export default function VisaoTarefas() {
         {vista === 'quadro' && <ControleOrdem criterio={ordem} direcao={direcao} onChange={(c, dir) => definir({ ordem: c === 'manual' ? null : c, dir: c === 'manual' || dir === 'asc' ? null : dir })} />}
         {temFiltro && <Button variante="fantasma" tamanho="sm" onClick={() => definir({ projeto: null, empresa: null, resp: null, prior: null, etiq: null })}>Limpar · {filtradas.length} de {doEscopo.length}</Button>}
       </div>
+      {/* [PV-3] A LEGENDA DOS PROJETOS: só aparece com 2 ou mais projetos para escolher (com um só não há o que diferenciar). Os chips usam a cor do projeto (projeto.cor) e ligam o mesmo filtro ?projeto= do menu "Projetos". */}
+      {opcoesProjeto.length > 1 && <div className="mb-3"><LegendaProjetos projetos={opcoesProjeto} contagens={contagens} selecionados={projetoIds} onAlternar={alternarProjeto} /></div>}
       <div className="mb-4"><FaixaColaboradores pessoas={colaboradores} valor={resp} onChange={(id) => definir({ resp: id || null })} /></div>
 
       {/* As três vistas recebem só as tarefas filtradas. Clicar numa tarefa GRAVA ?tarefa= na URL e o detalhe abre por cima. */}

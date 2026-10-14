@@ -7,7 +7,7 @@
    Como rodar: node --experimental-strip-types lib/tarefas.casos.ts
    ============================================================================ */
 
-import { colunaDaTarefa, colunasUnificadas, ehCriterioOrdem, filtrarTarefas, ordenarTarefas } from './tarefas.ts';
+import { colunaDaTarefa, colunasUnificadas, contarPorProjeto, ehCriterioOrdem, filtrarTarefas, ordenarTarefas } from './tarefas.ts';
 import type { Projeto, Tarefa } from './tipos.ts';
 
 /** Tarefa de teste; só o que cada caso precisa muda. */
@@ -64,6 +64,9 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'coluna só de um projeto não tem a lista do outro', obtido: colunasUnificadas([p1, p2]).find((c) => c.chave === 'revisao')?.porProjeto.p1, esperado: undefined },
   { porque: 'acha a coluna da tarefa', obtido: colunaDaTarefa(colunasUnificadas([p1, p2]), tarefa('x', { projetoId: 'p2', colunaId: 'p2_Revisão' }))?.titulo, esperado: 'Revisão' },
   { porque: 'tarefa de lista apagada não tem coluna', obtido: colunaDaTarefa(colunasUnificadas([p1]), tarefa('x', { projetoId: 'p1', colunaId: 'sumiu' })), esperado: undefined },
+  { porque: 'conta as tarefas de cada projeto, na ordem dos projetos', obtido: contarPorProjeto([p2, p1], todas), esperado: [{ projetoId: 'p2', total: 1 }, { projetoId: 'p1', total: 2 }] },
+  { porque: 'projeto sem tarefa aparece com 0', obtido: contarPorProjeto([p3], todas), esperado: [{ projetoId: 'p3', total: 0 }] },
+  { porque: 'sem tarefas todos os projetos ficam com 0', obtido: contarPorProjeto([p1, p2], []).map((x) => x.total), esperado: [0, 0] },
 ];
 
 let falhas = 0;

@@ -6,7 +6,8 @@
                  (as mesmas vistas com tarefas de VÁRIOS projetos, com a coluna Projeto).
    Depende de: lib/store (useDados), components/ui/basicos, components/ui/Tabela,
                lib/metricas (rótulos e tons de prioridade), lib/utils (datas, cx) e
-               components/ui/Graficos (COR_GRAFICO e TONS_COLUNA).
+               components/ui/Graficos (COR_GRAFICO e TONS_COLUNA) e
+               ./MarcadorProjeto (cor de identidade do projeto, na visão geral).
    Contexto: §5 Projetos (três vistas: quadro, lista, cronograma).
    ============================================================================ */
 "use client";
@@ -19,6 +20,7 @@ import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import { ROTULO_PRIORIDADE, TOM_PRIORIDADE } from '@/lib/metricas';
 import { cx, dataBR, dataCurta, diasEntre, hojeISO, somaDias } from '@/lib/utils';
 import { COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
+import { CLASSE_COR_PROJETO, MarcadorProjeto, estiloProjeto } from './MarcadorProjeto';
 
 // [PV-1] A COR DO STATUS nas vistas: a última lista é sempre verde; as demais usam as 3 primeiras cores de TONS_COLUNA (components/ui/Graficos.tsx).
 /**
@@ -96,7 +98,8 @@ export function VistaLista({ projeto, tarefas, onAbrir, mostrarProjeto = false }
                   <button onClick={(e) => { e.stopPropagation(); onAbrir(t.id); }} className="text-left font-medium hover:text-primaria focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50 rounded">{t.titulo}</button>
                   {t.etiquetas.length > 0 && <div className="mt-1 flex gap-1">{t.etiquetas.map((e) => <EtiquetaTarefa key={e} nome={e} compacta />)}</div>}
                 </Td>
-                {mostrarProjeto && <Td className="text-[13px] text-tinta-suave">{proj?.nome}</Td>}
+                {/* [PV-4] A IDENTIDADE DO PROJETO NA LISTA: bolinha na cor do projeto + nome escrito. A bolinha é decorativa (aria-hidden); o nome desambigua projetos de mesma cor. */}
+                {mostrarProjeto && <Td className="text-[13px] text-tinta-suave"><span className="inline-flex items-center gap-2">{proj && <MarcadorProjeto cor={proj.cor} />}{proj?.nome}</span></Td>}
                 {/* Bolinha colorida é decorativa (aria-hidden): o nome da lista vem ao lado. */}
                 <Td><span className="inline-flex items-center gap-2 text-[13px]"><span className="h-2.5 w-2.5 rounded-full" style={{ background: proj ? corColuna(proj, t.colunaId) : COR_GRAFICO.aFazer }} aria-hidden />{col?.titulo}</span></Td>
                 <Td>{resp && <span className="flex items-center gap-2"><Avatar nome={resp.nome} tamanho={24} /><span className="text-[13px]">{resp.nome}</span></span>}</Td>
@@ -133,7 +136,7 @@ function Ordenar({ campo, ordem, setOrdem, children }: { campo: Ordem; ordem: Or
   );
 }
 
-// [PV-4] O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular.
+// [PV-5] O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular.
 /**
  * Cronograma: cada tarefa é uma barra do início estimado até o prazo,
  * sobre a janela do projeto. A linha vertical marca hoje.
@@ -159,7 +162,7 @@ export function VistaCronograma({ projeto, tarefas, onAbrir, mostrarProjeto = fa
   const projDe = (t: Tarefa) => d.projeto(t.projetoId) ?? projeto;
   // Tarefas em ordem de prazo: as que vencem antes ficam no topo.
   const itens = [...tarefas].sort((a, b) => a.prazo.localeCompare(b.prazo));
-  // [PV-5] A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos.
+  // [PV-6] A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos.
   /*
    * Janela do gráfico: começa no MENOR entre o início do projeto e o início
    * estimado de cada tarefa; termina no MAIOR entre a entrega e os prazos.
@@ -201,12 +204,19 @@ export function VistaCronograma({ projeto, tarefas, onAbrir, mostrarProjeto = fa
                   <span className="absolute -top-0.5 left-1 rounded bg-erro px-1 text-[10px] font-bold text-white dark:text-noite">hoje</span>
                 </span>
               )}
-              {/* Linha roxa da entrega prevista de cada projeto (um só na ficha; vários na visão geral). */}
-              {projetos.map((p) => <span key={p.id} className="absolute inset-y-0 w-0.5 bg-primaria/60" style={{ left: `${x(p.entrega)}%` }} title={mostrarProjeto ? `Entrega prevista de ${p.nome}` : 'Entrega prevista'} />)}
+              {/* [PV-7] A LINHA DE ENTREGA: roxa na ficha de um projeto; na visão geral cada projeto ganha a sua, na cor dele, com uma etiqueta "Entrega" + nome (cor nunca sozinha). */}
+              {projetos.map((p) => mostrarProjeto ? (
+                <span key={p.id} className={cx(CLASSE_COR_PROJETO, 'absolute inset-y-0 w-0.5 bg-(--cor-vis)')} style={{ left: `${x(p.entrega)}%`, ...estiloProjeto(p.cor) }} title={`Entrega prevista de ${p.nome}`}>
+                  {/* Etiqueta à esquerda da linha, no pé do gráfico; texto escuro sobre a cor clareada no tema escuro (como o "hoje"). */}
+                  <span className="absolute bottom-0.5 right-1 max-w-[9rem] truncate whitespace-nowrap rounded bg-(--cor-vis) px-1 text-[10px] font-bold text-white dark:text-noite">Entrega · {p.nome}</span>
+                </span>
+              ) : (
+                <span key={p.id} className="absolute inset-y-0 w-0.5 bg-primaria/60" style={{ left: `${x(p.entrega)}%` }} title="Entrega prevista" />
+              ))}
             </div>
             <ul>
               {itens.map((t) => {
-                // [PV-6] O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo.
+                // [PV-8] O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo.
                 // SIMULADO: tarefa não tem data de início; estima 1 dia por item
                 // do checklist (mínimo 3) antes do prazo.
                 const ini = somaDias(t.prazo, -Math.max(3, t.checklist.length));
@@ -221,7 +231,8 @@ export function VistaCronograma({ projeto, tarefas, onAbrir, mostrarProjeto = fa
                       {resp && <Avatar nome={resp.nome} tamanho={22} />}
                       <span className="min-w-0">
                         <span className="block truncate text-[13px] font-medium text-tinta">{t.titulo}</span>
-                        {mostrarProjeto && proj && <span className="block truncate text-[11px] text-tinta-suave">{proj.nome}</span>}
+                        {/* Na visão geral: bolinha do projeto + nome escrito abaixo do título (a barra continua na cor do STATUS). */}
+                        {mostrarProjeto && proj && <span className="flex items-center gap-1.5 text-[11px] text-tinta-suave"><MarcadorProjeto cor={proj.cor} className="h-2 w-2" /><span className="min-w-0 truncate">{proj.nome}</span></span>}
                       </span>
                     </button>
                     <div className="relative h-full flex-1">
@@ -246,7 +257,7 @@ export function VistaCronograma({ projeto, tarefas, onAbrir, mostrarProjeto = fa
         </div>
       </div>
       {/* Legenda em texto: o gráfico sempre tem resumo legível (acessibilidade). */}
-      <p className="mt-3 text-[12px] text-tinta-suave">A barra vai do início estimado ao prazo; o preenchimento mostra o checklist concluído. A linha roxa marca a entrega prevista {mostrarProjeto ? 'de cada projeto' : 'do projeto'}.</p>
+      <p className="mt-3 text-[12px] text-tinta-suave">A barra vai do início estimado ao prazo; o preenchimento mostra o checklist concluído. {mostrarProjeto ? 'A cor da barra é a do status; a bolinha ao lado do título e a linha vertical de entrega usam a cor de cada projeto.' : 'A linha roxa marca a entrega prevista do projeto.'}</p>
     </div>
   );
 }
