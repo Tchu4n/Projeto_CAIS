@@ -2,7 +2,7 @@
    CARTAOTAREFA.TSX
    O que é: o cartão de uma tarefa dentro de uma lista do quadro kanban. Só
    pode ser arrastado por quem pode mover a tarefa; os outros veem um cadeado.
-   Onde é usado: components/projetos/Quadro.tsx (um cartão por tarefa da lista).
+   Onde é usado: components/projetos/Quadro.tsx e QuadroGeral.tsx (um cartão por tarefa da lista).
    Depende de: lucide-react (ícones), components/ui/basicos (Avatar,
                EtiquetaTarefa), lib/store (useDados, Tarefa) e lib/utils
                (cx, dataCurta, diasEntre, hojeISO).
@@ -33,10 +33,13 @@ import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
  * @param onDragStart chamado quando o usuário começa a arrastar o cartão.
  * @param onDragEnd chamado quando o arraste termina (soltou ou cancelou).
  * @param destaque true por alguns segundos quando OUTRA pessoa mexeu no cartão (tempo real, G02).
+ * @param projetoNome nome do projeto, no quadro geral (components/projetos/QuadroGeral.tsx).
  * @returns o cartão clicável e arrastável.
  */
-export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd, destaque = false }: {
+export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd, destaque = false, projetoNome }: {
   tarefa: Tarefa; concluida: boolean; arrastando: boolean; arrastavel: boolean; cadeado: boolean; destaque?: boolean;
+  /** Nome do projeto, mostrado acima do título (só no quadro geral, onde há cartões de vários projetos). */
+  projetoNome?: string;
   onAbrir: () => void; onDragStart: (e: DragEvent) => void; onDragEnd: () => void;
 }) {
   const d = useDados();
@@ -100,6 +103,8 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
       {tarefa.etiquetas.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1">{tarefa.etiquetas.map((e) => <EtiquetaTarefa key={e} nome={e} compacta />)}</div>
       )}
+      {/* No quadro geral, o projeto da tarefa fica acima do título. */}
+      {projetoNome && <p className="mb-0.5 truncate text-[11px] font-semibold uppercase tracking-wide text-tinta-suave">{projetoNome}</p>}
       {/* Título fica mais apagado quando a tarefa já está concluída. */}
       <p className={cx('text-sm font-medium leading-snug text-tinta', concluida && 'text-tinta-suave')}>{tarefa.titulo}</p>
 

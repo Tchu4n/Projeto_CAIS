@@ -20,7 +20,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 import { Plus, FolderKanban, Search, CalendarDays } from 'lucide-react';
 import { useDados } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
@@ -29,12 +30,23 @@ import { podeFazer } from '@/lib/permissoes';
 import { progressoProjeto, ROTULO_STATUS_PROJETO, TOM_STATUS_PROJETO } from '@/lib/metricas';
 import { CabecalhoPagina, BarraFiltros } from '@/components/shell/Pagina';
 import Button from '@/components/button';
-import { Select } from '@/components/ui/form';
+import { Segmentado, Select } from '@/components/ui/form';
 import { Etiqueta, EstadoVazio, Esqueleto, GrupoAvatares, Progresso } from '@/components/ui/basicos';
 import FormProjeto from '@/components/projetos/FormProjeto';
+import VisaoTarefas from '@/components/projetos/VisaoTarefas';
 import { corQuadro } from '@/components/projetos/cores';
 import { dataCurta, normalizar } from '@/lib/utils';
 
+/**
+ * Página da rota /projetos. Só embrulha o conteúdo num <Suspense>: ele lê ?visao= e os filtros da URL com
+ * useSearchParams, e sem o Suspense o `npm run build` falha (docs/notas-next16.md §2).
+ * @returns a página.
+ */
+export default function Projetos() {
+  return <Suspense><ProjetosConteudo /></Suspense>;
+}
+
+// [PV-1] AS DUAS VISÕES DE /projetos: "Projetos" (a grade de cartões) e "Tarefas" (quadro, lista e cronograma de todos os projetos do escopo, filtrando por projeto). A escolha vai na URL como ?visao=tarefas.
 /**
  * Lista de projetos (rota /projetos).
  * Cada cartão mostra a empresa, o nome, o status, uma "miniatura" do quadro,
@@ -45,16 +57,19 @@ import { dataCurta, normalizar } from '@/lib/utils';
  *
  * @returns a página com filtros e a grade de cartões (ou esqueleto/vazio).
  */
-export default function Projetos() {
+function ProjetosConteudo() {
   const d = useDados();
+  const router = useRouter();
+  // Visão escolhida: a grade de projetos (padrão) ou as tarefas de todos os projetos (?visao=tarefas).
+  const visao: 'projetos' | 'tarefas' = useSearchParams().get('visao') === 'tarefas' ? 'tarefas' : 'projetos';
   const { sessao } = useAuth();
-  // [PV-1] O ESCOPO DA LISTA: o administrador vê todos os projetos, a empresa só os dela e o profissional só aqueles em que está alocado (lib/escopo.ts). É conveniência de tela; a segurança real é do back-end.
+  // [PV-2] O ESCOPO DA LISTA: o administrador vê todos os projetos, a empresa só os dela e o profissional só aqueles em que está alocado (lib/escopo.ts). É conveniência de tela; a segurança real é do back-end.
   // Projetos que a sessão pode ver. Sem sessão (só por um instante) a lista é vazia.
   // Filtrar aqui é conveniência de interface; a segurança real é do back-end (§7).
   const visiveis = useMemo(() => (sessao ? projetosVisiveis(sessao, d) : []), [sessao, d]);
   // Empresas do filtro: só as dos projetos visíveis (a Empresa não vê as outras no seletor).
   const empresasDoFiltro = useMemo(() => (sessao ? empresasVisiveis(sessao, d) : []), [sessao, d]);
-  // [PV-2] QUEM CRIA PROJETO: só quem tem a permissão "editar_projeto" (lib/permissoes.ts). O botão fica escondido, não desabilitado, para os outros perfis.
+  // [PV-3] QUEM CRIA PROJETO: só quem tem a permissão "editar_projeto" (lib/permissoes.ts). O botão fica escondido, não desabilitado, para os outros perfis.
   // "+ Novo projeto" é ESCONDIDO (não desabilitado) de quem não pode: o botão nunca teria uso
   // para esse perfil, e esconder evita dúvida e o anúncio de "indisponível" no leitor de tela.
   const podeCriar = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
@@ -65,7 +80,7 @@ export default function Projetos() {
   const [empresa, setEmpresa] = useState('');
   const [status, setStatus] = useState('');
 
-  // [PV-3] OS FILTROS DA LISTA: empresa, status e busca por nome (sem acento).
+  // [PV-4] OS FILTROS DA LISTA: empresa, status e busca por nome (sem acento).
   // Aplica os três filtros em sequência. Cada .filter deixa passar tudo
   // quando o filtro está vazio (o "!empresa ||" faz isso).
   // normalizar() tira acentos e maiúsculas: "projeto" acha "Projéto".
@@ -77,9 +92,16 @@ export default function Projetos() {
 
   return (
     <div className="mx-auto max-w-[1400px] p-4 sm:p-6 lg:p-8">
-      <CabecalhoPagina titulo="Projetos" descricao="Da empresa à tarefa: cada projeto tem equipe alocada e um quadro próprio."
+      <CabecalhoPagina titulo="Projetos" descricao={visao === 'tarefas' ? 'Tudo o que está sendo feito e o que está pendente, em todos os projetos. Filtre por projeto ou colaborador.' : 'Da empresa à tarefa: cada projeto tem equipe alocada e um quadro próprio.'}
         acao={podeCriar ? <Button onClick={() => setNovo(true)}><Plus className="h-4 w-4" aria-hidden />Novo projeto</Button> : undefined} />
 
+      <div className="mb-4">
+        {/* NAVEGA: troca a visão na URL (replace: o botão Voltar não fica preso entre as duas). */}
+        <Segmentado rotulo="Visão" valor={visao} onChange={(v) => router.replace(v === 'tarefas' ? '/projetos?visao=tarefas' : '/projetos')}
+          opcoes={[{ valor: 'projetos', rotulo: 'Projetos' }, { valor: 'tarefas', rotulo: 'Tarefas' }]} />
+      </div>
+
+      {visao === 'tarefas' ? <VisaoTarefas /> : (<>
       {/* Filtros acima do conteúdo, sempre visíveis (§10). */}
       <BarraFiltros>
         {/* Campo de busca com lupa: a lupa é absoluta por cima do input
@@ -163,6 +185,8 @@ export default function Projetos() {
           })}
         </ul>
       )}
+
+      </>)}
 
       {/* Modal de criação. Ao salvar, o FormProjeto GRAVA o projeto na store
         * e NAVEGA para /projetos/[id]?aba=equipe (§5: projeto novo abre na

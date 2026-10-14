@@ -24,6 +24,7 @@ import Button from '@/components/button';
 import Menu, { ItemMenu } from '@/components/ui/Menu';
 import CartaoTarefa from './CartaoTarefa';
 import { corQuadro } from './cores';
+import { ordenarTarefas, ROTULO_ORDEM, type CriterioOrdem, type Direcao } from '@/lib/tarefas';
 import { cx, hojeISO, novoId, somaDias } from '@/lib/utils';
 
 // [PV-1] O QUADRO KANBAN: listas lado a lado no desktop e abas no celular, arrastar e soltar nativo (HTML5), criar cartão e gerenciar listas.
@@ -52,9 +53,11 @@ import { cx, hojeISO, novoId, somaDias } from '@/lib/utils';
  * @param projeto projeto dono do quadro (listas, cor de fundo).
  * @param tarefas tarefas a exibir (já filtradas pela tela).
  * @param onAbrir abre o detalhe da tarefa pelo id.
+ * @param ordem critério de ordem dos cartões em cada lista ('manual' = a ordem do arrastar; padrão).
+ * @param direcao sentido da ordem (padrão crescente).
  * @returns o quadro com abas no celular e listas lado a lado no desktop.
  */
-export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void }) {
+export default function Quadro({ projeto, tarefas, onAbrir, ordem = 'manual', direcao = 'asc' }: { projeto: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void; ordem?: CriterioOrdem; direcao?: Direcao }) {
   const d = useDados();
   const { sessao } = useAuth();
   const avisar = useToast();
@@ -114,9 +117,11 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
    * @param id id da coluna.
    * @returns tarefas daquela coluna, ordenadas.
    */
-  const daColuna = (id: string) => tarefas.filter((t) => t.colunaId === id).sort((a, b) => a.ordem - b.ordem);
+  // [PV-5] A ORDEM DOS CARTÕES em cada lista: manual (a do arrastar) ou automática por prazo, prioridade, responsável ou título (lib/tarefas.ts). Na automática, reordenar dentro da lista fica desligado.
+  const manual = ordem === 'manual';
+  const daColuna = (id: string) => ordenarTarefas(tarefas.filter((t) => t.colunaId === id), ordem, direcao, (pid) => d.pessoa(pid)?.nome ?? '');
 
-  // [PV-5] O CÁLCULO DA POSIÇÃO ao arrastar: o cartão cai antes do primeiro cartão cujo meio está abaixo do mouse; se nenhum, vai para o fim da lista.
+  // [PV-6] O CÁLCULO DA POSIÇÃO ao arrastar: o cartão cai antes do primeiro cartão cujo meio está abaixo do mouse; se nenhum, vai para o fim da lista.
   /**
    * Evento dragover: dispara sem parar enquanto um cartão passa por cima
    * da área de cartões de uma lista. Decide ONDE o cartão cairia.
@@ -147,7 +152,8 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
      * Exemplo: mouse na metade de cima do 2º cartão => indice = 1.
      */
     let indice = cartoes.length;
-    for (let i = 0; i < cartoes.length; i++) {
+    // Ordem automática: a posição não é escolhida; o cartão sempre vai para o fim da lista de destino.
+    for (let i = 0; manual && i < cartoes.length; i++) {
       const r = cartoes[i].getBoundingClientRect();
       if (e.clientY < r.top + r.height / 2) { indice = i; break; }
     }
@@ -156,7 +162,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
     if (alvo?.colunaId !== colunaId || alvo.indice !== indice) setAlvo({ colunaId, indice });
   };
 
-  // [PV-6] A SOLTURA: confere de novo a permissão mover_tarefa e grava com moverTarefa (renumera a lista). Só avisa quando troca de lista. TODO(API).
+  // [PV-7] A SOLTURA: confere de novo a permissão mover_tarefa e grava com moverTarefa (renumera a lista). Só avisa quando troca de lista. TODO(API).
   /**
    * Evento drop: o usuário soltou o cartão sobre uma lista.
    * @param e evento de arraste do React.
@@ -169,7 +175,8 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
     // Só move se havia um cartão sendo arrastado e um alvo calculado no dragover.
     const t = tarefas.find((x) => x.id === arrastando);
     // Confere a permissão de novo na hora de soltar (o dragstart já filtra, mas aqui é a gravação).
-    if (arrastando && alvo && t && pode('mover_tarefa', t.responsavelId)) {
+    // Ordem automática: soltar na MESMA lista não reordena nada.
+    if (arrastando && alvo && t && pode('mover_tarefa', t.responsavelId) && (manual || t.colunaId !== colunaId)) {
       // GRAVA: muda coluna e ordem da tarefa na store (localStorage) e
       // renumera os vizinhos da lista de destino.
       // TODO(API): trocar por chamada à API e avisar os colegas pelo
@@ -200,6 +207,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
           <span className="h-2 w-2 rounded-full bg-sucesso motion-safe:animate-pulse" aria-hidden />Ao vivo
         </span>
         <span role="status" aria-live="polite" className="font-medium text-white/80">{anuncio}</span>
+        {!manual && <span className="font-medium text-white/80">Ordenado por {ROTULO_ORDEM[ordem].toLowerCase()}: reordenar dentro da lista está desligado</span>}
       </div>
       {/* Abas de lista no celular (md:hidden some no desktop). §5: no celular colunas viram abas. */}
       <div className="rolagem flex gap-1.5 overflow-x-auto p-3 md:hidden" role="tablist" aria-label="Listas do quadro">
@@ -254,7 +262,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                     <ItemMenu onClick={() => { setRenomeando(col.id); fechar(); }}>Renomear lista</ItemMenu>
                     <ItemMenu perigo onClick={() => {
                       fechar();
-                      // [PV-7] AS REGRAS DE EXCLUIR LISTA: só lista vazia e o quadro precisa ficar com pelo menos duas listas (uma de trabalho e a última, "Pronto").
+                      // [PV-8] AS REGRAS DE EXCLUIR LISTA: só lista vazia e o quadro precisa ficar com pelo menos duas listas (uma de trabalho e a última, "Pronto").
                       // Não deixa excluir lista com cartões: as tarefas sumiriam junto.
                       if (lista.length) { avisar('Mova ou exclua os cartões antes de excluir a lista.', 'erro'); return; }
                       // Mínimo de duas listas: uma de trabalho e a última ("Pronto").
@@ -330,7 +338,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
               e.preventDefault();
               // Nome vazio não cria lista.
               if (!novaLista.trim()) return;
-              // [PV-8] ONDE ENTRA UMA LISTA NOVA: antes da última, para "Pronto" continuar sendo a última.
+              // [PV-9] ONDE ENTRA UMA LISTA NOVA: antes da última, para "Pronto" continuar sendo a última.
               // Nova lista entra antes da última (que representa "Pronto"),
               // para "Pronto" continuar sendo a última e significar concluída.
               const cols = [...projeto.colunas];
@@ -369,7 +377,7 @@ function Espaco({ texto }: { texto?: string }) {
   );
 }
 
-// [PV-9] A CRIAÇÃO RÁPIDA DE CARTÃO: título, responsável e prazo são obrigatórios (§5); prazo sugerido = hoje + 7 dias; nasce com prioridade média; o responsável é escolhido entre os alocados no projeto.
+// [PV-10] A CRIAÇÃO RÁPIDA DE CARTÃO: título, responsável e prazo são obrigatórios (§5); prazo sugerido = hoje + 7 dias; nasce com prioridade média; o responsável é escolhido entre os alocados no projeto.
 /**
  * Criação rápida de cartão. Responsável e prazo são obrigatórios (slide 21).
  * Fechado, é só um botão "Adicionar cartão"; aberto, vira um mini formulário.

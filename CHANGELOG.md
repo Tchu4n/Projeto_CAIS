@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Visão geral das tarefas e ordenação do quadro (14/10/2026)
+- Criado: a visão **Tarefas** em /projetos (seletor Projetos | Tarefas, `?visao=tarefas`): quadro, lista e cronograma com as tarefas de vários projetos, com resumo (total, em aberto, concluídas, atrasadas) e filtros por projeto (um, vários ou todos), colaborador (seletor e faixa de avatares), prioridade, etiqueta e, para o administrador, empresa; todo o estado vai na URL. Componentes `VisaoTarefas`, `QuadroGeral` (listas dos projetos unidas pelo NOME; mover leva o cartão à lista de mesmo nome do projeto dele) e `ControlesTarefas` (ordenar e faixa de colaboradores); `lib/tarefas.ts` com `filtrarTarefas`, `ordenarTarefas`, `colunasUnificadas` e 26 casos em `lib/tarefas.casos.ts`; `testes/navegador/h09-tarefas-geral.mjs`.
+- Modificado: o quadro de cada projeto (ficha) ganhou o seletor "Ordem" (manual, prazo, prioridade, responsável, título, com sentido) e a faixa de colaboradores; com ordem automática reordenar dentro da lista fica desligado e mover entre listas continua. `VistaLista` e `VistaCronograma` aceitam tarefas de vários projetos (coluna Projeto, uma linha de entrega por projeto); `CartaoTarefa` mostra o nome do projeto no quadro geral.
+- Removido: nada.
+
 ## Empresa ajusta o time das trilhas (13/10/2026)
 - Criado: `excluidosIds` em Trilha (lib/tipos.ts) e `podeAjustarTime` em lib/escopo.ts; 7 casos novos em lib/permissoes.casos.ts; testes/navegador/h08-empresa-ajusta-time.mjs.
 - Modificado: numa trilha de alcance "empresa" (a que a empresa criou ou a que o administrador publicou para ela), a empresa pode desmarcar quem não precisa cumprir a trilha e marcar de novo para devolver; a pessoa retirada sai do público (progresso, painel e certificado). Quem já concluiu fica marcado e travado, para não perder o progresso e o certificado. O administrador vê um aviso com quantas pessoas a empresa retirou. A regra mora em `publicoDaTrilha` (lib/metricas.ts), então os números do administrador também descontam.

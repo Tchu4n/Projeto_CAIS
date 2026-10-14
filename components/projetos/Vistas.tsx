@@ -2,7 +2,8 @@
    VISTAS.TSX
    O que é: as vistas alternativas ao quadro: Lista (tabela) e Cronograma (barras no tempo).
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx (VistaLista e VistaCronograma,
-                 trocadas pelo seletor de vista da aba Tarefas).
+                 trocadas pelo seletor de vista da aba Tarefas) e components/projetos/VisaoTarefas.tsx
+                 (as mesmas vistas com tarefas de VÁRIOS projetos, com a coluna Projeto).
    Depende de: lib/store (useDados), components/ui/basicos, components/ui/Tabela,
                lib/metricas (rótulos e tons de prioridade), lib/utils (datas, cx) e
                components/ui/Graficos (COR_GRAFICO e TONS_COLUNA).
@@ -40,19 +41,22 @@ const corColuna = (p: Projeto, colunaId: string) => {
 /**
  * Vista em lista: a mesma tarefa, em tabela ordenável.
  * Clicar na linha (ou no título) abre o detalhe da tarefa.
- * @param projeto projeto das tarefas (listas, para nome e cor do status).
+ * @param projeto projeto das tarefas (listas, para nome e cor do status); omitido na visão geral, em que cada
+ *   tarefa usa o projeto dela.
  * @param tarefas tarefas já filtradas pela tela.
  * @param onAbrir abre o detalhe da tarefa pelo id.
+ * @param mostrarProjeto true na visão geral: acrescenta a coluna "Projeto".
  * @returns tabela de tarefas ou estado vazio.
  */
-export function VistaLista({ projeto, tarefas, onAbrir }: { projeto: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void }) {
+export function VistaLista({ projeto, tarefas, onAbrir, mostrarProjeto = false }: { projeto?: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void; mostrarProjeto?: boolean }) {
   const d = useDados();
+  /** Projeto da tarefa: o da própria tarefa (visão geral) ou o recebido por prop. */
+  const projDe = (t: Tarefa) => d.projeto(t.projetoId) ?? projeto;
   // Coluna pela qual a tabela está ordenada (começa por prazo).
   const [ordem, setOrdem] = useState<'prazo' | 'prioridade' | 'status'>('prazo');
   // [PV-3] A ORDEM DE PRIORIDADE ao ordenar: alta primeiro, depois média e baixa.
   // Peso numérico para ordenar prioridade: alta vem primeiro.
   const peso = { alta: 0, media: 1, baixa: 2 };
-  const ultima = projeto.colunas.at(-1)?.id;
   /*
    * Ordena uma CÓPIA das tarefas ([...tarefas]) para não mexer no array
    * recebido. Prazo compara texto ISO (AAAA-MM-DD ordena certo como texto);
@@ -62,9 +66,9 @@ export function VistaLista({ projeto, tarefas, onAbrir }: { projeto: Projeto; ta
   const lista = useMemo(() => [...tarefas].sort((a, b) =>
     ordem === 'prazo' ? a.prazo.localeCompare(b.prazo)
       : ordem === 'prioridade' ? peso[a.prioridade] - peso[b.prioridade]
-      : projeto.colunas.findIndex((c) => c.id === a.colunaId) - projeto.colunas.findIndex((c) => c.id === b.colunaId)),
+      : (projDe(a)?.colunas.findIndex((c) => c.id === a.colunaId) ?? 0) - (projDe(b)?.colunas.findIndex((c) => c.id === b.colunaId) ?? 0)),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [tarefas, ordem, projeto.colunas]);
+  [tarefas, ordem, projeto?.colunas, d.projetos]);
 
   // Estado vazio: nenhuma tarefa (ou o filtro escondeu todas).
   if (!tarefas.length) return <EstadoVazio icone={<ListTodo className="h-6 w-6" />} titulo="Nenhuma tarefa" descricao="Nada corresponde aos filtros, ou o quadro ainda está vazio." />;
@@ -74,13 +78,14 @@ export function VistaLista({ projeto, tarefas, onAbrir }: { projeto: Projeto; ta
     <div className="rounded-2xl border border-borda bg-superficie">
       <Tabela rotulo="Tarefas em lista">
         {/* Status, Prazo e Prioridade têm cabeçalho clicável para ordenar. */}
-        <thead><tr><Th>Tarefa</Th><Th><Ordenar campo="status" ordem={ordem} setOrdem={setOrdem}>Status</Ordenar></Th><Th>Responsável</Th><Th><Ordenar campo="prazo" ordem={ordem} setOrdem={setOrdem}>Prazo</Ordenar></Th><Th><Ordenar campo="prioridade" ordem={ordem} setOrdem={setOrdem}>Prioridade</Ordenar></Th><Th>Checklist</Th></tr></thead>
+        <thead><tr><Th>Tarefa</Th>{mostrarProjeto && <Th>Projeto</Th>}<Th><Ordenar campo="status" ordem={ordem} setOrdem={setOrdem}>Status</Ordenar></Th><Th>Responsável</Th><Th><Ordenar campo="prazo" ordem={ordem} setOrdem={setOrdem}>Prazo</Ordenar></Th><Th><Ordenar campo="prioridade" ordem={ordem} setOrdem={setOrdem}>Prioridade</Ordenar></Th><Th>Checklist</Th></tr></thead>
         <tbody>
           {lista.map((t) => {
             const resp = d.pessoa(t.responsavelId);
-            const col = projeto.colunas.find((c) => c.id === t.colunaId);
-            // Atrasada = prazo já passou e a tarefa não está em "Pronto".
-            const atrasada = t.colunaId !== ultima && t.prazo < hojeISO();
+            const proj = projDe(t);
+            const col = proj?.colunas.find((c) => c.id === t.colunaId);
+            // Atrasada = prazo já passou e a tarefa não está em "Pronto" (a última lista do projeto da tarefa).
+            const atrasada = t.colunaId !== proj?.colunas.at(-1)?.id && t.prazo < hojeISO();
             return (
               <Tr key={t.id} onClick={() => onAbrir(t.id)}>
                 <Td>
@@ -91,8 +96,9 @@ export function VistaLista({ projeto, tarefas, onAbrir }: { projeto: Projeto; ta
                   <button onClick={(e) => { e.stopPropagation(); onAbrir(t.id); }} className="text-left font-medium hover:text-primaria focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50 rounded">{t.titulo}</button>
                   {t.etiquetas.length > 0 && <div className="mt-1 flex gap-1">{t.etiquetas.map((e) => <EtiquetaTarefa key={e} nome={e} compacta />)}</div>}
                 </Td>
+                {mostrarProjeto && <Td className="text-[13px] text-tinta-suave">{proj?.nome}</Td>}
                 {/* Bolinha colorida é decorativa (aria-hidden): o nome da lista vem ao lado. */}
-                <Td><span className="inline-flex items-center gap-2 text-[13px]"><span className="h-2.5 w-2.5 rounded-full" style={{ background: corColuna(projeto, t.colunaId) }} aria-hidden />{col?.titulo}</span></Td>
+                <Td><span className="inline-flex items-center gap-2 text-[13px]"><span className="h-2.5 w-2.5 rounded-full" style={{ background: proj ? corColuna(proj, t.colunaId) : COR_GRAFICO.aFazer }} aria-hidden />{col?.titulo}</span></Td>
                 <Td>{resp && <span className="flex items-center gap-2"><Avatar nome={resp.nome} tamanho={24} /><span className="text-[13px]">{resp.nome}</span></span>}</Td>
                 {/* Atrasada: vermelho E o texto "atrasada" (cor nunca sozinha). */}
                 <Td><span className={cx('text-[13px] tabular-nums', atrasada ? 'font-semibold text-erro' : 'text-tinta')}>{dataBR(t.prazo)}{atrasada && ' · atrasada'}</span></Td>
@@ -133,16 +139,24 @@ function Ordenar({ campo, ordem, setOrdem, children }: { campo: Ordem; ordem: Or
  * sobre a janela do projeto. A linha vertical marca hoje.
  * (Sem data de início na tarefa, a barra estima 1 dia por item de checklist, mínimo 3.)
  *
- * @param projeto projeto (início e entrega definem a janela mínima).
+ * @param projeto projeto (início e entrega definem a janela mínima); omitido na visão geral, em que a janela
+ *   cobre todos os projetos das tarefas e cada um ganha a sua linha de entrega.
  * @param tarefas tarefas já filtradas pela tela.
  * @param onAbrir abre o detalhe da tarefa pelo id.
+ * @param mostrarProjeto true na visão geral: o nome do projeto aparece ao lado do título da tarefa.
  * @returns linha do tempo com uma barra por tarefa, ou estado vazio.
  * @example
  * Tarefa com prazo 20/05 e 5 itens de checklist: barra de 15/05 a 20/05.
  */
-export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void }) {
+export function VistaCronograma({ projeto, tarefas, onAbrir, mostrarProjeto = false }: { projeto?: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void; mostrarProjeto?: boolean }) {
   const d = useDados();
   const hoje = hojeISO();
+  // Estado vazio: sem tarefas não há o que desenhar (checado antes de calcular a janela, que precisa de ao menos uma data).
+  if (!tarefas.length) return <EstadoVazio icone={<ListTodo className="h-6 w-6" />} titulo="Nada no cronograma" descricao="Crie tarefas com prazo para vê-las na linha do tempo." />;
+  // Projetos que entram na janela: o recebido ou, na visão geral, os das tarefas (sem repetir).
+  const projetos = projeto ? [projeto] : ([...new Set(tarefas.map((t) => t.projetoId))].map((id) => d.projeto(id)).filter(Boolean) as Projeto[]);
+  /** Projeto da tarefa: o da própria tarefa (visão geral) ou o recebido por prop. */
+  const projDe = (t: Tarefa) => d.projeto(t.projetoId) ?? projeto;
   // Tarefas em ordem de prazo: as que vencem antes ficam no topo.
   const itens = [...tarefas].sort((a, b) => a.prazo.localeCompare(b.prazo));
   // [PV-5] A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos.
@@ -151,8 +165,8 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
    * estimado de cada tarefa; termina no MAIOR entre a entrega e os prazos.
    * Datas ISO ordenam certo como texto, por isso sort() basta.
    */
-  const inicio = [projeto.inicio, ...itens.map((t) => somaDias(t.prazo, -Math.max(3, t.checklist.length)))].sort()[0];
-  const fim = [projeto.entrega, ...itens.map((t) => t.prazo)].sort().at(-1)!;
+  const inicio = [...projetos.map((p) => p.inicio), ...itens.map((t) => somaDias(t.prazo, -Math.max(3, t.checklist.length)))].sort()[0];
+  const fim = [...projetos.map((p) => p.entrega), ...itens.map((t) => t.prazo)].sort().at(-1)!;
   // Total de dias da janela (+1 para incluir o último dia; mínimo 1 evita dividir por zero).
   const total = Math.max(1, diasEntre(inicio, fim) + 1);
   /**
@@ -166,9 +180,6 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
   // marcas semanais: uma data a cada 7 dias, do início ao fim da janela.
   const semanas: string[] = [];
   for (let s = inicio; s <= fim; s = somaDias(s, 7)) semanas.push(s);
-
-  // Estado vazio: sem tarefas não há o que desenhar.
-  if (!tarefas.length) return <EstadoVazio icone={<ListTodo className="h-6 w-6" />} titulo="Nada no cronograma" descricao="Crie tarefas com prazo para vê-las na linha do tempo." />;
 
   return (
     <div className="rounded-2xl border border-borda bg-superficie p-4">
@@ -190,8 +201,8 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
                   <span className="absolute -top-0.5 left-1 rounded bg-erro px-1 text-[10px] font-bold text-white dark:text-noite">hoje</span>
                 </span>
               )}
-              {/* Linha roxa da entrega prevista do projeto. */}
-              <span className="absolute inset-y-0 w-0.5 bg-primaria/60" style={{ left: `${x(projeto.entrega)}%` }} title="Entrega prevista" />
+              {/* Linha roxa da entrega prevista de cada projeto (um só na ficha; vários na visão geral). */}
+              {projetos.map((p) => <span key={p.id} className="absolute inset-y-0 w-0.5 bg-primaria/60" style={{ left: `${x(p.entrega)}%` }} title={mostrarProjeto ? `Entrega prevista de ${p.nome}` : 'Entrega prevista'} />)}
             </div>
             <ul>
               {itens.map((t) => {
@@ -200,14 +211,18 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
                 // do checklist (mínimo 3) antes do prazo.
                 const ini = somaDias(t.prazo, -Math.max(3, t.checklist.length));
                 const resp = d.pessoa(t.responsavelId);
-                const cor = corColuna(projeto, t.colunaId);
+                const proj = projDe(t);
+                const cor = proj ? corColuna(proj, t.colunaId) : COR_GRAFICO.aFazer;
                 // Fração do checklist concluída (0 a 1), para pintar dentro da barra.
                 const pct = t.checklist.length ? t.checklist.filter((c) => c.feito).length / t.checklist.length : 0;
                 return (
                   <li key={t.id} className="flex h-11 items-center border-b border-borda/60 last:border-0">
                     <button onClick={() => onAbrir(t.id)} className="flex w-[220px] shrink-0 items-center gap-2 pr-3 text-left hover:text-primaria">
                       {resp && <Avatar nome={resp.nome} tamanho={22} />}
-                      <span className="truncate text-[13px] font-medium text-tinta">{t.titulo}</span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-[13px] font-medium text-tinta">{t.titulo}</span>
+                        {mostrarProjeto && proj && <span className="block truncate text-[11px] text-tinta-suave">{proj.nome}</span>}
+                      </span>
                     </button>
                     <div className="relative h-full flex-1">
                       <button onClick={() => onAbrir(t.id)} title={`${t.titulo}: até ${dataBR(t.prazo)}`}
@@ -231,7 +246,7 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
         </div>
       </div>
       {/* Legenda em texto: o gráfico sempre tem resumo legível (acessibilidade). */}
-      <p className="mt-3 text-[12px] text-tinta-suave">A barra vai do início estimado ao prazo; o preenchimento mostra o checklist concluído. A linha roxa marca a entrega prevista do projeto.</p>
+      <p className="mt-3 text-[12px] text-tinta-suave">A barra vai do início estimado ao prazo; o preenchimento mostra o checklist concluído. A linha roxa marca a entrega prevista {mostrarProjeto ? 'de cada projeto' : 'do projeto'}.</p>
     </div>
   );
 }

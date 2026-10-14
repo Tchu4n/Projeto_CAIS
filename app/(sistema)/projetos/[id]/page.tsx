@@ -40,6 +40,8 @@ import { Abas, Card, CardTitulo, Etiqueta, Esqueleto, EstadoVazio, Progresso, Av
 import { Colunas, COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
 import Modal from '@/components/ui/Modal';
 import Quadro from '@/components/projetos/Quadro';
+import { ControleOrdem, FaixaColaboradores } from '@/components/projetos/ControlesTarefas';
+import type { CriterioOrdem, Direcao } from '@/lib/tarefas';
 import DetalheTarefa from '@/components/projetos/DetalheTarefa';
 import { VistaLista, VistaCronograma } from '@/components/projetos/Vistas';
 import Equipe from '@/components/projetos/Equipe';
@@ -115,6 +117,9 @@ function FichaProjeto() {
   const [fResp, setFResp] = useState('');
   const [fPrior, setFPrior] = useState('');
   const [fEtiq, setFEtiq] = useState('');
+  // Ordem dos cartões do quadro (Manual = a do arrastar) e o sentido.
+  const [ordem, setOrdem] = useState<CriterioOrdem>('manual');
+  const [direcao, setDirecao] = useState<Direcao>('asc');
 
   // [PV-4] A URL COMO ESTADO: aba e tarefa aberta vão em ?aba= e ?tarefa= (replace, sem encher o histórico). Outras telas abrem a ficha já numa aba ou tarefa por esses parâmetros.
   /**
@@ -260,15 +265,18 @@ function FichaProjeto() {
               <div className="w-36"><Select aria-label="Filtrar por etiqueta" value={fEtiq} onChange={(e) => setFEtiq(e.target.value)} placeholder="Etiqueta" opcoes={etiquetas.map((e) => ({ valor: e, rotulo: e }))} /></div>
               {/* "Limpar" zera os três filtros e mostra quantas tarefas
                 * aparecem do total ("Limpar · 3 de 12"). */}
+              {vista === 'quadro' && <ControleOrdem criterio={ordem} direcao={direcao} onChange={(c, dir) => { setOrdem(c); setDirecao(dir); }} />}
               {temFiltro && <Button variante="fantasma" tamanho="sm" onClick={() => { setFResp(''); setFPrior(''); setFEtiq(''); }}>Limpar · {filtradas.length} de {tarefas.length}</Button>}
             </div>
+            {/* Colaboradores com um clique: o avatar filtra o quadro, a lista e o cronograma por aquela pessoa. */}
+            <div className="mb-4 shrink-0"><FaixaColaboradores pessoas={responsaveis.map((p) => ({ id: p.id, nome: p.nome }))} valor={fResp} onChange={setFResp} /></div>
 
             {/* As três vistas recebem só as tarefas filtradas. Clicar numa
               * tarefa chama navegar({ tarefa }) → GRAVA ?tarefa= na URL e o
               * detalhe abre por cima, sem trocar de página (§5).
               * min-h-0: deixa o quadro encolher dentro do flex e rolar por
               * dentro, em vez de esticar a página. */}
-            {vista === 'quadro' && <div className="min-h-0 flex-1"><Quadro projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} /></div>}
+            {vista === 'quadro' && <div className="min-h-0 flex-1"><Quadro projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} ordem={ordem} direcao={direcao} /></div>}
             {vista === 'lista' && <VistaLista projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} />}
             {vista === 'cronograma' && <VistaCronograma projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} />}
           </>

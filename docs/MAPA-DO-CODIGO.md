@@ -146,27 +146,28 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/projetos/[id]/page.tsx`
 *a ficha de um projeto com quatro abas (Visão geral, Equipe, Tarefas e Arquivos), as vistas quadro/lista/cronograma e o detalhe da tarefa. A Visão geral tem o card "Próximas entregas" (prazo nos próximos 14 dias). Projeto fora do escopo do perfil (inclusive digitado na URL) manda para /sem-permissao; os botões que o perfil não pode usar são escondidos.*
 
-1. AS ABAS DA FICHA (Visão geral, Equipe, Tarefas, Arquivos): o valor vai na URL como ?aba=. Aba nova entra aqui, nas abas do cabeçalho e no bloco que a mostra. _(linha 51)_
-2. AS VISTAS DAS TAREFAS: quadro, lista e cronograma. Ficam só no estado: recarregar a página volta ao quadro. _(linha 54)_
-3. A ABA PADRÃO: sem ?aba= na URL a ficha abre em Tarefas, a mais usada no dia a dia. _(linha 102)_
-4. A URL COMO ESTADO: aba e tarefa aberta vão em ?aba= e ?tarefa= (replace, sem encher o histórico). Outras telas abrem a ficha já numa aba ou tarefa por esses parâmetros. _(linha 119)_
-5. O ESCOPO DA FICHA: projeto que a pessoa não pode ver leva a /sem-permissao. Conveniência de tela; a segurança real é do back-end. _(linha 146)_
-6. AS PERMISSÕES DOS BOTÕES DA FICHA: criar tarefa, alocar (administrador, ou a empresa nos projetos dela) e editar projeto. Cada um fica escondido, não desabilitado, para quem não pode. _(linha 156)_
-7. OS FILTROS DAS TAREFAS: responsável, prioridade e etiqueta, aplicados juntos. _(linha 167)_
-8. O BOTÃO PRINCIPAL DO CABEÇALHO muda com a aba: Equipe mostra "Alocar pessoa", Tarefas mostra "Nova tarefa" e a Visão geral mostra "Editar projeto". Cada um só existe para quem pode usar. _(linha 199)_
-9. A VISÃO GERAL DO PROJETO: escopo, andamento, próximas entregas, tarefas por lista, status, dados e exclusão. _(linha 291)_
-10. O TEMPO DECORRIDO do projeto: dias desde o início sobre a duração total, preso entre 0% e 100%. _(linha 316)_
-11. O ALERTA "tempo andando mais rápido que as entregas": aparece quando o tempo passou mais de 10 pontos à frente do que está pronto e o projeto tem tarefas. _(linha 360)_
-12. O STATUS DO PROJETO: só quem edita projeto troca; grava na hora, sem botão Salvar. Os outros perfis veem como texto. _(linha 407)_
-13. A EXCLUSÃO DO PROJETO: apaga também tarefas e alocações, sem desfazer. A tela sugere mudar o status para Concluído. _(linha 434)_
-14. A TAREFA NOVA: título, responsável (só quem está alocado), prazo e lista são obrigatórios (§5); prazo sugerido de hoje + 7 dias; entra no fim da lista e o detalhe abre logo depois. TODO(API): POST. _(linha 449)_
+1. AS ABAS DA FICHA (Visão geral, Equipe, Tarefas, Arquivos): o valor vai na URL como ?aba=. Aba nova entra aqui, nas abas do cabeçalho e no bloco que a mostra. _(linha 53)_
+2. AS VISTAS DAS TAREFAS: quadro, lista e cronograma. Ficam só no estado: recarregar a página volta ao quadro. _(linha 56)_
+3. A ABA PADRÃO: sem ?aba= na URL a ficha abre em Tarefas, a mais usada no dia a dia. _(linha 104)_
+4. A URL COMO ESTADO: aba e tarefa aberta vão em ?aba= e ?tarefa= (replace, sem encher o histórico). Outras telas abrem a ficha já numa aba ou tarefa por esses parâmetros. _(linha 124)_
+5. O ESCOPO DA FICHA: projeto que a pessoa não pode ver leva a /sem-permissao. Conveniência de tela; a segurança real é do back-end. _(linha 151)_
+6. AS PERMISSÕES DOS BOTÕES DA FICHA: criar tarefa, alocar (administrador, ou a empresa nos projetos dela) e editar projeto. Cada um fica escondido, não desabilitado, para quem não pode. _(linha 161)_
+7. OS FILTROS DAS TAREFAS: responsável, prioridade e etiqueta, aplicados juntos. _(linha 172)_
+8. O BOTÃO PRINCIPAL DO CABEÇALHO muda com a aba: Equipe mostra "Alocar pessoa", Tarefas mostra "Nova tarefa" e a Visão geral mostra "Editar projeto". Cada um só existe para quem pode usar. _(linha 204)_
+9. A VISÃO GERAL DO PROJETO: escopo, andamento, próximas entregas, tarefas por lista, status, dados e exclusão. _(linha 299)_
+10. O TEMPO DECORRIDO do projeto: dias desde o início sobre a duração total, preso entre 0% e 100%. _(linha 324)_
+11. O ALERTA "tempo andando mais rápido que as entregas": aparece quando o tempo passou mais de 10 pontos à frente do que está pronto e o projeto tem tarefas. _(linha 368)_
+12. O STATUS DO PROJETO: só quem edita projeto troca; grava na hora, sem botão Salvar. Os outros perfis veem como texto. _(linha 415)_
+13. A EXCLUSÃO DO PROJETO: apaga também tarefas e alocações, sem desfazer. A tela sugere mudar o status para Concluído. _(linha 442)_
+14. A TAREFA NOVA: título, responsável (só quem está alocado), prazo e lista são obrigatórios (§5); prazo sugerido de hoje + 7 dias; entra no fim da lista e o detalhe abre logo depois. TODO(API): POST. _(linha 457)_
 
 ### `app/(sistema)/projetos/page.tsx`
 *a lista de projetos em cartões, com busca e filtros, e o botão para criar um projeto novo. Mostra só os projetos do escopo do perfil (lib/escopo.ts) e esconde "Novo projeto" de quem não pode editar projeto.*
 
-1. O ESCOPO DA LISTA: o administrador vê todos os projetos, a empresa só os dela e o profissional só aqueles em que está alocado (lib/escopo.ts). É conveniência de tela; a segurança real é do back-end. _(linha 51)_
-2. QUEM CRIA PROJETO: só quem tem a permissão "editar_projeto" (lib/permissoes.ts). O botão fica escondido, não desabilitado, para os outros perfis. _(linha 57)_
-3. OS FILTROS DA LISTA: empresa, status e busca por nome (sem acento). _(linha 68)_
+1. AS DUAS VISÕES DE /projetos: "Projetos" (a grade de cartões) e "Tarefas" (quadro, lista e cronograma de todos os projetos do escopo, filtrando por projeto). A escolha vai na URL como ?visao=tarefas. _(linha 49)_
+2. O ESCOPO DA LISTA: o administrador vê todos os projetos, a empresa só os dela e o profissional só aqueles em que está alocado (lib/escopo.ts). É conveniência de tela; a segurança real é do back-end. _(linha 66)_
+3. QUEM CRIA PROJETO: só quem tem a permissão "editar_projeto" (lib/permissoes.ts). O botão fica escondido, não desabilitado, para os outros perfis. _(linha 72)_
+4. OS FILTROS DA LISTA: empresa, status e busca por nome (sem acento). _(linha 83)_
 
 ### `app/(sistema)/trilhas/[id]/page.tsx`
 *o editor de uma trilha: etapas, público e regras, progresso por pessoa, publicar/despublicar e excluir.*
@@ -539,9 +540,14 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 *o cartão de uma tarefa dentro de uma lista do quadro kanban. Só pode ser arrastado por quem pode mover a tarefa; os outros veem um cadeado.*
 
 1. O CARTÃO DO QUADRO: etiquetas, título e selos (prazo, checklist, aprovada, comentários, responsável). Não arrasta sozinho: repassa os eventos ao Quadro. _(linha 20)_
-2. QUANDO O PRAZO É "ATRASADO" E "PERTO": atrasada = prazo vencido e fora da última lista; perto = vence hoje ou nos próximos 2 dias. _(linha 47)_
-3. AS CORES DO SELO DE PRAZO, por prioridade: concluída (verde), atrasada (vermelho), perto (âmbar) e normal (cinza). O texto do selo segue a mesma ordem. _(linha 53)_
-4. O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. _(linha 118)_
+2. QUANDO O PRAZO É "ATRASADO" E "PERTO": atrasada = prazo vencido e fora da última lista; perto = vence hoje ou nos próximos 2 dias. _(linha 50)_
+3. AS CORES DO SELO DE PRAZO, por prioridade: concluída (verde), atrasada (vermelho), perto (âmbar) e normal (cinza). O texto do selo segue a mesma ordem. _(linha 56)_
+4. O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. _(linha 123)_
+
+### `components/projetos/ControlesTarefas.tsx`
+*dois controles das tarefas usados na ficha do projeto e na visão geral: "Ordenar por" (critério e sentido) e a faixa de colaboradores (um avatar por pessoa; clicar filtra).*
+
+1. A FAIXA DE COLABORADORES: um avatar por pessoa com tarefa; clicar filtra por ela e clicar de novo tira o filtro. Mostra até 12; o seletor "Responsável" cobre o resto. _(linha 45)_
 
 ### `components/projetos/cores.ts`
 *a paleta de fundos que o usuário escolhe para o quadro de um projeto.*
@@ -588,25 +594,38 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `components/projetos/Quadro.tsx`
 *o quadro kanban de um projeto (listas + cartões com arrastar e soltar), com o indicador "Ao vivo" e o destaque do cartão que outra pessoa mexeu (tempo real simulado, G02). Respeita o perfil: só quem pode mover arrasta, e os botões de criar cartão/lista e de editar lista só existem para quem pode usá-los.*
 
-1. O QUADRO KANBAN: listas lado a lado no desktop e abas no celular, arrastar e soltar nativo (HTML5), criar cartão e gerenciar listas. _(linha 29)_
-2. AS PERMISSÕES DO QUADRO: tudo passa por podeFazer (lib/permissoes.ts). Os botões de criar cartão e de editar lista só aparecem para quem tem a permissão; o detalhe da tarefa precisa concordar com esta regra. _(linha 61)_
-3. O TEMPO REAL: quando OUTRA aba mexe numa tarefa deste projeto, o cartão fica destacado por 2,5 s e o aviso "Fulano moveu... para ..." aparece ao lado de "Ao vivo". SIMULADO entre abas. _(linha 79)_
-4. A ÚLTIMA LISTA É "PRONTO" (tarefa concluída). Isso vale também para o selo do cartão, o prazo do detalhe e a data de conclusão gravada ao mover (lib/store.tsx). _(linha 105)_
-5. O CÁLCULO DA POSIÇÃO ao arrastar: o cartão cai antes do primeiro cartão cujo meio está abaixo do mouse; se nenhum, vai para o fim da lista. _(linha 119)_
-6. A SOLTURA: confere de novo a permissão mover_tarefa e grava com moverTarefa (renumera a lista). Só avisa quando troca de lista. TODO(API). _(linha 159)_
-7. AS REGRAS DE EXCLUIR LISTA: só lista vazia e o quadro precisa ficar com pelo menos duas listas (uma de trabalho e a última, "Pronto"). _(linha 257)_
-8. ONDE ENTRA UMA LISTA NOVA: antes da última, para "Pronto" continuar sendo a última. _(linha 333)_
-9. A CRIAÇÃO RÁPIDA DE CARTÃO: título, responsável e prazo são obrigatórios (§5); prazo sugerido = hoje + 7 dias; nasce com prioridade média; o responsável é escolhido entre os alocados no projeto. _(linha 372)_
+1. O QUADRO KANBAN: listas lado a lado no desktop e abas no celular, arrastar e soltar nativo (HTML5), criar cartão e gerenciar listas. _(linha 30)_
+2. AS PERMISSÕES DO QUADRO: tudo passa por podeFazer (lib/permissoes.ts). Os botões de criar cartão e de editar lista só aparecem para quem tem a permissão; o detalhe da tarefa precisa concordar com esta regra. _(linha 64)_
+3. O TEMPO REAL: quando OUTRA aba mexe numa tarefa deste projeto, o cartão fica destacado por 2,5 s e o aviso "Fulano moveu... para ..." aparece ao lado de "Ao vivo". SIMULADO entre abas. _(linha 82)_
+4. A ÚLTIMA LISTA É "PRONTO" (tarefa concluída). Isso vale também para o selo do cartão, o prazo do detalhe e a data de conclusão gravada ao mover (lib/store.tsx). _(linha 108)_
+5. A ORDEM DOS CARTÕES em cada lista: manual (a do arrastar) ou automática por prazo, prioridade, responsável ou título (lib/tarefas.ts). Na automática, reordenar dentro da lista fica desligado. _(linha 120)_
+6. O CÁLCULO DA POSIÇÃO ao arrastar: o cartão cai antes do primeiro cartão cujo meio está abaixo do mouse; se nenhum, vai para o fim da lista. _(linha 124)_
+7. A SOLTURA: confere de novo a permissão mover_tarefa e grava com moverTarefa (renumera a lista). Só avisa quando troca de lista. TODO(API). _(linha 165)_
+8. AS REGRAS DE EXCLUIR LISTA: só lista vazia e o quadro precisa ficar com pelo menos duas listas (uma de trabalho e a última, "Pronto"). _(linha 265)_
+9. ONDE ENTRA UMA LISTA NOVA: antes da última, para "Pronto" continuar sendo a última. _(linha 341)_
+10. A CRIAÇÃO RÁPIDA DE CARTÃO: título, responsável e prazo são obrigatórios (§5); prazo sugerido = hoje + 7 dias; nasce com prioridade média; o responsável é escolhido entre os alocados no projeto. _(linha 380)_
+
+### `components/projetos/QuadroGeral.tsx`
+*o quadro kanban da VISÃO GERAL: junta as tarefas de vários projetos, com as listas de mesmo nome (A fazer, Fazendo, Revisão, Pronto...) numa coluna só. Cada cartão mostra o projeto dele. Arrasta e solta como o quadro de um projeto; o cartão vai para a lista de MESMO NOME do projeto dele.*
+
+1. O QUADRO GERAL: as listas dos projetos se juntam pelo NOME. Não cria, renomeia nem exclui lista (isso é no quadro de cada projeto). Arrastar para uma lista que o projeto do cartão não tem é recusado com aviso. _(linha 24)_
+2. A SOLTURA NO QUADRO GERAL: confere a permissão, acha a lista de mesmo nome no projeto do cartão (se não existir, avisa e não move) e grava com moverTarefa. Na ordem automática, soltar na mesma lista não faz nada. _(linha 93)_
+
+### `components/projetos/VisaoTarefas.tsx`
+*a visão geral das tarefas em /projetos?visao=tarefas: quadro, lista e cronograma com as tarefas de VÁRIOS projetos juntas, com filtro por projeto (um, vários ou todos), colaborador, prioridade e etiqueta, ordenação do quadro e um resumo (total, em aberto, concluídas e atrasadas).*
+
+1. OS PARÂMETROS DA URL da visão geral: vista, projeto (ids separados por vírgula), empresa, resp, prior, etiq, ordem, dir e tarefa. Tudo vai na URL (replace, sem encher o histórico) para o link poder ser compartilhado; valor inválido é ignorado. _(linha 35)_
+2. AS OPÇÕES DOS FILTROS saem das tarefas que existem nos projetos escolhidos: só aparece colaborador e etiqueta que tem tarefa. _(linha 75)_
 
 ### `components/projetos/Vistas.tsx`
 *as vistas alternativas ao quadro: Lista (tabela) e Cronograma (barras no tempo).*
 
-1. A COR DO STATUS nas vistas: a última lista é sempre verde; as demais usam as 3 primeiras cores de TONS_COLUNA (components/ui/Graficos.tsx). _(linha 22)_
-2. A VISTA EM LISTA: a mesma tarefa em tabela, ordenável por prazo (padrão), prioridade e status. Clicar na linha abre o detalhe. _(linha 39)_
-3. A ORDEM DE PRIORIDADE ao ordenar: alta primeiro, depois média e baixa. _(linha 52)_
-4. O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular. _(linha 130)_
-5. A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos. _(linha 148)_
-6. O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo. _(linha 198)_
+1. A COR DO STATUS nas vistas: a última lista é sempre verde; as demais usam as 3 primeiras cores de TONS_COLUNA (components/ui/Graficos.tsx). _(linha 23)_
+2. A VISTA EM LISTA: a mesma tarefa em tabela, ordenável por prazo (padrão), prioridade e status. Clicar na linha abre o detalhe. _(linha 40)_
+3. A ORDEM DE PRIORIDADE ao ordenar: alta primeiro, depois média e baixa. _(linha 57)_
+4. O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular. _(linha 136)_
+5. A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos. _(linha 162)_
+6. O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo. _(linha 209)_
 
 ### `components/RecuperarSenhaForm.tsx`
 *o cartão da tela /recuperar-senha. Passo 1: e-mail. Passo 2: "e-mail enviado" (com o botão de demonstração que abre o link). Passo 3: nova senha e confirmação, com as regras em tempo real.*
@@ -949,6 +968,13 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 10. O botão "Restaurar dados de demonstração": volta ao seed e também é a saída da tela de erro de dados danificados. APAGA o que foi editado. _(linha 360)_
 11. As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts. _(linha 386)_
 
+### `lib/tarefas.ts`
+*funções puras para a visão geral de tarefas (/projetos?visao=tarefas) e para o quadro de cada projeto: filtrar por projeto, colaborador, prioridade e etiqueta; ordenar por prazo, prioridade, responsável ou título; e juntar as listas de vários projetos pelo NOME (A fazer, Fazendo, ...).*
+
+1. OS CRITÉRIOS DE ORDEM do quadro e o texto de cada um no seletor "Ordenar por". Critério novo entra aqui, em CRITERIOS_ORDEM e no switch de `ordenarTarefas`. _(linha 15)_
+2. COMO OS FILTROS SE COMBINAM: todos ao mesmo tempo (e), cada um só vale se estiver preenchido. O de projeto aceita vários. _(linha 79)_
+3. COMO AS LISTAS DOS PROJETOS SE JUNTAM no quadro geral: pelo NOME (sem acento nem maiúscula). A lista que é a última de algum projeto ("Pronto") vai sempre para o fim. Lista com nome próprio de um só projeto vira coluna extra. _(linha 107)_
+
 ### `lib/tema.ts`
 *o ÚNICO lugar que sabe ler, aplicar e gravar o tema do CAIS, e o hook useTema() que mantém todos os botões de tema sincronizados.*
 
@@ -1043,4 +1069,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-119 arquivos mapeados, 545 pontos vitais.
+123 arquivos mapeados, 555 pontos vitais.
