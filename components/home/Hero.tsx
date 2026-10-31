@@ -3,13 +3,14 @@
    O que é: a primeira dobra da página: o que é o CAIS em uma frase, os dois
    botões de ação e o diagrama dos três pilares.
    Onde é usado: app/page.tsx.
-   Depende de: next/link, ./LinkRolar, components/marca/TresPilares.tsx e das cores
+   Depende de: next/link, ./LinkRolar, components/marca/TresPilares.tsx, components/marca/OndasDeFundo.tsx e das cores
    --color-noite* e --color-pilar-* de app/globals.css.
    Contexto: §1 (produto e tagline) e §15 item 0 (homepage).
    ============================================================================ */
 import Link from "next/link";
 import LinkRolar from "./LinkRolar";
 import TresPilares from "@/components/marca/TresPilares";
+import OndasDeFundo from "@/components/marca/OndasDeFundo";
 
 /**
  * Hero da homepage. Server Component: texto, links e um SVG (o botão que rola é o LinkRolar, Client).
@@ -23,10 +24,12 @@ export default function Hero() {
   return (
     // pt-28: reserva espaço para o topo fixo (h-16) e ainda deixa respiro.
     <section className="relative overflow-hidden bg-noite pb-16 pt-28 text-white dark:bg-noite-alt sm:pb-24 sm:pt-32">
+      {/* Ondas animadas na "superfície", atrás de tudo. */}
+      <OndasDeFundo />
       {/* Brilho roxo desfocado ao fundo, só decoração. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full bg-pilar-roxo/25 blur-[120px]"
+        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full bg-onda/25 blur-[120px]"
       />
 
       {/* Duas colunas a partir de lg; abaixo disso o diagrama fica embaixo do texto. */}
@@ -47,7 +50,7 @@ export default function Hero() {
             {/* NAVEGA: rola até o formulário de interesse (#participar), TODA vez que clicar (LinkRolar; o Link do Next não rola de novo na mesma âncora). */}
             <LinkRolar
               alvo="participar"
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-botao px-5 text-[15px] font-semibold text-white transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-noite"
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-botao px-5 text-[15px] font-semibold text-sobre-cor transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-noite"
             >
               Quero trazer minha empresa
             </LinkRolar>
