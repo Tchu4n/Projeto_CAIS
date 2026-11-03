@@ -62,6 +62,9 @@ export function criarSeed(): Dados {
     // ⚠️ ATENÇÃO: mudar esses ids ou e-mails desencontra o login de demonstração e o cadastro.
     pessoas: [
       { id: 'pes_admin', nome: 'Administrador CAIS', email: 'admin@cais.com.br', telefone: '', cargo: 'Coordenação do programa', perfil: 'admin', status: 'ativo', dataEntrada: d(-120), area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId: '' },
+      // Admins que entram com o Google (login real, docs/GOOGLE-AUTH.md): o e-mail precisa ser o da conta Google.
+      { id: 'pes_admin_google1', nome: 'Admin CAIS (Google 1)', email: 'proglogicprojetocais@gmail.com', telefone: '', cargo: 'Coordenação do programa', perfil: 'admin', status: 'ativo', dataEntrada: d(-120), area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId: '' },
+      { id: 'pes_admin_google2', nome: 'Admin CAIS (Google 2)', email: 'projetocaisproglogic@gmail.com', telefone: '', cargo: 'Coordenação do programa', perfil: 'admin', status: 'ativo', dataEntrada: d(-120), area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId: '' },
       { id: 'pes_ana', nome: 'Ana Souza', email: 'ana.souza@cais.example', telefone: '(81) 99000-0001', cargo: 'Desenvolvedora', perfil: 'profissional', status: 'ativo', dataEntrada: d(-90), area: 'Front-end', nivel: 'Pleno', cargaMax: 40, habilidades: ['React', 'TypeScript', 'Liderança'], empresaId: '' },
       { id: 'pes_bruno', nome: 'Bruno Lima', email: 'bruno.lima@cais.example', telefone: '(81) 99000-0002', cargo: 'Desenvolvedor', perfil: 'profissional', status: 'ativo', dataEntrada: d(-80), area: 'Front-end', nivel: 'Júnior', cargaMax: 40, habilidades: ['React', 'CSS'], empresaId: '' },
       { id: 'pes_carla', nome: 'Carla Nunes', email: 'carla.nunes@cais.example', telefone: '(81) 99000-0003', cargo: 'Designer', perfil: 'profissional', status: 'ativo', dataEntrada: d(-70), area: 'UX', nivel: 'Pleno', cargaMax: 40, habilidades: ['Figma', 'Pesquisa'], empresaId: '' },

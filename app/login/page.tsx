@@ -6,7 +6,7 @@
      o link "Entrar com outra conta" de /sem-permissao, o fim da recuperação de
      senha (/recuperar-senha) e o layout protegido app/(sistema)/layout.tsx, que
      manda para "/login?voltar=..." quem não tem sessão.
-   Depende de: components/AcessoLayout.tsx (duas colunas, compartilhada com
+   Depende de: auth.ts (googleConfigurado), components/AcessoLayout.tsx (duas colunas, compartilhada com
      recuperar senha e primeiro acesso) e components/LoginForm.tsx (formulário e ?voltar=).
    Contexto: §8 (Onda 1: login), §15 item 1 (autenticação e shell) e
      docs/notas-next16.md §1 (Server Component) e §2 (useSearchParams + Suspense).
@@ -15,6 +15,7 @@
 import { Suspense } from 'react';
 import { LoginForm } from '@/components/LoginForm';
 import AcessoLayout from '@/components/AcessoLayout';
+import { googleConfigurado } from '@/auth';
 
 /**
  * Página de login (rota "/login").
@@ -31,7 +32,8 @@ export default function LoginPage() {
         * <Suspense>, o `npm run build` falha com "useSearchParams() should
         * be wrapped in a suspense boundary" (notas-next16 §2). */}
       <Suspense>
-        <LoginForm />
+        {/* googleConfigurado vem do servidor (auth.ts): o botão do Google só aparece com as credenciais no .env.local. */}
+        <LoginForm googleAtivo={googleConfigurado} />
       </Suspense>
     </AcessoLayout>
   );

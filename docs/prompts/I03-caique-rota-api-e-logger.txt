@@ -1,0 +1,365 @@
+## 🟢 I03 — Rota API + Logger
+
+**Duração:** 1h30  
+**Responsável:** Backend Engineer  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT
+
+```markdown
+TAREFA: Criar rotas API /api/caique/chat e /api/caique/feedback + logging
+
+PASSO 1: Criar lib/caique-logger.ts
+
+/* ============================================================================
+   lib/caique-logger.ts
+   O que é: Logging estruturado de perguntas, respostas e feedback
+   Onde é usado: lib/caique.ts e rotas de API
+   Depende de: fs.promises (Node.js nativo)
+   ============================================================================ */
+
+import { promises as fs } from "fs";
+import { join } from "path";
+
+/**
+ * Interface de log CAIQUE
+ */
+export interface LogCaique {
+  timestamp: string;                      // ISO 8601
+  userId: string;
+  companyId: string;
+  trailId: string;
+  pergunta: string;
+  resposta: string;
+  responseTimeMs: number;
+  tokensUsed: number;
+  usouPesquisaExterna: boolean;
+  erro?: string | null;
+  rating?: 1 | -1;                        // feedback (adicionado depois)
+  comentario?: string;
+}
+
+/**
+ * Grava log de pergunta/resposta
+ */
+export async function gravarLogCaique(log: LogCaique): Promise<void> {
+  try {
+    const logsDir = join(process.cwd(), "logs");
+    const dataHoje = new Date().toISOString().split("T")[0];  // YYYY-MM-DD
+    const fileName = `caique-${dataHoje}.json`;
+    const filePath = join(logsDir, fileName);
+
+    // Criar pasta logs se não existir
+    try {
+      await fs.mkdir(logsDir, { recursive: true });
+    } catch {
+      // pasta já existe
+    }
+
+    // Ler arquivo existente ou criar novo
+    let logs: LogCaique[] = [];
+    try {
+      const content = await fs.readFile(filePath, "utf-8");
+      logs = JSON.parse(content);
+    } catch {
+      // arquivo não existe, começar com []
+      logs = [];
+    }
+
+    // Adicionar novo log
+    logs.push(log);
+
+    // Gravar
+    await fs.writeFile(filePath, JSON.stringify(logs, null, 2));
+  } catch (erro) {
+    console.error("[CAIQUE-LOGGER] Erro ao gravar log:", erro);
+    // Não deixar erro de logging bloquear a resposta ao usuário
+  }
+}
+
+/**
+ * Lê logs de um período
+ */
+export async function lerLogsCaique(
+  companyId: string,
+  dataInicio?: string,
+  dataFim?: string
+): Promise<LogCaique[]> {
+  try {
+    const logsDir = join(process.cwd(), "logs");
+    const files = await fs.readdir(logsDir);
+    const jsonFiles = files.filter((f) => f.startsWith("caique-") && f.endsWith(".json"));
+
+    let allLogs: LogCaique[] = [];
+
+    for (const file of jsonFiles) {
+      const filePath = join(logsDir, file);
+      try {
+        const content = await fs.readFile(filePath, "utf-8");
+        const logs = JSON.parse(content) as LogCaique[];
+        allLogs.push(...logs);
+      } catch {
+        continue;
+      }
+    }
+
+    // Filtrar por companyId
+    allLogs = allLogs.filter((log) => log.companyId === companyId);
+
+    // Filtrar por data se fornecidas
+    if (dataInicio) {
+      allLogs = allLogs.filter((log) => log.timestamp >= dataInicio);
+    }
+    if (dataFim) {
+      allLogs = allLogs.filter((log) => log.timestamp <= dataFim);
+    }
+
+    return allLogs;
+  } catch (erro) {
+    console.error("[CAIQUE-LOGGER] Erro ao ler logs:", erro);
+    return [];
+  }
+}
+
+/**
+ * Calcula estatísticas dos logs
+ */
+export function estatisticasLogs(logs: LogCaique[]) {
+  if (logs.length === 0) {
+    return {
+      totalPerguntas: 0,
+      avgResponseTimeMs: 0,
+      numErros: 0,
+      ratingMedio: 0,
+      percentualComFeedback: 0,
+    };
+  }
+
+  const tempoTotal = logs.reduce((sum, log) => sum + log.responseTimeMs, 0);
+  const numErros = logs.filter((log) => log.erro).length;
+  const comRating = logs.filter((log) => log.rating !== undefined);
+  const ratingMedio = comRating.length > 0
+    ? comRating.reduce((sum, log) => sum + (log.rating || 0), 0) / comRating.length
+    : 0;
+
+  return {
+    totalPerguntas: logs.length,
+    avgResponseTimeMs: tempoTotal / logs.length,
+    numErros,
+    ratingMedio,
+    percentualComFeedback: (comRating.length / logs.length) * 100,
+  };
+}
+
+PASSO 2: Criar app/(sistema)/api/caique/chat/route.ts
+
+/* ============================================================================
+   app/(sistema)/api/caique/chat/route.ts
+   O que é: POST handler para processar pergunta do usuário
+   Onde é usado: Frontend chama POST /api/caique/chat
+   Depende de: lib/caique.ts, lib/auth.tsx
+   ============================================================================ */
+
+import { processarPerguntaDoCaique } from "@/lib/caique";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export async function POST(request: Request) {
+  try {
+    // Validar autenticação
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { erro: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    // Parse body
+    const body = await request.json();
+    const { pergunta, contexto } = body;
+
+    if (!pergunta || !contexto) {
+      return NextResponse.json(
+        { erro: "Campos obrigatórios: pergunta, contexto" },
+        { status: 400 }
+      );
+    }
+
+    // Validar permissão: usuário não pode acessar outro companyId (isolamento)
+    const userCompanyId = (session.user as any).companyId;
+    const userRole = (session.user as any).role;
+
+    if (contexto.companyId !== userCompanyId && userRole !== "admin") {
+      return NextResponse.json(
+        { erro: "Sem permissão para acessar esta empresa" },
+        { status: 403 }
+      );
+    }
+
+    // Chamar orchestrator
+    const resposta = await processarPerguntaDoCaique(pergunta, {
+      userId: session.user.id,
+      companyId: contexto.companyId,
+      trailId: contexto.trailId,
+      trailName: contexto.trailName,
+      userLanguage: contexto.userLanguage || "pt",
+      historicoMensagens: contexto.historicoMensagens || [],
+    });
+
+    // Retornar
+    return NextResponse.json(resposta, {
+      status: resposta.success ? 200 : 400,
+    });
+  } catch (erro: any) {
+    console.error("[CAIQUE-ROUTE] Erro em /api/caique/chat:", erro);
+    return NextResponse.json(
+      { erro: "Erro no servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+PASSO 3: Criar app/(sistema)/api/caique/feedback/route.ts
+
+/* ============================================================================
+   app/(sistema)/api/caique/feedback/route.ts
+   O que é: POST handler para receber feedback do usuário
+   Onde é usado: Frontend envia feedback após cada resposta
+   Depende de: lib/caique-logger.ts
+   ============================================================================ */
+
+import { lerLogsCaique, gravarLogCaique } from "@/lib/caique-logger";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { erro: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { messageId, feedback, comentario } = body;
+
+    if (!messageId || !feedback) {
+      return NextResponse.json(
+        { erro: "Campos obrigatórios: messageId, feedback" },
+        { status: 400 }
+      );
+    }
+
+    if (!["thumbs_up", "thumbs_down"].includes(feedback)) {
+      return NextResponse.json(
+        { erro: "Feedback deve ser: thumbs_up ou thumbs_down" },
+        { status: 400 }
+      );
+    }
+
+    // Buscar log original
+    const userCompanyId = (session.user as any).companyId;
+    const logs = await lerLogsCaique(userCompanyId);
+    
+    // Encontrar por timestamp (messageId é construído como ${timestamp})
+    const logIndex = logs.findIndex((l) => l.timestamp.includes(messageId.substring(0, 19)));
+    if (logIndex === -1) {
+      return NextResponse.json(
+        { erro: "Mensagem não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    // Atualizar com feedback
+    logs[logIndex].rating = feedback === "thumbs_up" ? 1 : -1;
+    if (comentario) {
+      logs[logIndex].comentario = comentario;
+    }
+
+    // Gravar atualizado
+    await gravarLogCaique(logs[logIndex]);
+
+    return NextResponse.json({ ok: true, rating: logs[logIndex].rating });
+  } catch (erro: any) {
+    console.error("[CAIQUE-FEEDBACK] Erro:", erro);
+    return NextResponse.json(
+      { erro: "Erro no servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+PASSO 4: Criar app/(sistema)/api/caique/logs/route.ts (Admin only)
+
+/* ============================================================================
+   app/(sistema)/api/caique/logs/route.ts
+   O que é: GET handler para admin ver logs (analytics)
+   Onde é usado: Dashboard admin
+   Depende de: lib/caique-logger.ts
+   ============================================================================ */
+
+import { lerLogsCaique, estatisticasLogs } from "@/lib/caique-logger";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if ((session.user as any).role !== "admin") {
+      return NextResponse.json(
+        { erro: "Apenas administrador" },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const companyId = searchParams.get("companyId");
+    const dataInicio = searchParams.get("dataInicio");
+    const dataFim = searchParams.get("dataFim");
+
+    if (!companyId) {
+      return NextResponse.json(
+        { erro: "companyId obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    const logs = await lerLogsCaique(companyId, dataInicio || undefined, dataFim || undefined);
+    const stats = estatisticasLogs(logs);
+
+    return NextResponse.json({
+      logs,
+      stats,
+      totalLogs: logs.length,
+    });
+  } catch (erro) {
+    console.error("[CAIQUE-LOGS] Erro:", erro);
+    return NextResponse.json(
+      { erro: "Erro no servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+VALIDAÇÃO:
+- [ ] npm run lint (0 errors)
+- [ ] Rotas criadas em path correto
+- [ ] Autenticação validada
+- [ ] Isolamento de empresa validado
+- [ ] Feedback armazenado (teste com curl)
+
+ENTREGA:
+1. lib/caique-logger.ts
+2. app/(sistema)/api/caique/chat/route.ts
+3. app/(sistema)/api/caique/feedback/route.ts
+4. app/(sistema)/api/caique/logs/route.ts
+5. Screenshot: npm run lint
+6. Confirmação: "Rotas prontas, logs funcionando"
+```

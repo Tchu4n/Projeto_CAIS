@@ -1,0 +1,58 @@
+## 🟢 I05 — Design System Integration
+
+**Duração:** 1h  
+**Responsável:** Frontend Engineer  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT
+
+```markdown
+TAREFA: Aplicar tokens CAIS ao ChatWidget + integrar painel
+
+PASSO 1: Atualizar ChatWidget com tokens CAIS
+
+No ChatWidget.tsx, garantir:
+- Background: bg-superficie
+- Texto: text-tinta
+- Botão: bg-botao text-branco
+- Feedback: text-sucesso / text-erro
+- Tipografia: font-space (títulos), font-archivo (corpo)
+- Espaçamento: gap-2, gap-4, gap-6 (escala Tailwind 4px)
+- Raios: rounded-lg, rounded-2xl (conforme tamanho do elemento)
+- Sombra: shadow-card
+
+PASSO 2: Integrar em painel (app/(sistema)/painel/page.tsx)
+
+Adicionar no final:
+
+import { ChatWidget } from "@/components/caique/ChatWidget";
+
+// Dentro do painel:
+<ChatWidget
+  trailId={trailAtualId || ""}
+  trailName={trailAtualName || "Trilha"}
+  companyId={session?.user?.companyId || ""}
+  userId={session?.user?.id || ""}
+  userLanguage="pt"
+/>
+
+PASSO 3: Testes de responsividade
+
+- [ ] 1280px: chat no canto inferior direito, fixo
+- [ ] 768px: tablet, chat usável
+- [ ] 375px: mobile, chat coluna única, sem horizontal scroll
+- [ ] Sem cobrir conteúdo importante (z-index = 50)
+- [ ] Dark mode funciona (tokens seguem tema)
+
+VALIDAÇÃO:
+- [ ] npm run lint
+- [ ] Tokens aplicados corretamente
+- [ ] Responsividade OK em 3 breakpoints
+- [ ] Design system consistente (cores, fontes, espaçamento)
+
+ENTREGA:
+1. ChatWidget.tsx com tokens CAIS
+2. Painel integrado
+3. Screenshots: 3 breakpoints
+```

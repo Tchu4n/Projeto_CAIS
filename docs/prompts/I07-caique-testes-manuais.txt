@@ -1,0 +1,98 @@
+## 🔴 I07 — Testes Manuais + QA
+
+**Duração:** 2h  
+**Responsável:** QA Engineer  
+**Ferramenta:** Manual (navegador + checklist)  
+**Não é Claude Code**
+
+### Checklist
+
+```markdown
+## Testes Manuais CAIQUE
+
+### TESTE 1: Admin (Profissional)
+
+[ ] Login como admin
+[ ] Painel abre, chat widget presente
+[ ] Clicar chat: abre, botão flutua
+[ ] Digitar pergunta: "O que é OOP?"
+[ ] Enter: pergunta envia
+[ ] Spinner mostra enquanto carrega
+[ ] Resposta aparece (5–10s)
+[ ] Resposta faz sentido (contém "orientação", "objetos", etc)
+[ ] Botões 👍👎 aparecem embaixo da resposta
+[ ] Clicar 👍: toast "Obrigado!"
+[ ] Chat mantém histórico (segunda pergunta refere a primeira)
+[ ] Fechar chat: widget desaparece
+[ ] Reabrir chat: histórico mantém
+
+### TESTE 2: Empresa
+
+[ ] Login como empresa@example.com
+[ ] Painel empresa (ver só seus projetos)
+[ ] Chat abre no painel
+[ ] Perguntar sobre trilha de sua empresa: funciona
+[ ] Perguntar sobre trilha de outra empresa: "Sem acesso" ou sem docs
+[ ] Feedback salva
+[ ] Logout funciona
+
+### TESTE 3: Responsividade Mobile
+
+[ ] Browser 375px (DevTools mobile)
+[ ] Chat abre em tela inteira (modal?)
+[ ] Input usável (não muito pequeno)
+[ ] Histórico scrollável
+[ ] Teclado não cobre resposta
+[ ] Enviar com Enter funciona
+[ ] Feedback usável no celular (não muito pequeno)
+
+### TESTE 4: Performance
+
+[ ] Primeira pergunta: < 10s
+[ ] Segunda pergunta (com histórico): < 10s
+[ ] 5 perguntas consecutivas: nenhuma timeout
+[ ] Não fazer crash se pergunta é muito longa
+[ ] Múltiplos usuários simultâneos: OK (teste manual depois)
+
+### TESTE 5: Erros
+
+[ ] Desligar internet: erro "Sem conexão" aparecer
+[ ] Aguardar e reconectar: funciona
+[ ] Pergunta vazia: erro "Digite algo"
+[ ] Contexto inválido (sem companyId): erro seguro
+[ ] Gemini timeout (simular): "Timeout, tente novamente"
+[ ] Rate limit Gemini (simular): "API sobrecarregada"
+
+### TESTE 6: Logs & Feedback
+
+[ ] Fazer 5 perguntas
+[ ] Clicar feedback (2x 👍, 2x 👎)
+[ ] Admin vai para /painel/caique-analytics
+[ ] Painel mostra: 5 perguntas, 4 com feedback, avg response time
+[ ] Filtro por período funciona
+[ ] Logout e login: logs persistem
+
+### TESTE 7: Design System
+
+[ ] Cores: primária = roxo, sucesso = verde, erro = vermelho
+[ ] Tipografia: títulos = Space Grotesk, corpo = Archivo
+[ ] Espaçamento: gap correto, padding correto
+[ ] Dark mode: chat muda com tema
+[ ] Acessibilidade: aria-label em botões, foco visível
+
+### TESTE 8: Segurança
+
+[ ] Session cookie visível (DevTools Network)
+[ ] NEXTAUTH_SECRET diferente dev/prod
+[ ] Nenhuma chave API exposta (logs, resposta)
+[ ] Isolamento: user A ≠ vê logs de user B
+[ ] CORS: request de outro domínio é bloqueado
+
+RESULTADO ESPERADO:
+8/8 testes ✅ passando
+Nenhum bug crítico
+Pronto para staging
+
+ASSINADO:
+QA Lead: _________________ Data: ___/___
+```

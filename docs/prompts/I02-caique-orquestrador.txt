@@ -1,0 +1,375 @@
+## 🟢 I02 — Backend Orchestrator (lib/caique.ts)
+
+**Duração:** 2h  
+**Responsável:** Backend Engineer  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT (COMPLETO)
+
+```markdown
+TAREFA: Implementar lib/caique.ts — Orchestrator Gemini + Contexto CAIS
+
+REFERÊNCIA:
+- /mnt/user-data/uploads/CAIQUE_Suite_Completa_v1_0.zip → CAIQUE_System_Prompt_v1.md
+- docs/contexto-cais.md § 4 (Trilhas)
+- CLAUDE.md (padrões de comentários)
+
+PASSO 1: Criar lib/caique-system-prompt.ts
+
+/* ============================================================================
+   lib/caique-system-prompt.ts
+   O que é: System prompt oficial para Gemini, em português
+   Onde é usado: lib/caique.ts ao chamar Gemini
+   Depende de: Nada (puro texto)
+   Contexto: § 5 (Projetos) de docs/contexto-cais.md
+   ============================================================================ */
+
+/**
+ * System prompt oficial para CAIQUE
+ * Copiar exatamente de CAIQUE_System_Prompt_v1.md
+ * 
+ * Instruções críticas:
+ * - Responder APENAS sobre trilhas
+ * - Usar documentação fornecida
+ * - Modo conversacional (português claro)
+ * - Máx 500 palavras por resposta
+ */
+export function getSystemPrompt(
+  trailName: string,
+  language: "pt" | "en" | "es"
+): string {
+  const prompts = {
+    pt: `Você é CAIQUE, assistente IA especializado na trilha "${trailName}". 
+Sua missão é esclarecer dúvidas sobre o conteúdo desta trilha de forma clara e conversacional.
+
+REGRAS OBRIGATÓRIAS:
+1. Responda APENAS sobre "${trailName}"
+2. Se pergunta é fora do escopo: "Não posso ajudar com isso, sou especializado em ${trailName}"
+3. Use os documentos fornecidos como base (quando disponível)
+4. Respostas em português, máximo 500 palavras
+5. Se não sabe: "Não encontrei essa informação nos materiais"
+6. Nunca invente conteúdo da trilha
+
+RECURSOS DISPONÍVEIS:
+- Etapas e conteúdo de ${trailName}
+- Histórico da conversa (últimas 10 mensagens)
+
+ESTILO:
+- Conversacional, amigável
+- Use exemplos quando possível
+- Pergunte para clarificar se necessário`,
+    en: `You are CAIQUE, an AI assistant specialized in the "${trailName}" learning trail.
+Your mission is to clarify questions about this trail's content clearly and conversationally.
+
+MANDATORY RULES:
+1. Answer ONLY about "${trailName}"
+2. If question is out of scope: "I can't help with that, I specialize in ${trailName}"
+3. Use provided documents as base
+4. Respond in English, max 500 words
+5. If unsure: "I didn't find that information in the materials"
+6. Never invent trail content
+
+AVAILABLE RESOURCES:
+- Stages and content of ${trailName}
+- Conversation history (last 10 messages)
+
+STYLE:
+- Conversational, friendly
+- Use examples when possible`,
+    es: `Eres CAIQUE, asistente IA especializado en la ruta "${trailName}".
+Tu misión es aclarar dudas sobre el contenido de esta ruta de forma clara y conversacional.
+
+REGLAS OBLIGATORIAS:
+1. Responde SOLO sobre "${trailName}"
+2. Si pregunta es fuera del alcance: "No puedo ayudarte con eso, soy especialista en ${trailName}"
+3. Usa documentos proporcionados como base
+4. Responde en español, máximo 500 palabras
+5. Si no sabes: "No encontré esa información en los materiales"
+6. Nunca inventes contenido de la ruta
+
+RECURSOS DISPONIBLES:
+- Etapas y contenido de ${trailName}
+- Historial de conversación (últimas 10 mensajes)
+
+ESTILO:
+- Conversacional, amigable
+- Usa ejemplos cuando sea posible`,
+  };
+  
+  return prompts[language] || prompts.pt;
+}
+
+PASSO 2: Criar lib/caique.ts (Orchestrator Principal)
+
+/* ============================================================================
+   lib/caique.ts
+   O que é: Orchestrator que integra Gemini API com contexto do CAIS
+   Onde é usado: Rota /api/caique/chat, função chamada por POST handler
+   Depende de: lib/caique-system-prompt.ts, lib/escopo.ts, lib/caique-logger.ts
+   Contexto: § 6 (Dashboards) e § 7 (Técnico) de docs/contexto-cais.md
+   ============================================================================ */
+
+import { getSystemPrompt } from "@/lib/caique-system-prompt";
+import { docsDaTrilhaVisiveis } from "@/lib/escopo";
+import { gravarLogCaique } from "@/lib/caique-logger";
+
+/**
+ * Tipo: Contexto do usuário na sessão CAIQUE
+ */
+export interface CaiqueContext {
+  userId: string;                                    // "ana.souza"
+  companyId: string;                                 // "vertice"
+  trailId: string;                                   // "trilha-js-avancado"
+  trailName: string;                                 // "JavaScript Avançado"
+  userLanguage: "pt" | "en" | "es";                  // idioma do usuário
+  historicoMensagens: Array<{                        // últimas 10 mensagens
+    role: "user" | "assistant";
+    content: string;
+  }>;
+}
+
+/**
+ * Tipo: Resposta do CAIQUE
+ */
+export interface CaiqueResponse {
+  success: boolean;
+  resposta: string;                                  // texto da resposta
+  metadata: {
+    responseTimeMs: number;
+    tokensUsed: number;
+    modelo: string;                                  // "gemini-2.0-flash"
+    fonte: string;                                   // qual doc foi usado
+    idioma: string;                                  // idioma da resposta
+  };
+  erro?: string;                                     // se success=false
+}
+
+/**
+ * Processa uma pergunta do usuário via CAIQUE
+ * @param pergunta Texto da pergunta em linguagem natural
+ * @param contexto Dados do usuário (userId, companyId, trailId, etc)
+ * @returns Resposta estruturada com metadata
+ * @throws Error se GEMINI_API_KEY não estiver definida
+ * @example
+ * const res = await processarPerguntaDoCaique(
+ *   "Como usar async/await em JavaScript?",
+ *   {
+ *     userId: "ana.souza",
+ *     companyId: "vertice",
+ *     trailId: "trilha-js-avancado",
+ *     trailName: "JavaScript Avançado",
+ *     userLanguage: "pt",
+ *     historicoMensagens: [{ role: "user", content: "Oi" }]
+ *   }
+ * )
+ * // → { success: true, resposta: "async/await é...", metadata: {...} }
+ */
+export async function processarPerguntaDoCaique(
+  pergunta: string,
+  contexto: CaiqueContext
+): Promise<CaiqueResponse> {
+  const startTime = performance.now();
+
+  try {
+    // PASSO 1: Validar contexto
+    if (!pergunta?.trim()) {
+      return {
+        success: false,
+        resposta: "",
+        metadata: { responseTimeMs: 0, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+        erro: "Pergunta vazia",
+      };
+    }
+
+    if (!contexto.userId || !contexto.companyId || !contexto.trailId) {
+      return {
+        success: false,
+        resposta: "",
+        metadata: { responseTimeMs: 0, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+        erro: "Contexto inválido (userId, companyId, trailId obrigatórios)",
+      };
+    }
+
+    // PASSO 2: Buscar documentos da trilha (isolamento por companyId)
+    const docs = await docsDaTrilhaVisiveis(contexto.companyId, contexto.trailId);
+    if (!docs || docs.length === 0) {
+      // ⚠️ ATENÇÃO: Posso responder mesmo sem docs? Sim, mas com menos contexto.
+      // Aqui escolhemos: retornar erro se não tiver docs (mais seguro)
+      return {
+        success: false,
+        resposta: "",
+        metadata: { responseTimeMs: 0, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+        erro: "Nenhum documento encontrado para esta trilha",
+      };
+    }
+
+    // SIMULADO: Aqui entraríamos em API real; por enquanto, usar mock
+    // TODO(API): Quando API Gemini estiver configurada, descomente fetch abaixo
+
+    // PASSO 3: Montar system prompt
+    const systemPrompt = getSystemPrompt(contexto.trailName, contexto.userLanguage);
+    const docsContexto = docs
+      .map((doc) => `${doc.titulo || doc.nome}: ${doc.conteudo || doc.descricao}`)
+      .join("\n\n---\n\n")
+      .substring(0, 2000);  // limitar tamanho
+
+    // PASSO 4: Chamar Gemini API
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${
+      process.env.GEMINI_MODEL || "gemini-2.0-flash"
+    }:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+    const timeout = parseInt(process.env.GEMINI_TIMEOUT_MS || "8000");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    const geminiBody = {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }],
+      },
+      contents: [
+        // Histórico de mensagens anteriores
+        ...contexto.historicoMensagens.slice(-10).map((msg) => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        })),
+        // Pergunta atual
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Documentos da trilha disponíveis:\n\n${docsContexto}\n\nPergunta: ${pergunta}`,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 500,
+        topP: 0.9,
+      },
+    };
+
+    let geminiResponse;
+    try {
+      const response = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(geminiBody),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Tratar erros específicos do Gemini
+        if (response.status === 429) {
+          return {
+            success: false,
+            resposta: "",
+            metadata: { responseTimeMs: performance.now() - startTime, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+            erro: "API sobrecarregada. Tente novamente em alguns segundos.",
+          };
+        }
+        
+        if (response.status === 401) {
+          return {
+            success: false,
+            resposta: "",
+            metadata: { responseTimeMs: performance.now() - startTime, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+            erro: "Erro de autenticação com Gemini. Verifique GEMINI_API_KEY.",
+          };
+        }
+
+        throw new Error(`Gemini API error: ${response.status} ${errorData?.error?.message || ""}`);
+      }
+
+      geminiResponse = await response.json();
+    } catch (e: any) {
+      clearTimeout(timeoutId);
+
+      if (e.name === "AbortError") {
+        return {
+          success: false,
+          resposta: "",
+          metadata: { responseTimeMs: performance.now() - startTime, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+          erro: `Timeout após ${timeout}ms. Tente uma pergunta mais simples.`,
+        };
+      }
+
+      throw e;
+    }
+
+    // PASSO 5: Parse resposta Gemini
+    const texto = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!texto) {
+      return {
+        success: false,
+        resposta: "",
+        metadata: { responseTimeMs: performance.now() - startTime, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+        erro: "Resposta vazia do Gemini",
+      };
+    }
+
+    // PASSO 6: Calcular metadata
+    const responseTimeMs = performance.now() - startTime;
+    const tokensUsed = geminiResponse?.usageMetadata?.totalTokenCount || 0;
+    const fonte = docs?.[0]?.titulo || docs?.[0]?.nome || "desconhecido";
+
+    const metadata = {
+      responseTimeMs,
+      tokensUsed,
+      modelo: process.env.GEMINI_MODEL || "gemini-2.0-flash",
+      fonte,
+      idioma: contexto.userLanguage,
+    };
+
+    // PASSO 7: Gravar log
+    // GRAVA: histórico de perguntas e respostas (para feedback e análise)
+    await gravarLogCaique({
+      timestamp: new Date().toISOString(),
+      userId: contexto.userId,
+      companyId: contexto.companyId,
+      trailId: contexto.trailId,
+      pergunta,
+      resposta: texto,
+      responseTimeMs,
+      tokensUsed,
+      usouPesquisaExterna: false,  // v1: sempre false
+      erro: null,
+    });
+
+    // PASSO 8: Retornar sucesso
+    return {
+      success: true,
+      resposta: texto,
+      metadata,
+    };
+  } catch (erro: any) {
+    console.error("[CAIQUE] Erro em processarPerguntaDoCaique:", erro);
+    const responseTimeMs = performance.now() - startTime;
+    return {
+      success: false,
+      resposta: "",
+      metadata: { responseTimeMs, tokensUsed: 0, modelo: "", fonte: "", idioma: contexto.userLanguage },
+      erro: erro.message || "Erro desconhecido ao processar pergunta",
+    };
+  }
+}
+
+VALIDAÇÃO:
+- [ ] npm run lint (0 errors)
+- [ ] npx tsc --noEmit (0 TS errors)
+- [ ] Funções com JSDoc completo
+- [ ] Error handling para: vazio, contexto inválido, docs não encontrado, timeout, 429, 401
+
+ENTREGA:
+1. lib/caique-system-prompt.ts
+2. lib/caique.ts com orchestrator completo
+3. Screenshot: npm run lint
+4. Confirmação: "Orchestrator pronto, sem dependências externas ainda"
+
+PRÓXIMO: I03 criará a rota que chama isto
+```
