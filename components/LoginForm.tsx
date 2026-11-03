@@ -4,7 +4,7 @@
    sair do campo, mensagens de erro claras e três botões "Entrar como" que
    preenchem e-mail e senha de uma conta de demonstração de cada perfil.
    Onde é usado: app/login/page.tsx (tela de login, ao lado do BrandPanel).
-   Depende de: lib/auth (useAuth, CONTAS_DEMO, SENHA_DEMO), lib/utils (EMAIL_REGEX, mascaraEmail), lib/tipos (Perfil), next/navigation (useRouter,
+   Depende de: next-auth/react (signIn, só no botão do Google), lib/auth (useAuth, CONTAS_DEMO, SENHA_DEMO), lib/utils (EMAIL_REGEX, mascaraEmail), lib/tipos (Perfil), next/navigation (useRouter,
    useSearchParams), lucide-react e dos componentes ./input, ./button,
    ./checkbox, ./BotaoEntrar (o botão animado) e ./CaisLogo.
    Contexto: §15 (organograma: Login → Shell; Esqueci a senha; Primeiro
@@ -15,7 +15,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, CircleAlert, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
+import { Mail, Lock, CircleAlert, ShieldCheck, GraduationCap, Building2, LogIn } from "lucide-react";
+import { signIn } from "next-auth/react";
 import { useAuth, CONTAS_DEMO, SENHA_DEMO } from "@/lib/auth";
 import { EMAIL_REGEX, mascaraEmail } from "@/lib/utils";
 import type { Perfil } from "@/lib/tipos";
@@ -51,6 +52,17 @@ const COPY = {
   inactive: "Esta conta está inativa e não pode entrar. Fale com o administrador do programa para reativá-la.",
   // Convite ainda não usado: a senha só existe depois do primeiro acesso.
   invited: "Você ainda não ativou a conta. Abra o link do convite que recebeu para criar a sua senha.",
+  // Login com Google: o botão só aparece se as credenciais estiverem configuradas (auth.ts, googleConfigurado).
+  googleButton: "Entrar com Google",
+  googleDivider: "ou",
+  googleConnecting: "Abrindo o Google…",
+  // Motivos de ?google= (vindos de /login/google): cada um diz o que houve e como seguir.
+  googleErros: {
+    "nao-cadastrado": "Este e-mail Google não está cadastrado no programa. Peça um convite ao administrador ou entre com outra conta.",
+    inativo: "Esta conta está inativa e não pode entrar. Fale com o administrador do programa para reativá-la.",
+    convidado: "Você ainda não ativou a conta. Abra o link do convite que recebeu para criar a sua senha.",
+    cancelado: "O login com Google não foi concluído. Tente de novo.",
+  } as Record<string, string>,
   demoLabel: "Entrar como",
   demoHint: "Só no protótipo: o botão preenche e-mail e senha. Você ainda clica em Entrar.",
   demoSenha: "Senha de todas (até alguém trocar a sua)",
@@ -100,9 +112,10 @@ function validar(email: string, password: string): Erros {
  * Cartão de login do CAIS.
  * Fluxo: valida → chama `entrar` (lib/auth) → em caso de sucesso, NAVEGA para
  * o endereço de ?voltar= (ou /painel); em caso de erro, mostra o aviso e balança o cartão.
+ * @param googleAtivo - true mostra o botão "Entrar com Google" (a página decide, pelas variáveis de ambiente).
  * @returns o cartão com o formulário.
  */
-export const LoginForm = () => {
+export const LoginForm = ({ googleAtivo = false }: { googleAtivo?: boolean }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // "Lembrar-me": decide se a sessão fica no localStorage (sobrevive ao fechar
@@ -131,7 +144,9 @@ export const LoginForm = () => {
   // volta para onde queria ir. Sem o parâmetro, vai para o painel.
   const voltar = params.get("voltar");
   // ?aviso=inativa: o layout do sistema encerrou a sessão de uma conta que foi inativada enquanto estava aberta.
-  const avisoDaUrl = params.get("aviso") === "inativa" ? COPY.inactive : "";
+  // ?google=<motivo>: /login/google devolveu a pessoa porque o Google não pôde entrar (conta fora do cadastro, inativa...).
+  const motivoGoogle = params.get("google");
+  const avisoDaUrl = params.get("aviso") === "inativa" ? COPY.inactive : (motivoGoogle && COPY.googleErros[motivoGoogle]) || "";
   // [PV-5] PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel.
   // Só aceita caminho interno ("/algo", mas não "//site.com", que o navegador
   // trataria como outro site) e nunca o próprio /login (cairia em laço).
@@ -160,6 +175,16 @@ export const LoginForm = () => {
     irParaODestino();
   }, [irParaODestino]);
 
+  // true enquanto o navegador segue para o Google (trava o botão para não clicar duas vezes).
+  const [abrindoGoogle, setAbrindoGoogle] = useState(false);
+
+  // NAVEGA: sai do site para o Google; ele devolve a pessoa em /login/google, que abre a sessão do CAIS.
+  // [PV-6] O BOTÃO DO GOOGLE: o destino do retorno é /login/google?voltar=<destino>. Mudar a rota exige mudar app/login/google e o endereço no Google Cloud.
+  const entrarComGoogle = () => {
+    setAbrindoGoogle(true);
+    void signIn("google", { redirectTo: `/login/google?voltar=${encodeURIComponent(destino)}` });
+  };
+
   // Estado "sucesso" (borda verde) só depois de tocado e com formato válido.
   const emailValido = tocado.email && !erros.email && EMAIL_REGEX.test(email.trim());
 
@@ -172,7 +197,7 @@ export const LoginForm = () => {
     setErros((prev) => ({ ...prev, [campo]: v[campo] }));
   };
 
-  // [PV-6] O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx.
+  // [PV-7] O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx.
   /* ==========================================================================
      3) AUTENTICAÇÃO — é aqui que você pluga sua API real
      ==========================================================================
@@ -224,12 +249,12 @@ export const LoginForm = () => {
         irParaODestino();
         return; // mantém o botão animando até a troca de página
       }
-      // [PV-7] A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui.
+      // [PV-8] A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui.
       // Login recusado: cada motivo tem a sua mensagem (senha errada, conta inativa ou convite pendente).
       setAuthError(r.motivo === 'inativo' ? COPY.inactive : r.motivo === 'convidado' ? COPY.invited : COPY.authFailed);
       setShakeKey((k) => k + 1);
     } catch {
-      // [PV-8] A mensagem de falha de rede ou servidor (diferente de senha errada).
+      // [PV-9] A mensagem de falha de rede ou servidor (diferente de senha errada).
       // Falha de rede ou servidor (a promessa deu erro): mensagem diferente de "senha errada".
       setAuthError("Não foi possível conectar. Verifique sua internet e tente de novo.");
       setShakeKey((k) => k + 1);
@@ -340,7 +365,7 @@ export const LoginForm = () => {
           </Link>
         </div>
 
-        {/* [PV-9] O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. */}
+        {/* [PV-10] O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. */}
         {/* executando = login em andamento (campos válidos): o barquinho navega até o logo; recusado, volta ao início. */}
         <div className="mt-1">
           <BotaoEntrar executando={loading} aoTerminar={aoTerminarAnimacao} textoExecutando={COPY.submitting}>
@@ -348,6 +373,21 @@ export const LoginForm = () => {
           </BotaoEntrar>
         </div>
       </form>
+
+      {/* Login com Google: só se as credenciais existirem (googleAtivo). Fica fora do <form> para não disparar o envio por e-mail e senha. */}
+      {googleAtivo && (
+        <div className="mt-5">
+          <div className="mb-4 flex items-center gap-3 text-xs text-tinta-suave" aria-hidden="true">
+            <span className="h-px flex-1 bg-borda" />
+            {COPY.googleDivider}
+            <span className="h-px flex-1 bg-borda" />
+          </div>
+          <Button type="button" variante="secundario" larguraTotal disabled={loading || abrindoGoogle} onClick={entrarComGoogle}>
+            <LogIn aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {abrindoGoogle ? COPY.googleConnecting : COPY.googleButton}
+          </Button>
+        </div>
+      )}
 
       {/* SIMULADO: botões "Entrar como" com as contas fictícias de lib/auth (CONTAS_DEMO).
        * Cada botão preenche e-mail e senha da conta daquele perfil e limpa erros antigos;

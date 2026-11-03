@@ -81,6 +81,9 @@ A regra fica em `lib/carga.ts` (funções puras, testadas em `lib/carga.casos.ts
 - Onde o semáforo aparece: tela `/carga`; modal "Alocar pessoa" (prévia antes × depois por semana, aviso com as semanas acima do limite e o botão "Usar dd/mm como início", da `proximaJanelaLivre`, mantendo a duração em dias úteis); select de pessoas com o pico no período do projeto; coluna Carga da aba Equipe (pico da pessoa no período da alocação; a empresa não vê); card do painel do admin (com "Ver carga da equipe"); "Minha carga da semana" do profissional (8 semanas e a quebra por projeto); e "Disponibilidade" na ficha de pessoa.
 - Cenários do seed: **Bruno** acima do limite (30 + 15 h nos mesmos dias); **Diego**, o exemplo do time (§16): 10 h/sem no Sprint de acessibilidade até daqui a 7 dias e 30 h/sem no Portal a partir do 8º dia, nunca acima do limite; **Elisa** (limite 30 h) acima do limite só em 2 semanas; **Gabriela** livre.
 
+## Login com Google
+Botão "Entrar com Google" em `/login` (só com `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` e `AUTH_SECRET` no `.env.local`). O Google só prova o e-mail; o perfil vem do cadastro e e-mail fora dele, conta inativa ou convite pendente não entram. Passo a passo e pendências em `docs/GOOGLE-AUTH.md`. Os prompts do CAIQUE (I01 a I12) estão em `docs/prompts/`, ainda não implementados.
+
 ## Permissões por perfil
 
 As regras ficam em funções puras, sem React, e podem ser testadas com Node:

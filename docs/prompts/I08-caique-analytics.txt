@@ -1,0 +1,29 @@
+## 🔵 I08 — Analytics Dashboard (OPCIONAL, v1.5)
+
+**Duração:** 2h  
+**Responsável:** Frontend Engineer  
+**Ferramenta:** Claude Code  
+**Status:** Pode skipar em v1, fazer em v1.5
+
+### SUB-PROMPT (resumido)
+
+```markdown
+TAREFA: Criar página /app/(sistema)/painel/caique-analytics/page.tsx (OPCIONAL)
+
+O QUE FAZER:
+1. Criar rota analytics (só admin)
+2. Chamar GET /api/caique/logs?companyId=X
+3. Mostrar gráficos:
+   - # perguntas por dia (chart)
+   - Avg response time (gauge)
+   - % feedback positivo (gauge)
+   - Trilhas mais perguntadas (tabela)
+4. Filtros: data início, data fim, company
+
+OPCIONAL: pode fazer em v1.5, não é crítico para v1
+
+ENTREGA:
+1. página analytics
+2. Gráficos funcionando
+3. Filtros funcionando
+```

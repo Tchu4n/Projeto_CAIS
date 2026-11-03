@@ -1,0 +1,112 @@
+## 🔴 I01 — Setup & Segurança CAIQUE
+
+**Duração:** 1h30  
+**Responsável:** DevOps + Backend Lead  
+**Ferramenta:** Manual + arquivo  
+**Não é Claude Code (setup + estrutura)**
+
+### Checklist
+
+```markdown
+## CAIQUE Setup Inicial
+
+### I01.1 — Google Gemini API
+
+[ ] 1. Ir para https://console.cloud.google.com
+[ ] 2. Criar novo projeto: "CAIS-CAIQUE"
+[ ] 3. Ativar "Generative AI API"
+[ ] 4. Ativar "Vertex AI API"
+[ ] 5. Criar API Key (tipo: Restricted API Key)
+[ ] 6. Adicionar ao .env.local:
+    GEMINI_API_KEY=sua_key_aqui
+    GEMINI_MODEL=gemini-2.0-flash
+    GEMINI_TIMEOUT_MS=8000
+[ ] 7. Testar com curl:
+    curl -X POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API_KEY \
+      -H "Content-Type: application/json" \
+      -d '{"contents":[{"parts":[{"text":"Olá"}]}]}'
+[ ] 8. Response deve conter {"candidates":[...]}
+
+### I01.2 — Criar Estrutura de Pastas
+
+[ ] Criar: components/caique/
+    ├── ChatWidget.tsx
+    ├── ChatMessage.tsx
+    ├── ChatFeedback.tsx
+    └── index.ts
+
+[ ] Criar: app/(sistema)/api/caique/
+    ├── chat/
+    │   └── route.ts
+    ├── feedback/
+    │   └── route.ts
+    └── logs/
+        └── route.ts
+
+[ ] Criar: lib/
+    ├── caique.ts (orchestrator)
+    ├── caique-logger.ts (logging)
+    ├── caique.test.ts (Jest)
+    └── caique-system-prompt.ts (system prompt do Gemini)
+
+[ ] Criar: logs/ (pasta vazia, para arquivo JSON)
+
+### I01.3 — Validar Isolamento de Empresa
+
+[ ] Função docsDaTrilhaVisiveis em lib/escopo.ts:
+    - Input: companyId, trailId
+    - Query: SELECT * FROM trilha_docs WHERE company_id=? AND trail_id=?
+    - Output: docs ou []
+    - Teste: empresa A não vê docs de empresa B
+
+[ ] Testes de segurança em lib/carga.casos.ts:
+    - [ ] T1: Admin vê todas as trilhas
+    - [ ] T2: Empresa A ≠ vê Empresa B
+    - [ ] T3: Profissional de A ≠ vê trilha de B
+    - [ ] T4: SQL injection bloqueado
+    - [ ] T5: XSS sanitizado
+
+### I01.4 — Atualizar CLAUDE.md
+
+Adicionar seção:
+
+```
+## CAIQUE - Chatbot IA para Trilhas
+
+### O que é
+Assistente IA que responde dúvidas sobre trilhas. Usa Google Gemini API.
+
+### Pastas
+- components/caique/ — React components
+- app/(sistema)/api/caique/ — Rotas API
+- lib/caique*.ts — Lógica, logging, testes
+
+### Variáveis de env
+- GEMINI_API_KEY (obrigatória)
+- GEMINI_MODEL (padrão: gemini-2.0-flash)
+- GEMINI_TIMEOUT_MS (padrão: 8000)
+
+### Padrão de comentários
+Seguir CLAUDE.md padrão. Adicionar:
+// SIMULADO: antes de chamar API real
+// TODO(API): quando API Gemini mudar
+```
+
+### I01.5 — Criar arquivo .env.example
+
+```
+# Google Gemini API
+GEMINI_API_KEY=seu_api_key
+GEMINI_MODEL=gemini-2.0-flash
+GEMINI_TIMEOUT_MS=8000
+```
+
+ENTREGA ESPERADA:
+- [ ] Google Console mostra Gemini API ativa
+- [ ] .env.local preenchido (3 variáveis)
+- [ ] curl test retorna resposta JSON
+- [ ] Pastas criadas
+- [ ] docsDaTrilhaVisiveis implementada
+- [ ] 5 testes de segurança passando
+- [ ] CLAUDE.md atualizado
+```

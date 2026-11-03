@@ -32,6 +32,10 @@ linguagem simples e proponha duas alternativas"*.
 | **F · Semáforo de carga** | F01 → F04 | regra por período, tela "Carga da equipe", sugestão de data livre | C03 (F04 também usa D05) |
 | **G · Lacunas do deck** | G01, G02, G03 | filtros por período, quadro em tempo real simulado, anexos simulados | C |
 | **H · Revisão** | H01 | checklist da definição de pronto | rode ao fim de cada bloco |
+| **J · Google Auth** | J01 → J05 | login com Google via NextAuth (J01 é manual no Google Cloud) | C02 |
+| **I · CAIQUE** | I01 → I12 | chatbot de IA (Gemini 2.0 Flash) com isolamento por empresa; I01/I07 manuais, I09 a I12 são documentação | J, D |
+
+> Blocos J e I vieram de `Desktop/prompts pra adicionar`. O ajuste Flash (modelo `gemini-2.0-flash`, timeout 8000) já está aplicado. O **I04 é um esqueleto**: aponta para um documento que não veio junto e precisa ser reescrito antes de rodar. Os prompts foram escritos de forma genérica: o J02 a J05 são adaptados ao código real do CAIS no plano de cada execução.
 
 Dentro de cada bloco, siga a ordem dos números. Entre blocos há alguma
 liberdade. Se a prioridade for o semáforo, por exemplo, dá para rodar F01 a

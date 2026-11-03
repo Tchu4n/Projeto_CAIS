@@ -1,0 +1,114 @@
+## 🟢 J03 — Provider Google + Integrar lib/auth.ts
+
+**Duração:** 2h  
+**Responsável:** Backend Engineer  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT
+
+```markdown
+TAREFA: Configurar Google Provider e testar autenticação
+
+O QUE FAZER:
+
+1. Atualizar lib/auth.ts com callback de BD
+
+   // Após a seção "declare module", adicionar:
+   
+   import { db } from "@/lib/db";  // assumindo que já existe
+   
+   // No callbacks.jwt:
+   async jwt({ token, user, account }) {
+     if (user) {
+       token.id = user.id;
+       // Buscar do BD
+       const userData = await db.user.findUnique({
+         where: { email: user.email || "" },
+         include: { empresa: true }
+       });
+       
+       if (userData) {
+         token.companyId = userData.empresa?.id || "default";
+         token.role = userData.role || "profissional";
+       } else {
+         // SIMULADO: primeiro login Google = profissional de empresa default
+         token.companyId = "default-company";
+         token.role = "profissional";
+       }
+     }
+     return token;
+   }
+   
+   // No callbacks.signIn:
+   async signIn({ user, account, profile, email, credentials }) {
+     // TODO(API): Implementar quando BD de usuários existir
+     // Por enquanto: permitir qualquer email Google
+     if (!user.email) return false;
+     return true;
+   }
+
+2. Criar lib/db.ts (conexão mock ou Prisma)
+
+   /* ============================================================================
+      lib/db.ts
+      O que é: Cliente do banco de dados (Prisma ou mock)
+      ============================================================================ */
+   
+   // Se usar Prisma:
+   import { PrismaClient } from "@prisma/client";
+   
+   const globalForPrisma = global as unknown as { prisma: PrismaClient };
+   
+   export const db =
+     globalForPrisma.prisma ||
+     new PrismaClient({
+       log: ["query"],
+     });
+   
+   if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+   
+   // Se mock (sem Prisma ainda):
+   export const db = {
+     user: {
+       findUnique: async (where: any) => {
+         // Retornar null (usuário não existe) ou dados mock
+         return null;
+       }
+     }
+   };
+
+3. Testar flow de login localmente
+
+   - npm run dev
+   - Ir para http://localhost:3000/login
+   - Clicar em "Entrar com Google"
+   - Verificar se redireciona para Google
+   - Fazer login com conta Google
+   - Verificar se volta para /painel com sessão ativa
+
+4. Verificar sessão no console
+
+   // Em qualquer página autenticada, adicionar:
+   
+   import { useSession } from "next-auth/react";
+   
+   export default function TestSession() {
+     const { data: session } = useSession();
+     console.log("Session:", session);
+     return <pre>{JSON.stringify(session, null, 2)}</pre>;
+   }
+
+VALIDAÇÃO:
+- [ ] Login redireciona para Google
+- [ ] Volta do Google para /painel
+- [ ] Session contém: user.email, user.id, user.companyId, user.role
+- [ ] Logout funciona (/login redireciona para /api/auth/signout)
+- [ ] npm run lint (0 errors)
+
+ENTREGA:
+1. lib/auth.ts com callbacks BD integrados
+2. lib/db.ts (mock ou Prisma)
+3. Screenshot: Session object no console
+4. Confirmação: "Login Google funciona, sessão ativa"
+```

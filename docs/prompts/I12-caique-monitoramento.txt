@@ -1,0 +1,89 @@
+## 🔵 I12 — Monitoring & Metrics
+
+**Duração:** 45 min  
+**Responsável:** DevOps  
+**Ferramenta:** Documentação  
+**Não é Claude Code**
+
+### Conteúdo
+
+```markdown
+# CAIQUE — Monitoring & Metrics
+
+## Dashboard Recomendado (Datadog / New Relic / Prometheus)
+
+### Panel 1: Response Time
+- Métrica: `caique.response_time_ms`
+- Target: avg < 5s, p99 < 10s
+- Alert: > 10s por 5 min
+
+### Panel 2: Error Rate
+- Métrica: `caique.errors_total` / `caique.requests_total`
+- Target: < 5%
+- Alert: > 10% por 2 min
+
+### Panel 3: Feedback Score
+- Métrica: `caique.feedback_positive` / `caique.feedback_total`
+- Target: > 60%
+- Alert: < 30%
+
+### Panel 4: API Usage
+- Métrica: `caique.requests_total` por dia
+- Trend: crescimento esperado? (mais usuários = mais perguntas)
+
+### Panel 5: Gemini API Quota
+- Métrica: `gemini.tokens_used` / `gemini.quota_limit`
+- Target: < 80%
+- Alert: > 90%
+
+## Logs Estruturados
+
+Formato JSON (logs/caique-*.json):
+
+```json
+{
+  "timestamp": "2026-11-03T14:30:00Z",
+  "userId": "ana.souza",
+  "companyId": "vertice",
+  "trailId": "trilha-js",
+  "responseTimeMs": 2500,
+  "tokensUsed": 150,
+  "erro": null,
+  "rating": 1
+}
+```
+
+Parsing: `jq '.[] | select(.responseTimeMs > 10000)' logs/caique-*.json` (queries)
+
+## SLA Proposto
+
+- Uptime: 99.5% (máx 3h downtime/mês)
+- Response time p99: 10s
+- Availability: 24/7 (sem janela de manutenção)
+- Recovery: < 5 min se down
+
+## Checklist de Lançamento
+
+- [ ] Métricas configuradas
+- [ ] Alertas ligados
+- [ ] Dashboard criado
+- [ ] Playbook de incident escrito
+- [ ] Runbook de rollback pronto
+- [ ] On-call definido
+
+## Escalação de Incidentes
+
+| Severidade | Sintoma | Ação | Tempo |
+|---|---|---|---|
+| P1 (crítico) | Chat down ou erro 100% | Rollback imediato | < 5 min |
+| P2 (alto) | Response time > 15s ou error > 20% | Investigar + hotfix | < 30 min |
+| P3 (médio) | Response time > 10s ou error > 10% | Agendado | < 4h |
+| P4 (baixo) | Feedback score < 50% | Backlog | < 1 semana |
+
+## Roadmap Observabilidade (v2)
+
+- [ ] Distributed tracing (OpenTelemetry)
+- [ ] Custom metrics (pergunta por categoria, etc)
+- [ ] Alertas inteligentes (ML-based)
+- [ ] Dashboard em tempo real para Admin
+```
