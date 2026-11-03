@@ -12,7 +12,8 @@
      (useRouter, usePathname), lib/permissoes.ts (podeAcessar e a guarda da trilha obrigatória),
      lib/store.tsx (useDados, para saber a trilha pendente), components/shell/Sidebar.tsx,
      components/shell/Topbar.tsx, components/shell/TrilhaPendente.tsx, components/CaisLogo.tsx (CaisMark),
-     components/ui/basicos.tsx (EstadoErro, quando a store não lê os dados) e components/button.tsx.
+     components/ui/basicos.tsx (EstadoErro, quando a store não lê os dados), components/button.tsx e
+     components/caique/ChatWidget.tsx (o chat do CAIQUE).
    Contexto: §3 (perfis), §10 (anatomia de toda tela: só o conteúdo rola),
      §12 fluxo 1 (trilha obrigatória libera o sistema), §15 item 1 (shell da
      aplicação) e docs/notas-next16.md §4 (rotas públicas e protegidas).
@@ -34,6 +35,7 @@ import { CaisMark } from '@/components/CaisLogo';
 import { EstadoErro } from '@/components/ui/basicos';
 import Button from '@/components/button';
 import { RotateCw } from 'lucide-react';
+import { ChatWidget } from '@/components/caique/ChatWidget';
 
 // [PV-1] A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end.
 /**
@@ -193,6 +195,8 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
           ) : trilhaBloqueia ? <TrilhaPendente /> : children}
         </main>
       </div>
+      {/* [PV-7] O CHAT DO CAIQUE: botão flutuante em todas as telas internas (components/caique/ChatWidget.tsx). Para tirar o chat de uma tela, condicione aqui por `caminho` ou perfil. */}
+      <ChatWidget />
     </div>
   );
 }
