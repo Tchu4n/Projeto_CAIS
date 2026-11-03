@@ -349,6 +349,16 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 3. As classes do botão, também usadas em links que parecem botão. Mudar aqui muda o Button e esses links juntos. _(linha 66)_
 4. O BOTÃO: com isLoading mostra o spinner, troca o texto por loadingText (padrão "Salvando…") e desabilita. Para mudar o texto padrão, é aqui. _(linha 96)_
 
+### `components/caique/ChatMensagem.tsx`
+*o balão de uma mensagem (da pessoa ou do CAIQUE), com a hora e, nas respostas do CAIQUE, os botões "Útil" e "Não ajudou".*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
+### `components/caique/ChatWidget.tsx`
+*o botão redondo no canto da tela e a janela de conversa do CAIQUE, com os quatro estados: vazio (boas-vindas e sugestões), carregando ("CAIQUE está digitando"), erro (com "Tentar de novo") e com conversa. As respostas ainda são SIMULADAS (lib/caique.ts); a IA entra depois.*
+
+1. OS TEXTOS DO CHAT: nome, boas-vindas, aviso de demonstração e mensagens de erro. Troque o texto aqui, não no meio do JSX. _(linha 23)_
+
 ### `components/CaisLogo.tsx`
 *o símbolo (CaisMark) e o logo completo com o nome (CaisLogo), desenhados em SVG inline com os vetores do guia da marca.*
 
@@ -957,6 +967,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 3. O TEXTO DO CAMPO DE BUSCA por perfil: precisa prometer só o que o perfil consegue achar. Mudou os tipos em montarCandidatos? Ajuste aqui. _(linha 55)_
 4. A BUSCA GLOBAL: junta tudo o que a sessão abre, filtra pelo texto (todas as palavras, sem acento) e reparte as vagas da lista entre os tipos. TODO(API): vira chamada ao servidor. _(linha 156)_
 
+### `lib/caique.ts`
+*funções puras do chat do CAIQUE: de qual trilha o chat está falando, quais perguntas sugerir, se a pergunta é válida e a resposta (por enquanto FINGIDA, sem IA).*
+
+1. O TAMANHO MÁXIMO da pergunta (em caracteres). O limite protege o custo da IA quando ela for ligada. _(linha 22)_
+2. AS PERGUNTAS SUGERIDAS do chat vazio: com trilha aberta e sem trilha. Troque o texto aqui. _(linha 41)_
+
 ### `lib/carga.ts`
 *a regra do semáforo de carga em funções puras: quanto da semana de cada pessoa está ocupado, dia a dia, levando em conta QUANDO cada alocação acontece (e não só se ela existe).*
 
@@ -1205,4 +1221,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-144 arquivos mapeados, 603 pontos vitais.
+147 arquivos mapeados, 606 pontos vitais.

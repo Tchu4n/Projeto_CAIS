@@ -22,6 +22,7 @@ async function captura(nome) {
 }
 /** Digita no campo do chat (setter nativo + evento, que o React entende). */
 const digitar = (t) => ev(`(() => { const el = document.getElementById('caique-pergunta'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(el, ${JSON.stringify(t)}); el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+/** Texto visível da janela do chat (vazio se estiver fechada). */
 const janela = () => ev(`document.querySelector('[role=dialog][aria-label*="CAIQUE"]')?.innerText ?? ''`);
 
 try {
