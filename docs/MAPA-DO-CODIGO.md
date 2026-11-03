@@ -76,12 +76,13 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/layout.tsx`
 *a casca (menu lateral + topo + área de conteúdo) de todas as telas internas, e o "porteiro" que barra quem não está logado ou cujo perfil não pode abrir a rota (lib/permissoes.ts).*
 
-1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 38)_
-2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 69)_
-3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 96)_
-4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 124)_
-5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 139)_
-6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 172)_
+1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 40)_
+2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 71)_
+3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 98)_
+4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 126)_
+5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 141)_
+6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 174)_
+7. O CHAT DO CAIQUE: botão flutuante em todas as telas internas (components/caique/ChatWidget.tsx). Para tirar o chat de uma tela, condicione aqui por `caminho` ou perfil. _(linha 198)_
 
 ### `app/(sistema)/minhas-tarefas/page.tsx`
 *as tarefas em que a pessoa logada é responsável, de todos os projetos, agrupadas por prazo (Atrasadas, Hoje, Esta semana, Depois) e as concluídas recentemente (recolhidas), com filtros de projeto e prioridade. Clicar abre o detalhe da tarefa por cima da lista (?tarefa= na URL, como no quadro).*
@@ -195,6 +196,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 2. A TRILHA NOVA: nasce como rascunho, alcance geral e prazo de 7 dias; abre o editor, que salva sozinho. TODO(API): POST. _(linha 61)_
 3. O TEXTO "QUEM RECEBE" do cartão: o nome da empresa, "N pessoa(s)" ou "Todos", conforme o alcance. _(linha 111)_
 
+### `app/api/auth/[...nextauth]/route.ts`
+*entrega ao Next as rotas GET e POST do Auth.js (/api/auth/signin, /callback/google, /session...).*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
 ### `app/globals.css`
 
 1. AS CORES DO TEMA CLARO (marca, estados, painéis noite, fundo da home, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. _(linha 23)_
@@ -216,6 +222,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. O TÍTULO E A DESCRIÇÃO PADRÃO da aba do navegador. O modelo "%s · CAIS" monta o título das outras páginas (ex.: "Projetos · CAIS"). _(linha 20)_
 2. A COR DA BARRA DO NAVEGADOR NO CELULAR (Névoa no tema claro, Tinta no escuro) e o viewportFit "cover", que libera a área segura do iPhone para as barras fixas. _(linha 32)_
 3. O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar (modo escuro e cores do tema). A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts, e "cais-tema-aplicado" repete a de lib/temaAtivo.tsx: mude os dois lados juntos. Não escreva comentários dentro do texto. _(linha 52)_
+
+### `app/login/google/page.tsx`
+*a página da rota "/login/google", para onde o Google devolve a pessoa depois do login.*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
 
 ### `app/login/page.tsx`
 *a página da rota "/login" — tela de entrada no sistema.*
@@ -260,6 +271,27 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 *a página pública (sem login) em que qualquer pessoa confere se o código de um certificado do CAIS é válido.*
 
 1. O TÍTULO DA ABA da página de verificação ("Verificar certificado · CAIS"). _(linha 18)_
+
+## Raiz do projeto (configuração)
+
+### `auth.ts`
+*configura o Auth.js com o provedor Google. Ele só PROVA QUEM A PESSOA É (o e-mail verificado pelo Google); quem decide se ela entra e com qual perfil é o cadastro do CAIS (lib/googleLogin.ts), conferido em components/RetornoGoogle.tsx.*
+
+1. QUANDO O BOTÃO DO GOOGLE APARECE: só com as três variáveis no .env.local (veja docs/GOOGLE-AUTH.md). Sem elas, o login por e-mail e senha continua sozinho. _(linha 20)_
+2. A TELA DE LOGIN do Auth.js: erros do Google (ex.: acesso negado) voltam para /login com ?error=. _(linha 30)_
+3. A REGRA DE QUEM PODE USAR O GOOGLE: hoje, só e-mail com verificação do Google. Domínio permitido ou lista de e-mails entram aqui. _(linha 41)_
+
+### `next.config.ts`
+*a configuração do Next.js do projeto.*
+
+1. Lê os endereços de rede do computador a cada início do servidor (o IP muda quando a rede muda). _(linha 12)_
+2. OS ENDEREÇOS LIBERADOS no npm run dev: sem eles o JavaScript não roda quando a tela é aberta por 127.0.0.1 ou pelo IP da rede (celular, outro micro). Não muda nada no build. _(linha 27)_
+3. Esconde a bolinha "N" do Next no canto da tela durante o npm run dev. Erros continuam aparecendo. _(linha 34)_
+
+### `tailwind.config.ts`
+*configuração herdada do Tailwind v3. ⚠️ ATENÇÃO: no Tailwind v4 (usado aqui) este arquivo só é lido se o CSS tiver uma diretiva "@config" apontando para ele, e o projeto NÃO tem; as cores e fontes declaradas aqui NÃO estão ativas.*
+
+1. ARQUIVO SEM EFEITO HOJE (Tailwind v4 só o lê com @config no CSS, e o projeto não tem). As cores e fontes reais ficam no @theme de app/globals.css: edite lá. _(linha 11)_
 
 ## components/ (peças de tela)
 
@@ -684,6 +716,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 4. A TROCA DE SENHA: grava a nova senha (a antiga deixa de valer), avisa e volta ao login. TODO(API): vira PATCH com o token do link. _(linha 159)_
 5. QUAL PASSO ABRIR: com ?token= aceita só "demo" e e-mail válido (simulado, vira a validação da API) e mostra a nova senha; senão, link inválido. Sem token, passo 1 ou 2. _(linha 234)_
 
+### `components/RetornoGoogle.tsx`
+*roda quando o Google devolve a pessoa ao CAIS. Pergunta ao Auth.js quem ela é, casa o e-mail com o cadastro e abre a sessão do CAIS (ou volta ao /login com o motivo).*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
 ### `components/shell/EmConstrucao.tsx`
 *o cabeçalho de uma página mais um estado vazio "Em construção", usado pelas telas que ainda serão feitas nos próximos blocos.*
 
@@ -964,6 +1001,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 9. OS COLABORADORES DA EMPRESA: quem ela pode escolher para as trilhas dela = profissionais ativos alocados em algum projeto dela. _(linha 177)_
 10. QUEM PODE RETIRAR PESSOAS DO TIME DE UMA TRILHA: a empresa, só nas trilhas de alcance "empresa" que são DELA (as que ela criou e as que a coordenação publicou para ela). Quem já concluiu não pode ser retirado (a tela desabilita). TODO(PROGLOGIC): confirmar. _(linha 192)_
 
+### `lib/googleLogin.ts`
+*dado o e-mail que o Google comprovou, decide qual pessoa do cadastro entra ou por que não entra.*
+
+1. AS REGRAS DO LOGIN COM GOOGLE: e-mail precisa estar no cadastro, conta inativa não entra e convite pendente deve usar o link do convite. TODO(API): a API decide. _(linha 24)_
+
 ### `lib/metricas.ts`
 *funções puras que calculam as entregas por projeto (painel da empresa), público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.*
 
@@ -1145,20 +1187,6 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 8. Regra do formato de e-mail de TODOS os formulários (login, recuperação, cadastros): mude aqui para aceitar ou recusar mais formatos. _(linha 191)_
 9. Máscara do campo de e-mail enquanto se digita (tira espaços e passa para minúsculas); a validação do formato é a EMAIL_REGEX acima. _(linha 206)_
 
-## Raiz do projeto (configuração)
-
-### `next.config.ts`
-*a configuração do Next.js do projeto.*
-
-1. Lê os endereços de rede do computador a cada início do servidor (o IP muda quando a rede muda). _(linha 12)_
-2. OS ENDEREÇOS LIBERADOS no npm run dev: sem eles o JavaScript não roda quando a tela é aberta por 127.0.0.1 ou pelo IP da rede (celular, outro micro). Não muda nada no build. _(linha 27)_
-3. Esconde a bolinha "N" do Next no canto da tela durante o npm run dev. Erros continuam aparecendo. _(linha 34)_
-
-### `tailwind.config.ts`
-*configuração herdada do Tailwind v3. ⚠️ ATENÇÃO: no Tailwind v4 (usado aqui) este arquivo só é lido se o CSS tiver uma diretiva "@config" apontando para ele, e o projeto NÃO tem; as cores e fontes declaradas aqui NÃO estão ativas.*
-
-1. ARQUIVO SEM EFEITO HOJE (Tailwind v4 só o lê com @config no CSS, e o projeto não tem). As cores e fontes reais ficam no @theme de app/globals.css: edite lá. _(linha 11)_
-
 ## Arquivos .json
 
 ### `package.json`
@@ -1177,4 +1205,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-139 arquivos mapeados, 598 pontos vitais.
+144 arquivos mapeados, 603 pontos vitais.
