@@ -33,7 +33,7 @@ export default function LoginPage() {
         * be wrapped in a suspense boundary" (notas-next16 §2). */}
       <Suspense>
         {/* googleConfigurado vem do servidor (auth.ts): o botão do Google só aparece com as credenciais no .env.local. */}
-        <LoginForm googleAtivo={googleConfigurado} />
+        <LoginForm googleAtivo={googleConfigurado} googleClientId={process.env.AUTH_GOOGLE_ID ?? ""} />
       </Suspense>
     </AcessoLayout>
   );

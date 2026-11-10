@@ -11,6 +11,7 @@
 
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 
 /**
  * Diz se as credenciais do Google estão no ambiente.
@@ -26,7 +27,31 @@ export const googleConfigurado = Boolean(
 // TODO(API): quando a PROGLOGIC tiver o cadastro no servidor, a conferência "este e-mail está cadastrado?"
 // sobe para o callback `signIn` abaixo; hoje o cadastro mora no navegador (lib/store.tsx) e não dá para ler aqui.
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google,
+    // Google Identity Services (components/BotaoGoogle.tsx): o navegador manda o ID token (JWT) e o servidor o valida aqui.
+    Credentials({
+      id: "google-gis",
+      name: "Google",
+      credentials: { credential: {} },
+      async authorize(c) {
+        const token = typeof c?.credential === "string" ? c.credential : "";
+        if (!token) return null;
+        try {
+          // O endpoint oficial confere assinatura e validade do token.
+          const r = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`, { cache: "no-store" });
+          if (!r.ok) return null;
+          const p = (await r.json()) as { aud?: string; email?: string; email_verified?: string | boolean; name?: string; sub?: string };
+          // aud tem de ser o nosso client ID (impede token emitido para outro app).
+          if (p.aud !== process.env.AUTH_GOOGLE_ID) return null;
+          if (!p.email || String(p.email_verified) !== "true") return null;
+          return { id: p.sub ?? p.email, email: p.email, name: p.name ?? p.email };
+        } catch {
+          return null;
+        }
+      },
+    }),
+  ],
   // [PV-2] A TELA DE LOGIN do Auth.js: erros do Google (ex.: acesso negado) voltam para /login com ?error=.
   pages: { signIn: "/login", error: "/login" },
   // Sessão só em cookie assinado (JWT): não há banco. Ela serve de ponte; o CAIS abre a própria sessão depois.
@@ -39,7 +64,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * @returns true para deixar entrar; false recusa (volta ao /login com erro).
      */
     // [PV-3] A REGRA DE QUEM PODE USAR O GOOGLE: hoje, só e-mail com verificação do Google. Domínio permitido ou lista de e-mails entram aqui.
-    signIn({ profile }) {
+    signIn({ profile, account }) {
+      // "google-gis": o e-mail verificado já foi conferido em authorize().
+      if (account?.provider === "google-gis") return true;
       return profile?.email_verified === true;
     },
   },

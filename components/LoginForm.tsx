@@ -15,8 +15,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, CircleAlert, ShieldCheck, GraduationCap, Building2, LogIn } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { Mail, Lock, CircleAlert, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
+import { BotaoGoogle } from "./BotaoGoogle";
 import { useAuth, CONTAS_DEMO, SENHA_DEMO } from "@/lib/auth";
 import { EMAIL_REGEX, mascaraEmail } from "@/lib/utils";
 import type { Perfil } from "@/lib/tipos";
@@ -115,7 +115,7 @@ function validar(email: string, password: string): Erros {
  * @param googleAtivo - true mostra o botão "Entrar com Google" (a página decide, pelas variáveis de ambiente).
  * @returns o cartão com o formulário.
  */
-export const LoginForm = ({ googleAtivo = false }: { googleAtivo?: boolean }) => {
+export const LoginForm = ({ googleAtivo = false, googleClientId = "" }: { googleAtivo?: boolean; googleClientId?: string }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // "Lembrar-me": decide se a sessão fica no localStorage (sobrevive ao fechar
@@ -180,10 +180,12 @@ export const LoginForm = ({ googleAtivo = false }: { googleAtivo?: boolean }) =>
 
   // NAVEGA: sai do site para o Google; ele devolve a pessoa em /login/google, que abre a sessão do CAIS.
   // [PV-6] O BOTÃO DO GOOGLE: o destino do retorno é /login/google?voltar=<destino>. Mudar a rota exige mudar app/login/google e o endereço no Google Cloud.
-  const entrarComGoogle = () => {
+  // O botão oficial (Google Identity Services) já validou o token no servidor; aqui só seguimos para a ponte.
+  const googleConcluido = () => {
     setAbrindoGoogle(true);
-    void signIn("google", { redirectTo: `/login/google?voltar=${encodeURIComponent(destino)}` });
+    router.push(`/login/google?voltar=${encodeURIComponent(destino)}`);
   };
+  const googleFalhou = () => router.replace("/login?google=cancelado");
 
   // Estado "sucesso" (borda verde) só depois de tocado e com formato válido.
   const emailValido = tocado.email && !erros.email && EMAIL_REGEX.test(email.trim());
@@ -382,10 +384,10 @@ export const LoginForm = ({ googleAtivo = false }: { googleAtivo?: boolean }) =>
             {COPY.googleDivider}
             <span className="h-px flex-1 bg-borda" />
           </div>
-          <Button type="button" variante="secundario" larguraTotal disabled={loading || abrindoGoogle} onClick={entrarComGoogle}>
-            <LogIn aria-hidden="true" className="h-4 w-4 shrink-0" />
-            {abrindoGoogle ? COPY.googleConnecting : COPY.googleButton}
-          </Button>
+          {googleClientId && (
+            <BotaoGoogle clientId={googleClientId} desabilitado={loading || abrindoGoogle} aoConcluir={googleConcluido} aoFalhar={googleFalhou} />
+          )}
+          {abrindoGoogle && <p role="status" className="mt-2 text-center text-xs text-tinta-suave">{COPY.googleConnecting}</p>}
         </div>
       )}
 
