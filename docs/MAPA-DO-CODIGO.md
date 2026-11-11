@@ -76,12 +76,13 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/layout.tsx`
 *a casca (menu lateral + topo + área de conteúdo) de todas as telas internas, e o "porteiro" que barra quem não está logado ou cujo perfil não pode abrir a rota (lib/permissoes.ts).*
 
-1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 38)_
-2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 69)_
-3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 96)_
-4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 124)_
-5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 139)_
-6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 172)_
+1. A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end. _(linha 40)_
+2. A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão. _(linha 71)_
+3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 98)_
+4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 126)_
+5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 141)_
+6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 174)_
+7. O CHAT DO CAIQUE: botão flutuante em todas as telas internas (components/caique/ChatWidget.tsx). Para tirar o chat de uma tela, condicione aqui por `caminho` ou perfil. _(linha 198)_
 
 ### `app/(sistema)/minhas-tarefas/page.tsx`
 *as tarefas em que a pessoa logada é responsável, de todos os projetos, agrupadas por prazo (Atrasadas, Hoje, Esta semana, Depois) e as concluídas recentemente (recolhidas), com filtros de projeto e prioridade. Clicar abre o detalhe da tarefa por cima da lista (?tarefa= na URL, como no quadro).*
@@ -169,6 +170,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 3. QUEM CRIA PROJETO: só quem tem a permissão "editar_projeto" (lib/permissoes.ts). O botão fica escondido, não desabilitado, para os outros perfis. _(linha 72)_
 4. OS FILTROS DA LISTA: empresa, status e busca por nome (sem acento). _(linha 83)_
 
+### `app/(sistema)/temas/page.tsx`
+*tela do Administrador para escolher o tema padrão do sistema, criar e editar temas personalizados e atribuir um tema a cada empresa.*
+
+1. A GRADE de cartões: 1 coluna no celular, 2 no tablet e 3 no desktop. Mude as classes grid-cols para mudar quantos cartões cabem por linha (vale para temas-base e personalizados). _(linha 155)_
+
 ### `app/(sistema)/trilhas/[id]/page.tsx`
 *o editor de uma trilha: etapas, público e regras, progresso por pessoa, publicar/despublicar e excluir.*
 
@@ -189,6 +195,11 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 1. O FILTRO DA LISTA: Todas, Gerais, Da empresa, Do profissional (pelo alcance) ou Rascunhos (pelo status). _(linha 55)_
 2. A TRILHA NOVA: nasce como rascunho, alcance geral e prazo de 7 dias; abre o editor, que salva sozinho. TODO(API): POST. _(linha 61)_
 3. O TEXTO "QUEM RECEBE" do cartão: o nome da empresa, "N pessoa(s)" ou "Todos", conforme o alcance. _(linha 111)_
+
+### `app/api/auth/[...nextauth]/route.ts`
+*entrega ao Next as rotas GET e POST do Auth.js (/api/auth/signin, /callback/google, /session...).*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
 
 ### `app/globals.css`
 
@@ -212,10 +223,15 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 2. A COR DA BARRA DO NAVEGADOR NO CELULAR (Névoa no tema claro, Tinta no escuro) e o viewportFit "cover", que libera a área segura do iPhone para as barras fixas. _(linha 32)_
 3. O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar (modo escuro e cores do tema). A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts, e "cais-tema-aplicado" repete a de lib/temaAtivo.tsx: mude os dois lados juntos. Não escreva comentários dentro do texto. _(linha 52)_
 
+### `app/login/google/page.tsx`
+*a página da rota "/login/google", para onde o Google devolve a pessoa depois do login.*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
 ### `app/login/page.tsx`
 *a página da rota "/login" — tela de entrada no sistema.*
 
-1. A PÁGINA DE LOGIN (/login): só monta a moldura e o formulário. O Suspense é obrigatório porque o LoginForm usa useSearchParams; sem ele o build falha. _(linha 29)_
+1. A PÁGINA DE LOGIN (/login): só monta a moldura e o formulário. O Suspense é obrigatório porque o LoginForm usa useSearchParams; sem ele o build falha. _(linha 30)_
 
 ### `app/not-found.tsx`
 *a tela mostrada quando o endereço digitado não existe.*
@@ -255,6 +271,27 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 *a página pública (sem login) em que qualquer pessoa confere se o código de um certificado do CAIS é válido.*
 
 1. O TÍTULO DA ABA da página de verificação ("Verificar certificado · CAIS"). _(linha 18)_
+
+## Raiz do projeto (configuração)
+
+### `auth.ts`
+*configura o Auth.js com o provedor Google. Ele só PROVA QUEM A PESSOA É (o e-mail verificado pelo Google); quem decide se ela entra e com qual perfil é o cadastro do CAIS (lib/googleLogin.ts), conferido em components/RetornoGoogle.tsx.*
+
+1. QUANDO O BOTÃO DO GOOGLE APARECE: só com as três variáveis no .env.local (veja docs/GOOGLE-AUTH.md). Sem elas, o login por e-mail e senha continua sozinho. _(linha 20)_
+2. A TELA DE LOGIN do Auth.js: erros do Google (ex.: acesso negado) voltam para /login com ?error=. _(linha 30)_
+3. A REGRA DE QUEM PODE USAR O GOOGLE: hoje, só e-mail com verificação do Google. Domínio permitido ou lista de e-mails entram aqui. _(linha 41)_
+
+### `next.config.ts`
+*a configuração do Next.js do projeto.*
+
+1. Lê os endereços de rede do computador a cada início do servidor (o IP muda quando a rede muda). _(linha 12)_
+2. OS ENDEREÇOS LIBERADOS no npm run dev: sem eles o JavaScript não roda quando a tela é aberta por 127.0.0.1 ou pelo IP da rede (celular, outro micro). Não muda nada no build. _(linha 27)_
+3. Esconde a bolinha "N" do Next no canto da tela durante o npm run dev. Erros continuam aparecendo. _(linha 34)_
+
+### `tailwind.config.ts`
+*configuração herdada do Tailwind v3. ⚠️ ATENÇÃO: no Tailwind v4 (usado aqui) este arquivo só é lido se o CSS tiver uma diretiva "@config" apontando para ele, e o projeto NÃO tem; as cores e fontes declaradas aqui NÃO estão ativas.*
+
+1. ARQUIVO SEM EFEITO HOJE (Tailwind v4 só o lê com @config no CSS, e o projeto não tem). As cores e fontes reais ficam no @theme de app/globals.css: edite lá. _(linha 11)_
 
 ## components/ (peças de tela)
 
@@ -311,6 +348,16 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 2. AS ALTURAS DO BOTÃO: sm 32 px, md 40 px e lg 48 px, com o espaçamento e a fonte de cada uma. _(linha 58)_
 3. As classes do botão, também usadas em links que parecem botão. Mudar aqui muda o Button e esses links juntos. _(linha 66)_
 4. O BOTÃO: com isLoading mostra o spinner, troca o texto por loadingText (padrão "Salvando…") e desabilita. Para mudar o texto padrão, é aqui. _(linha 96)_
+
+### `components/caique/ChatMensagem.tsx`
+*o balão de uma mensagem (da pessoa ou do CAIQUE), com a hora e, nas respostas do CAIQUE, os botões "Útil" e "Não ajudou".*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
+### `components/caique/ChatWidget.tsx`
+*o botão redondo no canto da tela e a janela de conversa do CAIQUE, com os quatro estados: vazio (boas-vindas e sugestões), carregando ("CAIQUE está digitando"), erro (com "Tentar de novo") e com conversa. As respostas ainda são SIMULADAS (lib/caique.ts); a IA entra depois.*
+
+1. OS TEXTOS DO CHAT: nome, boas-vindas, aviso de demonstração e mensagens de erro. Troque o texto aqui, não no meio do JSX. _(linha 23)_
 
 ### `components/CaisLogo.tsx`
 *o símbolo (CaisMark) e o logo completo com o nome (CaisLogo), desenhados em SVG inline com os vetores do guia da marca.*
@@ -447,21 +494,33 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `components/LoginForm.tsx`
 *o cartão de login (e-mail, senha, "Lembrar-me"), com validação ao sair do campo, mensagens de erro claras e três botões "Entrar como" que preenchem e-mail e senha de uma conta de demonstração de cada perfil.*
 
-1. OS TEXTOS DA TELA DE LOGIN: título, rótulos, mensagens de erro (senha errada, conta inativa, convite pendente) e o texto dos botões de demonstração. Troque o texto aqui, não no meio do JSX. _(linha 29)_
-2. OS LINKS da tela: "Esqueceu a senha?" vai para /recuperar-senha; "Criar conta" ainda é "#" porque o cadastro só existe por convite (/primeiro-acesso). TODO(API). _(linha 59)_
-3. OS BOTÕES "ENTRAR COMO" (só no protótipo): um por perfil, usando a primeira conta daquele perfil em CONTAS_DEMO (lib/auth.tsx). Apagar quando a API real entrar. _(linha 69)_
-4. AS REGRAS DO FORMULÁRIO de login: e-mail obrigatório e no formato certo (EMAIL_REGEX), senha obrigatória. _(linha 82)_
-5. PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel. _(linha 135)_
-6. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 175)_
-7. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 227)_
-8. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 232)_
-9. O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. _(linha 343)_
+1. OS TEXTOS DA TELA DE LOGIN: título, rótulos, mensagens de erro (senha errada, conta inativa, convite pendente) e o texto dos botões de demonstração. Troque o texto aqui, não no meio do JSX. _(linha 30)_
+2. OS LINKS da tela: "Esqueceu a senha?" vai para /recuperar-senha; "Criar conta" ainda é "#" porque o cadastro só existe por convite (/primeiro-acesso). TODO(API). _(linha 71)_
+3. OS BOTÕES "ENTRAR COMO" (só no protótipo): um por perfil, usando a primeira conta daquele perfil em CONTAS_DEMO (lib/auth.tsx). Apagar quando a API real entrar. _(linha 81)_
+4. AS REGRAS DO FORMULÁRIO de login: e-mail obrigatório e no formato certo (EMAIL_REGEX), senha obrigatória. _(linha 94)_
+5. PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel. _(linha 150)_
+6. O BOTÃO DO GOOGLE: o destino do retorno é /login/google?voltar=<destino>. Mudar a rota exige mudar app/login/google e o endereço no Google Cloud. _(linha 182)_
+7. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 200)_
+8. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 252)_
+9. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 257)_
+10. O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. _(linha 368)_
+
+### `components/marca/LogoDaMarca.tsx`
+*mostra a marca da empresa configurada no tema ativo (imagem e/ou nome); sem marca no tema, mostra o logo do CAIS de sempre. Também exporta `useNomeDaMarca`, o nome para leitor de tela.*
+
+1. O TAMANHO MÁXIMO do logo da empresa: a altura vem da prop `tamanho` e a largura é limitada por max-w-[8rem] (128 px), para um logo largo não empurrar os botões do topo no celular. O nome ao lado também é limitado (max-w-[10rem]) e vira "…" se for maior. _(linha 55)_
+2. O QUE APARECE sem logo: só com nome (sem imagem), mostra apenas o nome da empresa em texto; sem nada no tema, mostra o CaisLogo de hoje. O CAIS nunca some da tela: o SeloCais fica fixo em outro lugar. _(linha 56)_
 
 ### `components/marca/OndasDeFundo.tsx`
 *três camadas de ondas, na cor de destaque do tema, que correm devagar no topo de uma área escura e esmaecem até sumir, como a "superfície da água" de onde o CAIS (o cais) se vê.*
 
 1. AS TRÊS CAMADAS: quanto da cor do tema (mistura com a noite), a opacidade, o deslocamento vertical e a duração da volta (menor = mais rápido). Mude aqui para deixar as ondas mais fortes, mais claras ou mais calmas. _(linha 18)_
 2. A ALTURA e o ESMAECIMENTO da faixa: h-[260px] é a altura; a máscara deixa o roxo cheio até 22% e some até 74% (antes de a última camada acabar, para não aparecer linha dura). Mude para as ondas descerem mais ou menos. _(linha 39)_
+
+### `components/marca/SeloCais.tsx`
+*um selo pequeno (símbolo + nome do CAIS) que aparece sempre, mesmo quando o tema troca o logo do cabeçalho pela marca da empresa cliente.*
+
+1. O TEXTO do selo fixo. É a garantia de que o CAIS continua visível quando o tema usa a marca da empresa; mude aqui para trocar o texto em todas as telas. _(linha 20)_
 
 ### `components/marca/TresPilares.tsx`
 *o desenho em SVG que liga Onboarding → Projetos → Dashboards, com as linhas sendo "desenhadas" ao abrir a página.*
@@ -667,6 +726,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 4. A TROCA DE SENHA: grava a nova senha (a antiga deixa de valer), avisa e volta ao login. TODO(API): vira PATCH com o token do link. _(linha 159)_
 5. QUAL PASSO ABRIR: com ?token= aceita só "demo" e e-mail válido (simulado, vira a validação da API) e mostra a nova senha; senão, link inválido. Sem token, passo 1 ou 2. _(linha 234)_
 
+### `components/RetornoGoogle.tsx`
+*roda quando o Google devolve a pessoa ao CAIS. Pergunta ao Auth.js quem ela é, casa o e-mail com o cadastro e abre a sessão do CAIS (ou volta ao /login com o motivo).*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
 ### `components/shell/EmConstrucao.tsx`
 *o cabeçalho de uma página mais um estado vazio "Em construção", usado pelas telas que ainda serão feitas nos próximos blocos.*
 
@@ -714,6 +778,39 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 1. O texto do bloqueio gentil quando a trava da trilha obrigatória impede abrir uma tela (título e explicação). Quem decide bloquear é lib/permissoes.ts. _(linha 15)_
 2. Para onde o bloqueio leva: /minhas-trilhas. Troque o endereço se a tela das trilhas mudar de lugar. _(linha 27)_
+
+### `components/temas/CampoCor.tsx`
+*um campo para editar UMA cor do tema: o seletor nativo (<input type="color">) e um campo de texto com o hexadecimal, sempre sincronizados.*
+
+1. O FORMATO ACEITO de cor: #RRGGBB (seis dígitos hexadecimais). Para aceitar também #RGB ou rgba(), mude esta expressão e a conversão do seletor em `paraSeletor`. _(linha 14)_
+
+### `components/temas/CampoLogo.tsx`
+*um campo para escolher a imagem do logo (PNG, JPG, WebP ou SVG), ver como ela fica sobre fundo claro ou escuro e remover.*
+
+1. AS MEDIDAS RECOMENDADAS PARA O LOGO: a orientação mostrada na tela e os limites dos avisos (não bloqueiam). O cabeçalho desenha o logo com 30 a 40 px de altura e no máximo 128 px de largura (components/marca/LogoDaMarca.tsx, [PV-1] de lá): por isso o ideal é horizontal, entre 3:1 e 4:1. Se mudar aquele limite, ajuste estes números. _(linha 18)_
+
+### `components/temas/CartaoTema.tsx`
+*cartão com a miniatura do tema, o nome, as etiquetas (Base, Padrão do sistema, quantas empresas usam) e as ações (usar como padrão, duplicar, editar, apagar).*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
+### `components/temas/EditorTema.tsx`
+*modal para criar ou editar um tema personalizado: nome, cores por grupo (claro e escuro), prévia ao vivo isolada e avisos de contraste.*
+
+1. O LIMITE do nome do tema (em caracteres). Mude aqui para permitir nomes maiores ou menores. _(linha 21)_
+2. O LIMITE do nome da empresa (em caracteres), igual ao que lib/temas.ts aceita ao ler do navegador. _(linha 25)_
+3. A IDENTIDADE DA EMPRESA no tema (nome e logos). Aparece no topo da lateral, no painel de marca do login e no topo da home; o selo "Plataforma CAIS" continua fixo e nenhum tema o troca. O limite do nome está em NOME_EMPRESA_MAX e o dos arquivos em lib/temas.ts (LOGO_MAX_BYTES, LOGO_TIPOS). _(linha 126)_
+4. OS CAMPOS DE COR vêm de GRUPOS_COR (lib/temas.ts): para ganhar ou perder um campo, mude lá; esta tela só desenha a lista. _(linha 139)_
+
+### `components/temas/PreviaTema.tsx`
+*um bloco de amostra (lateral, cartão, botões, etiquetas) que aplica as variáveis de cor de uma paleta SÓ dentro dele, via `style`, sem mudar o sistema.*
+
+1. O FORMATO DE COR que a prévia aceita (#RRGGBB). Valor fora disso é ignorado na prévia (ela usa a cor do sistema no lugar) e o aviso de hex inválido aparece no editor. _(linha 14)_
+
+### `components/temas/TemaPorEmpresa.tsx`
+*lista de empresas, cada uma com um seletor "padrão do sistema ou um tema específico".*
+
+1. AS OPÇÕES do seletor: a primeira (valor vazio) é "padrão do sistema"; as demais são os temas. Mude o texto da primeira opção aqui. _(linha 32)_
 
 ### `components/ThemeToggle.tsx`
 *botão redondo (sol/lua) que alterna o tema e lembra a escolha.*
@@ -870,6 +967,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 3. O TEXTO DO CAMPO DE BUSCA por perfil: precisa prometer só o que o perfil consegue achar. Mudou os tipos em montarCandidatos? Ajuste aqui. _(linha 55)_
 4. A BUSCA GLOBAL: junta tudo o que a sessão abre, filtra pelo texto (todas as palavras, sem acento) e reparte as vagas da lista entre os tipos. TODO(API): vira chamada ao servidor. _(linha 156)_
 
+### `lib/caique.ts`
+*funções puras do chat do CAIQUE: de qual trilha o chat está falando, quais perguntas sugerir, se a pergunta é válida e a resposta (por enquanto FINGIDA, sem IA).*
+
+1. O TAMANHO MÁXIMO da pergunta (em caracteres). O limite protege o custo da IA quando ela for ligada. _(linha 22)_
+2. AS PERGUNTAS SUGERIDAS do chat vazio: com trilha aberta e sem trilha. Troque o texto aqui. _(linha 41)_
+
 ### `lib/carga.ts`
 *a regra do semáforo de carga em funções puras: quanto da semana de cada pessoa está ocupado, dia a dia, levando em conta QUANDO cada alocação acontece (e não só se ela existe).*
 
@@ -913,6 +1016,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 8. QUEM PODE EDITAR A TRILHA: o admin edita qualquer uma; a empresa só as que ela criou (as publicadas pelo admin ela só acompanha). _(linha 163)_
 9. OS COLABORADORES DA EMPRESA: quem ela pode escolher para as trilhas dela = profissionais ativos alocados em algum projeto dela. _(linha 177)_
 10. QUEM PODE RETIRAR PESSOAS DO TIME DE UMA TRILHA: a empresa, só nas trilhas de alcance "empresa" que são DELA (as que ela criou e as que a coordenação publicou para ela). Quem já concluiu não pode ser retirado (a tela desabilita). TODO(PROGLOGIC): confirmar. _(linha 192)_
+
+### `lib/googleLogin.ts`
+*dado o e-mail que o Google comprovou, decide qual pessoa do cadastro entra ou por que não entra.*
+
+1. AS REGRAS DO LOGIN COM GOOGLE: e-mail precisa estar no cadastro, conta inativa não entra e convite pendente deve usar o link do convite. TODO(API): a API decide. _(linha 24)_
 
 ### `lib/metricas.ts`
 *funções puras que calculam as entregas por projeto (painel da empresa), público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.*
@@ -984,10 +1092,10 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 2. OS DADOS DE DEMONSTRAÇÃO inteiros (empresas, pessoas, trilhas, projetos, alocações, tarefas). Mudou o seed de forma incompatível? Suba a CHAVE em lib/store.tsx. _(linha 34)_
 3. As empresas de exemplo (ativa, em negociação, encerrada). CNPJs e domínios são fictícios. _(linha 52)_
 4. As pessoas de exemplo e as CONTAS de login (admin, profissionais, empresas). O cargaMax de cada uma é o limite do semáforo. Conta nova: acrescente também em CONTAS_DEMO (lib/auth.tsx). _(linha 60)_
-5. As trilhas de exemplo, com conteúdo, quizzes, prazos e datas de conclusão. As datas de publicação criam prazo vencido, perto e no prazo para a demonstração. _(linha 76)_
-6. Os projetos de exemplo, um por situação (em andamento, curto, planejado), cada um de uma empresa. _(linha 163)_
-7. AS ALOCAÇÕES que criam os cenários do semáforo: Bruno acima do limite, Diego (o exemplo do time) nunca vermelho, Elisa vermelha em 2 semanas, Gabriela livre. _(linha 172)_
-8. As tarefas do quadro, com checklist, comentários, anexos de exemplo e as aprovações da empresa (aprovadaEm). _(linha 191)_
+5. As trilhas de exemplo, com conteúdo, quizzes, prazos e datas de conclusão. As datas de publicação criam prazo vencido, perto e no prazo para a demonstração. _(linha 79)_
+6. Os projetos de exemplo, um por situação (em andamento, curto, planejado), cada um de uma empresa. _(linha 166)_
+7. AS ALOCAÇÕES que criam os cenários do semáforo: Bruno acima do limite, Diego (o exemplo do time) nunca vermelho, Elisa vermelha em 2 semanas, Gabriela livre. _(linha 175)_
+8. As tarefas do quadro, com checklist, comentários, anexos de exemplo e as aprovações da empresa (aprovadaEm). _(linha 194)_
 
 ### `lib/senha.ts`
 *funções puras que dizem se uma senha cumpre as regras do CAIS e quais regras faltam.*
@@ -1024,6 +1132,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 1. Chave do tema salvo ('cais-tema'). O script inline de app/layout.tsx repete este nome: mude os dois juntos, senão a tela pisca no tema errado. _(linha 24)_
 2. Como o tema escuro é ligado: a classe .dark no <html>. As cores de cada tema ficam em app/globals.css. _(linha 54)_
 3. Troca de tema: grava a escolha (ou apaga, no modo "seguir o sistema") e aplica na hora. É o ÚNICO lugar que escreve a chave do tema. _(linha 63)_
+
+### `lib/temaAtivo.tsx`
+*descobre qual tema vale para quem está na tela, escolhe a paleta do modo claro/escuro e grava as cores como variáveis CSS no <html>.*
+
+1. A CHAVE do último conjunto de cores aplicado, usada contra o "piscar" ao abrir a página. O <script> de app/layout.tsx repete este nome: mude os dois juntos, senão a tela pisca no tema errado. _(linha 26)_
+2. QUEM VÊ QUAL TEMA: Administrador e telas públicas usam o padrão; Empresa usa o tema da sua empresa; Profissional usa o da empresa da primeira alocação ativa (sem alocação, o padrão). A regra mora em empresaDoTema e resolverTemaId (lib/temas.ts). _(linha 58)_
 
 ### `lib/temas.ts`
 *o catálogo de temas do CAIS (CAIS, Paleta quente, Carvão, Oceano, Floresta e Ameixa) e as funções puras que escolhem, validam, duplicam e atualizam temas. Não usa React nem navegador.*
@@ -1089,20 +1203,6 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 8. Regra do formato de e-mail de TODOS os formulários (login, recuperação, cadastros): mude aqui para aceitar ou recusar mais formatos. _(linha 191)_
 9. Máscara do campo de e-mail enquanto se digita (tira espaços e passa para minúsculas); a validação do formato é a EMAIL_REGEX acima. _(linha 206)_
 
-## Raiz do projeto (configuração)
-
-### `next.config.ts`
-*a configuração do Next.js do projeto.*
-
-1. Lê os endereços de rede do computador a cada início do servidor (o IP muda quando a rede muda). _(linha 12)_
-2. OS ENDEREÇOS LIBERADOS no npm run dev: sem eles o JavaScript não roda quando a tela é aberta por 127.0.0.1 ou pelo IP da rede (celular, outro micro). Não muda nada no build. _(linha 27)_
-3. Esconde a bolinha "N" do Next no canto da tela durante o npm run dev. Erros continuam aparecendo. _(linha 34)_
-
-### `tailwind.config.ts`
-*configuração herdada do Tailwind v3. ⚠️ ATENÇÃO: no Tailwind v4 (usado aqui) este arquivo só é lido se o CSS tiver uma diretiva "@config" apontando para ele, e o projeto NÃO tem; as cores e fontes declaradas aqui NÃO estão ativas.*
-
-1. ARQUIVO SEM EFEITO HOJE (Tailwind v4 só o lê com @config no CSS, e o projeto não tem). As cores e fontes reais ficam no @theme de app/globals.css: edite lá. _(linha 11)_
-
 ## Arquivos .json
 
 ### `package.json`
@@ -1121,4 +1221,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-129 arquivos mapeados, 583 pontos vitais.
+147 arquivos mapeados, 606 pontos vitais.

@@ -2,6 +2,16 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Chat do CAIQUE: corpo do chat, ainda sem IA (03/11/2026)
+- Criado: `components/caique/ChatWidget.tsx` (botão flutuante e janela com os quatro estados: vazio com sugestões, "digitando", erro com "Tentar de novo" e conversa), `components/caique/ChatMensagem.tsx` (balão com "Útil" e "Não ajudou"), `lib/caique.ts` e `lib/caique.casos.ts` (13 casos) e o teste `testes/navegador/l01-caique-chat.mjs` (23 conferências, incluindo 375 px).
+- Modificado: `app/(sistema)/layout.tsx` (monta o chat em todas as telas internas); `docs/MAPA-DO-CODIGO.md` regenerado.
+- Removido: nada. As respostas são SIMULADAS (`SIMULADO` e `TODO(API)` em `lib/caique.ts`); digitar `/erro` dispara a falha de propósito. Dentro de uma trilha, o cabeçalho e as sugestões falam dela. A IA (Gemini, prompts I01 a I03) entra depois.
+
+## Login com Google e prompts de Google Auth e CAIQUE (03/11/2026)
+- Criado: `auth.ts` (Auth.js v5 com o provedor Google), a rota `app/api/auth/[...nextauth]/route.ts`, `lib/googleLogin.ts` e `lib/googleLogin.casos.ts` (7 casos), a tela de retorno `app/login/google/page.tsx` com `components/RetornoGoogle.tsx`, o `docs/GOOGLE-AUTH.md`, o `.env.example` e os prompts `docs/prompts/J01` a `J05` (Google Auth) e `I01` a `I12` (CAIQUE, já com Gemini 2.0 Flash; o I04 é um esqueleto a reescrever).
+- Modificado: `components/LoginForm.tsx` (botão "Entrar com Google" e mensagens de `?google=`, só com as credenciais no `.env.local`); `app/login/page.tsx`; `lib/seed.ts` (dois admins com e-mail Google); `docs/prompts/00-GUIA.md`; `.gitignore` (libera o `.env.example`); `package.json` (`next-auth@beta`).
+- Removido: nada. O login por e-mail e senha e os botões "Entrar como" seguem iguais. O Google só prova o e-mail; perfil e status vêm do cadastro.
+
 ## Módulo de temas: tela do admin, cobertura do sistema e identidade da empresa (24/10/2026)
 - Criado: a rota `/temas` (só admin) com `components/temas/*` (`CampoCor`, `CampoLogo`, `CartaoTema`, `EditorTema`, `PreviaTema`, `TemaPorEmpresa`); `lib/temaAtivo.tsx` (`TemaProvider`, `useTemaAtivo`, anti-piscada); `components/marca/LogoDaMarca.tsx` e `SeloCais.tsx`; o teste `testes/navegador/k01-logo-da-marca.mjs`.
 - Modificado: `lib/store.tsx`, `lib/tipos.ts` e `lib/seed.ts` (dados `temas` e as ações `salvarTema`, `removerTema`, `definirTemaPadrao`, `definirTemaEmpresa`); `app/globals.css` (tokens `--fundo-home`, `--noite`, `--noite-alt`, `--veu`, `--sobre-cor`, `--sobre-estado` e os derivados do tema `--marca-clara` e `--onda`); home, login, lateral, botões e painéis passam a usar tokens, e as ondas e o brilho do início e do login seguem a cor do tema; `app/(sistema)/layout.tsx` (a casca ganhou `relative`: elemento `sr-only` escapava do `overflow-hidden` e criava rolagem extra com faixa vazia no fim); `lib/permissoes.ts`, `components/shell/navegacao.ts` e `/design-system`.

@@ -1,0 +1,119 @@
+## 🟢 I06 — Jest Tests 30 Casos
+
+**Duração:** 3h  
+**Responsável:** QA Engineer + Backend  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT
+
+```markdown
+TAREFA: Criar lib/caique.test.ts com 30 casos Jest
+
+ESTRUTURA: 6 categorias, 5 testes cada = 30 total
+
+Categoria A: BÁSICOS (5 testes)
+- [ ] A1: Pergunta simples → resposta com sucesso
+- [ ] A2: Pergunta vazia → erro
+- [ ] A3: Contexto inválido (falta userId) → erro
+- [ ] A4: Histórico vazio funciona
+- [ ] A5: Resposta vazia do Gemini → erro
+
+Categoria B: MULTI-IDIOMA (4 testes)
+- [ ] B1: userLanguage="pt" → resposta em português
+- [ ] B2: userLanguage="en" → resposta em inglês
+- [ ] B3: userLanguage="es" → resposta em espanhol
+- [ ] B4: Idioma inválido → fallback português
+
+Categoria C: SEGURANÇA (3 testes)
+- [ ] C1: User de empresa A ≠ vê trilha de empresa B
+- [ ] C2: SQL injection na pergunta → bloqueado
+- [ ] C3: XSS na resposta → sanitizado
+
+Categoria D: PERFORMANCE (3 testes)
+- [ ] D1: Response time < 10s
+- [ ] D2: 10+ mensagens no histórico → funciona
+- [ ] D3: Múltiplas requisições simultâneas → OK
+
+Categoria E: EDGE CASES (5 testes)
+- [ ] E1: Pergunta com caracteres especiais (emoji, acentos)
+- [ ] E2: Pergunta muito longa (5000 chars)
+- [ ] E3: Histórico > 20 mensagens (trimado para 10)
+- [ ] E4: Retry automático se RESOURCE_EXHAUSTED
+- [ ] E5: Timeout graceful se passar de 10s
+
+Categoria F: LOGGING (5 testes)
+- [ ] F1: Log criado após resposta
+- [ ] F2: Feedback armazenado (thumbs_up)
+- [ ] F3: Feedback armazenado (thumbs_down)
+- [ ] F4: Estatísticas calculadas corretamente
+- [ ] F5: Logs filtrados por companyId (isolamento)
+
+PADRÃO AAA (Arrange-Act-Assert):
+
+describe("CAIQUE", () => {
+  it("A1: Pergunta simples retorna resposta", async () => {
+    // ARRANGE
+    const pergunta = "O que é async/await?";
+    const contexto = {
+      userId: "ana",
+      companyId: "vertice",
+      trailId: "js-avancado",
+      trailName: "JavaScript Avançado",
+      userLanguage: "pt",
+      historicoMensagens: []
+    };
+    
+    // Mock do Gemini (não fazer chamada real)
+    jest.mock("../caique-system-prompt", () => ({
+      getSystemPrompt: () => "Mock system prompt"
+    }));
+    
+    // ACT
+    const resposta = await processarPerguntaDoCaique(pergunta, contexto);
+    
+    // ASSERT
+    expect(resposta.success).toBe(true);
+    expect(resposta.resposta).toBeTruthy();
+    expect(resposta.resposta.length).toBeGreaterThan(10);
+    expect(resposta.metadata.responseTimeMs).toBeLessThan(10000);
+  });
+});
+
+MOCK DO GEMINI:
+- Usar jest.mock() ou MSW
+- Não fazer chamadas reais à API (economiza crédito)
+- Retornar resposta pré-definida por cenário
+- Exemplo:
+  
+  jest.mock("node-fetch", () => ({
+    __esModule: true,
+    default: jest.fn((url, options) => {
+      if (url.includes("gemini")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            candidates: [{
+              content: { parts: [{ text: "Mock response" }] }
+            }],
+            usageMetadata: { totalTokenCount: 150 }
+          })
+        });
+      }
+    })
+  }));
+
+COMANDO PARA RODAR:
+npm run test -- lib/caique.test.ts --verbose
+
+VALIDAÇÃO:
+- [ ] 30/30 testes passando
+- [ ] Coverage > 80% (npm run test -- --coverage)
+- [ ] Nenhum warning de jest
+
+ENTREGA:
+1. lib/caique.test.ts com 30 testes
+2. Output: "PASS lib/caique.test.ts (todos os 30 testes)"
+3. Coverage report screenshot
+4. Confirmação: "Testes de qualidade passam"
+```

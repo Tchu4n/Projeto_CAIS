@@ -1,0 +1,310 @@
+## 🟢 J04 — Tela Login Integrada com NextAuth
+
+**Duração:** 1h30  
+**Responsável:** Frontend Engineer  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT
+
+```markdown
+TAREFA: Atualizar tela de login para incluir Google OAuth
+
+CONTEXTO:
+- Tela de login do CAIS já existe (app/page.tsx ou similar)
+- Agora adicionar botão "Entrar com Google"
+- Manter email/senha como fallback (ou remover, conforme política)
+
+O QUE FAZER:
+
+1. Editar: app/(sistema)/login/page.tsx ou app/page.tsx
+
+   /* ============================================================================
+      app/(sistema)/login/page.tsx
+      O que é: Tela de login com Google OAuth integrado
+      Donde é usado: Rota raiz quando não autenticado
+      Depende de: signIn do NextAuth, components/CaisLogo, design system
+      ============================================================================ */
+   
+   "use client";
+   
+   import { signIn } from "next-auth/react";
+   import { useRouter, useSearchParams } from "next/navigation";
+   import { useState } from "react";
+   import { CaisLogo } from "@/components/CaisLogo";
+   import { AlertCircle, Loader2, Chrome } from "lucide-react";
+   
+   export default function LoginPage() {
+     const router = useRouter();
+     const searchParams = useSearchParams();
+     const [carregando, setCarregando] = useState(false);
+     const [erro, setErro] = useState<string | null>(null);
+     const [email, setEmail] = useState("");
+     const [senha, setSenha] = useState("");
+     const [lembrar, setLembrar] = useState(false);
+   
+     const errorParam = searchParams.get("error");
+     
+     // Erro de callback (ex: OAUTH_CALLBACK_ERROR)
+     const erroExibir = erro || (errorParam && "Erro ao fazer login. Tente novamente.");
+   
+     /**
+      * Handler: Login com Google
+      */
+     const handleGoogleSignIn = async () => {
+       setCarregando(true);
+       setErro(null);
+       
+       try {
+         const result = await signIn("google", {
+           redirect: false,
+           callbackUrl: "/painel",
+         });
+         
+         if (result?.error) {
+           setErro("Erro ao fazer login com Google");
+         } else if (result?.ok) {
+           router.push(result.url || "/painel");
+         }
+       } catch (e) {
+         setErro("Erro ao conectar com Google");
+         console.error(e);
+       } finally {
+         setCarregando(false);
+       }
+     };
+     
+     /**
+      * Handler: Login com Email/Senha (simulado ou integração com API futura)
+      */
+     const handleEmailSignIn = async (e: React.FormEvent) => {
+       e.preventDefault();
+       setCarregando(true);
+       setErro(null);
+       
+       if (!email || !senha) {
+         setErro("Preencha e-mail e senha");
+         setCarregando(false);
+         return;
+       }
+       
+       try {
+         // TODO(API): Implementar quando tiver API de login com email/senha
+         // Por enquanto: apenas Google OAuth
+         const result = await signIn("credentials", {
+           email,
+           password: senha,
+           redirect: false,
+           callbackUrl: "/painel",
+         });
+         
+         if (result?.error) {
+           setErro(result.error);
+         } else if (result?.ok) {
+           router.push(result.url || "/painel");
+         }
+       } catch (e) {
+         setErro("E-mail ou senha incorretos");
+       } finally {
+         setCarregando(false);
+       }
+     };
+   
+     return (
+       <div className="min-h-screen bg-fundo flex items-center justify-center p-4">
+         {/* Painel de marca (lado esquerdo em desktop) */}
+         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primaria to-primaria-forte flex-col justify-center items-center text-branco p-12">
+           <CaisLogo size={64} tone="claro" showWordmark={false} />
+           <h1 className="font-space text-4xl font-600 mt-8 text-center">
+             Novo caminho, sua trilha para o futuro.
+           </h1>
+           <p className="font-archivo text-lg mt-6 text-center opacity-90 max-w-md">
+             Forma. Aloca. Acompanha. Tudo em um só lugar.
+           </p>
+           
+           {/* Diagrama dos 3 pilares (se quiser visual, adicionar aqui) */}
+         </div>
+         
+         {/* Formulário (lado direito ou todo em mobile) */}
+         <div className="w-full max-w-sm">
+           <div className="bg-superficie rounded-3xl shadow-card p-8">
+             {/* Logo CAIS no topo (mobile) */}
+             <div className="lg:hidden flex justify-center mb-8">
+               <CaisLogo size={40} />
+             </div>
+             
+             {/* Título */}
+             <h2 className="font-space font-600 text-2xl text-tinta text-center mb-2">
+               Bem-vindo de volta
+             </h2>
+             <p className="text-tinta-suave text-center text-sm mb-8">
+               Acesse sua conta e continue sua jornada
+             </p>
+             
+             {/* Erro global */}
+             {erroExibir && (
+               <div className="mb-6 p-4 bg-erro/10 border border-erro rounded-lg flex gap-3">
+                 <AlertCircle size={20} className="text-erro flex-shrink-0 mt-0.5" />
+                 <p className="text-erro text-sm">{erroExibir}</p>
+               </div>
+             )}
+             
+             {/* Botão Google OAuth */}
+             <button
+               onClick={handleGoogleSignIn}
+               disabled={carregando}
+               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-superficie-alt hover:bg-[#f5f5f5] border border-borda rounded-lg font-archivo font-500 text-tinta transition-colors disabled:opacity-50 mb-6"
+               aria-label="Entrar com Google"
+             >
+               {carregando ? (
+                 <Loader2 size={20} className="animate-spin" />
+               ) : (
+                 <Chrome size={20} />
+               )}
+               {carregando ? "Conectando..." : "Entrar com Google"}
+             </button>
+             
+             {/* Divisor */}
+             <div className="flex items-center gap-4 mb-6">
+               <div className="flex-1 h-px bg-borda"></div>
+               <span className="text-tinta-fraca text-xs">OU</span>
+               <div className="flex-1 h-px bg-borda"></div>
+             </div>
+             
+             {/* Formulário Email/Senha (opcional, pode remover) */}
+             <form onSubmit={handleEmailSignIn} className="space-y-4">
+               {/* Email */}
+               <div>
+                 <label htmlFor="email" className="block text-sm font-archivo font-500 text-tinta mb-2">
+                   E-mail
+                 </label>
+                 <input
+                   id="email"
+                   type="email"
+                   value={email}
+                   onChange={(e) => setEmail(e.target.value)}
+                   placeholder="seu@email.com"
+                   className="w-full px-4 py-3 bg-fundo border border-borda rounded-lg text-tinta placeholder-tinta-fraca focus:outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/25 transition-all"
+                   disabled={carregando}
+                 />
+               </div>
+               
+               {/* Senha */}
+               <div>
+                 <label htmlFor="senha" className="block text-sm font-archivo font-500 text-tinta mb-2">
+                   Senha
+                 </label>
+                 <input
+                   id="senha"
+                   type="password"
+                   value={senha}
+                   onChange={(e) => setSenha(e.target.value)}
+                   placeholder="••••••••"
+                   className="w-full px-4 py-3 bg-fundo border border-borda rounded-lg text-tinta placeholder-tinta-fraca focus:outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/25 transition-all"
+                   disabled={carregando}
+                 />
+               </div>
+               
+               {/* Lembrar-me */}
+               <label className="flex items-center gap-2 cursor-pointer">
+                 <input
+                   type="checkbox"
+                   checked={lembrar}
+                   onChange={(e) => setLembrar(e.target.checked)}
+                   className="w-4 h-4 rounded accent-primaria"
+                 />
+                 <span className="text-sm text-tinta-suave">Lembrar-me por 30 dias</span>
+               </label>
+               
+               {/* Botão Entrar */}
+               <button
+                 type="submit"
+                 disabled={carregando}
+                 className="w-full px-4 py-3 bg-botao hover:bg-botao-hover text-branco font-archivo font-600 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+               >
+                 {carregando && <Loader2 size={18} className="animate-spin" />}
+                 {carregando ? "Entrando..." : "Entrar"}
+               </button>
+             </form>
+             
+             {/* Link Recuperação Senha */}
+             <div className="mt-6 text-center">
+               <a
+                 href="/recuperar-senha"
+                 className="text-sm text-primaria hover:text-primaria-forte transition-colors"
+               >
+                 Esqueceu sua senha?
+               </a>
+             </div>
+             
+             {/* Link Cadastro */}
+             <div className="mt-4 text-center text-sm text-tinta-suave">
+               Não tem conta?{" "}
+               <a
+                 href="/cadastro"
+                 className="text-primaria hover:text-primaria-forte font-500 transition-colors"
+               >
+                 Cadastre-se
+               </a>
+             </div>
+           </div>
+           
+           {/* Disclaimer */}
+           <p className="text-xs text-tinta-suave text-center mt-6">
+             Ao entrar, você concorda com nossos{" "}
+             <a href="/termos" className="underline hover:text-tinta">
+               Termos de Serviço
+             </a>{" "}
+             e{" "}
+             <a href="/privacidade" className="underline hover:text-tinta">
+               Política de Privacidade
+             </a>
+           </p>
+         </div>
+       </div>
+     );
+   }
+
+2. Atualizar app/layout.tsx para retirar SessionProvider antigo (se houver)
+
+   Garantir que está assim:
+   
+   import { SessionProvider } from "next-auth/react";
+   import { auth } from "@/lib/auth";
+   
+   export default async function RootLayout({ children }) {
+     const session = await auth();
+     
+     return (
+       <html>
+         <body>
+           <SessionProvider session={session}>
+             {children}
+           </SessionProvider>
+         </body>
+       </html>
+     );
+   }
+
+3. Testar responsividade
+
+   - [ ] Desktop: painel marca + formulário lado a lado
+   - [ ] Tablet 768px: logo no topo, formulário abaixo
+   - [ ] Mobile 375px: formulário ocupa tela
+   - [ ] Nenhum horizontal scroll
+
+VALIDAÇÃO:
+- [ ] npm run dev
+- [ ] Ir para http://localhost:3000
+- [ ] Redireciona para /login (não autenticado)
+- [ ] Botão Google visível
+- [ ] Clicar Google → redireciona para Google (ou simula)
+- [ ] Após login → painel (/painel)
+- [ ] Design system aplicado (cores, fontes, espaçamento)
+- [ ] npm run lint (0 errors)
+
+ENTREGA:
+1. app/(sistema)/login/page.tsx completo
+2. Screenshots: desktop, tablet, mobile
+3. Confirmação: "Login com Google funciona, design integrado"
+```

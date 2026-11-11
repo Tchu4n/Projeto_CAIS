@@ -1,0 +1,230 @@
+## 🟢 J02 — Instalar e Configurar NextAuth.js
+
+**Duração:** 1h  
+**Responsável:** Backend Engineer  
+**Ferramenta:** Claude Code (Sonnet 5)  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT (copiar inteiro no Claude Code)
+
+```markdown
+TAREFA: Instalar NextAuth.js v5 e estrutura base
+
+PASSO 1: Instalar pacotes
+npm install next-auth@beta @auth/core @auth/nextjs @auth/google-provider
+
+PASSO 2: Criar arquivo: lib/auth.ts
+
+/* ============================================================================
+   lib/auth.ts
+   O que é: Configuração NextAuth.js com Google OAuth
+   Onde é usado: route.ts em app/api/auth/[...nextauth]/
+   Depende de: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET
+   Contexto: § 7 (Técnico) de docs/contexto-cais.md
+   ============================================================================ */
+
+import NextAuth, { type DefaultSession, type NextAuthOptions } from "next-auth";
+import GoogleProvider from "@auth/nextjs/providers/google";
+import { type JWT } from "next-auth/jwt";
+
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    user: {
+      id: string;
+      companyId?: string;
+      role?: "admin" | "empresa" | "profissional";
+    } & DefaultSession["user"];
+  }
+}
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id?: string;
+    companyId?: string;
+    role?: "admin" | "empresa" | "profissional";
+  }
+}
+
+/**
+ * Configuração NextAuth.js com Google OAuth
+ * Documentação: https://next-auth.js.org/configuration/options
+ */
+export const authOptions: NextAuthOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: false,
+    }),
+  ],
+  
+  pages: {
+    signIn: "/login",
+    error: "/login",
+    // signOut: "/login",
+  },
+  
+  callbacks: {
+    /**
+     * JWT callback — chamado ao fazer login
+     * Aqui adicionamos companyId e role ao token
+     */
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.id = user.id;
+        // TODO(API): Buscar companyId e role do DB baseado em email
+        // Por enquanto, usar valores default (substituir depois)
+        token.companyId = "default-company";
+        token.role = "profissional";
+      }
+      return token;
+    },
+    
+    /**
+     * Session callback — retorna dados ao cliente
+     */
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.companyId = token.companyId as string;
+        session.user.role = token.role as "admin" | "empresa" | "profissional";
+      }
+      return session;
+    },
+    
+    /**
+     * SignIn callback — controlar quem pode fazer login
+     */
+    async signIn({ user, account, profile, email, credentials }) {
+      // TODO(API): Validar se usuário está cadastrado no DB
+      // Por enquanto, permitir qualquer login Google
+      return true;
+    },
+  },
+  
+  events: {
+    /**
+     * Evento de login bem-sucedido
+     */
+    async signIn({ user, account, profile, isNewUser }) {
+      console.log(`[AUTH] Login: ${user.email}, isNew: ${isNewUser}`);
+      // GRAVA: log de acesso em BD (para auditoria)
+    },
+    
+    /**
+     * Evento de logout
+     */
+    async signOut({ token }) {
+      console.log(`[AUTH] Logout: ${token.email}`);
+    },
+  },
+  
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 dias
+    updateAge: 24 * 60 * 60,   // atualizar token a cada 24h
+  },
+  
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+    maxAge: 30 * 24 * 60 * 60,
+  },
+};
+
+/**
+ * Wrapper do NextAuth para uso
+ */
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
+
+PASSO 3: Criar arquivo: app/api/auth/[...nextauth]/route.ts
+
+/* ============================================================================
+   app/api/auth/[...nextauth]/route.ts
+   O que é: Rota dinâmica NextAuth (handles sign-in, callback, etc)
+   Onde é usado: Chamado automaticamente por /api/auth/*
+   Depende de: lib/auth.ts
+   ============================================================================ */
+
+import { handlers } from "@/lib/auth";
+
+export const { GET, POST } = handlers;
+
+PASSO 4: Criar middleware: lib/auth-middleware.ts
+
+/* ============================================================================
+   lib/auth-middleware.ts
+   O que é: Middleware para validar rotas autenticadas
+   Onde é usado: middleware.ts (Next.js)
+   Depende de: lib/auth.ts
+   ============================================================================ */
+
+import { auth } from "@/lib/auth";
+import { NextResponse, type NextRequest } from "next/server";
+
+/**
+ * Middleware para validar autenticação em rotas protegidas
+ * @param request NextRequest
+ */
+export async function withAuth(request: NextRequest) {
+  const session = await auth();
+  
+  // Se não tem sessão e tenta acessar rota protegida
+  if (!session && request.nextUrl.pathname.startsWith("/painel")) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+  
+  // Se tem sessão e tenta acessar login
+  if (session && request.nextUrl.pathname === "/login") {
+    return NextResponse.redirect(new URL("/painel", request.url));
+  }
+  
+  return NextResponse.next();
+}
+
+PASSO 5: Atualizar middleware.ts (raiz do projeto)
+
+// middleware.ts
+import { withAuth } from "@/lib/auth-middleware";
+export const middleware = withAuth;
+
+export const config = {
+  matcher: ["/painel/:path*", "/api/caique/:path*", "/login"],
+};
+
+PASSO 6: Atualizar app/layout.tsx com SessionProvider
+
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+  
+  return (
+    <html lang="pt-BR">
+      <body>
+        <SessionProvider session={session}>
+          {children}
+        </SessionProvider>
+      </body>
+    </html>
+  );
+}
+
+VALIDAÇÃO:
+- [ ] npm run lint (0 errors)
+- [ ] npx tsc --noEmit (0 TS errors)
+- [ ] npm run build (sem problemas)
+- [ ] npm run dev (inicia sem erro)
+
+ENTREGA:
+1. lib/auth.ts completo com JSDoc
+2. app/api/auth/[...nextauth]/route.ts
+3. lib/auth-middleware.ts
+4. middleware.ts atualizado
+5. app/layout.tsx com SessionProvider
+6. Screenshot: npm run lint (0 errors)
+```

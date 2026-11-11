@@ -1,0 +1,143 @@
+## 🟢 J05 — Testes NextAuth + Validação
+
+**Duração:** 1h  
+**Responsável:** QA Engineer / Backend  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT
+
+```markdown
+TAREFA: Testes NextAuth.js + validação segurança
+
+O QUE FAZER:
+
+1. Criar: lib/auth.test.ts
+
+   describe("NextAuth - Google OAuth", () => {
+     
+     // J05.1: Login flow
+     it("deve permitir login com Google", async () => {
+       // Mock do signIn
+       // Arrange
+       const email = "teste@gmail.com";
+       const user = { email, name: "Teste User" };
+       
+       // Act (mockeado)
+       // const result = await signIn("google");
+       
+       // Assert (validar estrutura esperada)
+       expect(user).toHaveProperty("email");
+       expect(user).toHaveProperty("name");
+     });
+     
+     // J05.2: Session data
+     it("deve retornar session com companyId e role", async () => {
+       // Mock da sessão
+       const session = {
+         user: {
+           id: "user-123",
+           email: "ana@vertice.com",
+           companyId: "vertice",
+           role: "profissional"
+         }
+       };
+       
+       expect(session.user).toHaveProperty("companyId");
+       expect(session.user).toHaveProperty("role");
+       expect(session.user.role).toMatch(/admin|empresa|profissional/);
+     });
+     
+     // J05.3: JWT token
+     it("deve incluir id, companyId, role no token JWT", async () => {
+       const token = {
+         id: "user-123",
+         companyId: "vertice",
+         role: "profissional",
+         sub: "google-oauth-id"
+       };
+       
+       expect(token.id).toBeDefined();
+       expect(token.companyId).toBeDefined();
+       expect(token.role).toBeDefined();
+     });
+     
+     // J05.4: Logout
+     it("deve permitir logout", async () => {
+       // signOut() deve remover session
+       expect(true).toBe(true); // placeholder
+     });
+     
+     // J05.5: Redirects
+     it("deve redirecionar não-autenticado para /login", async () => {
+       // Teste de middleware
+       // Se acessa /painel sem sessão → redirect /login
+       expect(true).toBe(true); // placeholder
+     });
+     
+   });
+
+   NOTAS:
+   - NextAuth é complexo de mockar (usar msw ou jest.mock)
+   - Testes de integration são melhores que unitários
+   - Se difícil, focar em testes manuais + e2e com Playwright
+
+2. Testes manuais (checklist)
+
+   [ ] Login flow
+       - Ir para /login
+       - Clicar "Entrar com Google"
+       - Fazer login no Google
+       - Volta para /painel com sessão ativa
+   
+   [ ] Session persistence
+       - Fazer login
+       - Refresh página (F5)
+       - Sessão continua ativa
+       - User info mantém companyId, role
+   
+   [ ] Logout
+       - Ir para painel
+       - Clicar logout
+       - Redireciona para /login
+       - Session removida
+   
+   [ ] Redirect protection
+       - Sem login: acessa /painel → redireciona /login
+       - Com login: acessa /login → redireciona /painel
+   
+   [ ] Segurança
+       - NEXTAUTH_SECRET diferente dev vs prod
+       - GOOGLE_CLIENT_SECRET não está em Git
+       - Cookies session tem HttpOnly=true
+       - CSRF token validado
+
+3. Verificar logs
+
+   [ ] npm run dev mostra:
+       - "NextAuth.js configured successfully"
+       - Nenhum warning sobre env vars
+   
+   [ ] Logs de login:
+       - "[AUTH] Login: user@email.com, isNew: false"
+       - Aparece quando user faz login
+
+4. Validação de segurança
+
+   - [ ] NEXTAUTH_SECRET definido (não vazio)
+   - [ ] Cookies com secure=true em produção
+   - [ ] callbackUrl validado (não aberto a redirect)
+   - [ ] Google Client Secret protegido (.env.local)
+
+VALIDAÇÃO:
+- [ ] npm run test (testes passam, mesmo que básicos)
+- [ ] Todos os 5 testes manuais ✅ OK
+- [ ] npm run lint (0 errors)
+- [ ] npm run build (sucesso)
+
+ENTREGA:
+1. lib/auth.test.ts com testes
+2. Checklist manual preenchido (assinado)
+3. Screenshots: login flow completo
+4. Confirmação: "NextAuth validado, pronto para produção"
+```

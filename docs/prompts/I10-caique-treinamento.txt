@@ -1,0 +1,54 @@
+## 🔵 I10 — Training & Go-Live
+
+**Duração:** 1h  
+**Responsável:** Tech Lead  
+**Ferramenta:** Presentation  
+**Não é Claude Code (training)**
+
+### Conteúdo
+
+```markdown
+# CAIQUE Training Deck
+
+## Slide 1: O que é CAIQUE?
+- Assistente IA integrado ao CAIS
+- Responde sobre trilhas em linguagem natural
+- Powered by Google Gemini
+
+## Slide 2: Como usar (Profissional)
+- Chat abre ao lado do painel (canto inferior direito)
+- Digitar pergunta normal
+- CAIQUE responde baseado em documentos da trilha
+- Feedback: 👍 útil, 👎 não útil
+
+## Slide 3: Limitações
+- Responde APENAS sobre sua trilha
+- Pode errar (IA não é perfeita)
+- Max 500 palavras por resposta
+- Sem pesquisa externa (v1)
+
+## Slide 4: Admin - Analytics
+- Painel /painel/caique-analytics
+- Ver quantas perguntas, tempo médio, feedback
+- Filtrar por período, company
+- Usar para melhorar docs das trilhas
+
+## Slide 5: Troubleshooting
+- Chat não abre? Refresh página
+- Timeout? Pergunta simples demais
+- Erro API? Contactar Tech Lead
+
+## Slide 6: Demo ao vivo
+- Fazer login como profissional
+- Abrir painel
+- Fazer 3 perguntas
+- Mostrar feedback
+- Responder perguntas
+
+## Slide 7: Roadmap
+- v1: MVP (pronto agora)
+- v1.5: Analytics dashboard
+- v2: Pesquisa externa
+
+## Q&A
+```

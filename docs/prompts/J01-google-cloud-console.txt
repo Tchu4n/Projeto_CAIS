@@ -1,0 +1,50 @@
+## 🔴 J01 — Setup Google Cloud Console
+
+**Duração:** 30 min  
+**Responsável:** DevOps / Backend Lead  
+**Ferramenta:** Manual (Browser)  
+**Não é Claude Code**
+
+### Checklist
+
+```markdown
+## Google Cloud Console Setup
+
+[ ] 1. Ir para https://console.cloud.google.com
+[ ] 2. Criar novo projeto: "CAIS-Auth"
+[ ] 3. Ir para "Credentials" (Credenciais)
+[ ] 4. Clique em "Create Credentials" → OAuth 2.0 Client ID
+[ ] 5. Escolha "Web application"
+[ ] 6. Adicionar URIs autorizados:
+    - http://localhost:3000
+    - http://localhost:3000/api/auth/callback/google
+    - https://seu-dominio.com (produção)
+    - https://seu-dominio.com/api/auth/callback/google
+[ ] 7. Clicar "Create"
+[ ] 8. Copiar:
+    - Client ID
+    - Client Secret
+[ ] 9. Adicionar ao .env.local:
+    GOOGLE_CLIENT_ID=seu_id_aqui
+    GOOGLE_CLIENT_SECRET=seu_secret_aqui
+    NEXTAUTH_URL=http://localhost:3000 (dev) ou https://seu-dominio.com (prod)
+    NEXTAUTH_SECRET=gerar com: openssl rand -base64 32
+[ ] 10. Testar: npm run dev (sem erros de env)
+
+## ⚠️ Importante
+- NÃO fazer commit de .env.local
+- .env.local está em .gitignore?
+- NEXTAUTH_SECRET deve ser diferente dev vs prod
+- Guardar Client Secret com segurança (não compartilhar)
+
+## ✅ Validação
+- [ ] Google Console mostra credenciais ativas
+- [ ] .env.local preenchido (3 variáveis)
+- [ ] npm run dev não reclama de env
+- [ ] ls -la | grep .env mostra .env.local
+```
+
+**Entrega esperada:**
+- Screenshot do Google Cloud Console (Credentials)
+- `.env.example` atualizado (com placeholders)
+- Confirmação: "Credenciais geradas, prontas para NextAuth"

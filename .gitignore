@@ -42,3 +42,6 @@ next-env.d.ts
 
 # testes de navegador: perfis temporários do Chrome (pesados, recriados a cada teste)
 /testes/navegador/.perfis/
+
+# exceção: o modelo de variáveis (sem segredos) vai para o Git
+!.env.example

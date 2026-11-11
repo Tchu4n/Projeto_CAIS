@@ -1,0 +1,23 @@
+## 🟢 I04 — ChatWidget Frontend
+
+**Duração:** 2h  
+**Responsável:** Frontend Engineer  
+**Ferramenta:** Claude Code  
+**Comando:** `cd login_cais && claude`
+
+### SUB-PROMPT (COMPLETO)
+
+```markdown
+TAREFA: Implementar components/caique/ChatWidget.tsx completo
+
+[SUB-PROMPT IGUAL AO I3.1 DO DOCUMENTO ANTERIOR - repetir aqui]
+[Copiar exatamente do PROMPTS-CAIQUE-SUBDIVIDIDOS.md seção I3.1]
+
+[Por brevidade, resumo: criar ChatWidget com estado, histórico, feedback, responsivo]
+
+ENTREGA ESPERADA:
+1. components/caique/ChatWidget.tsx (250+ linhas)
+2. components/caique/index.ts (exports)
+3. Screenshots: desktop 1280px + mobile 375px
+4. Testes: input envia, spinner carrega, resposta renderiza, feedback salva
+```
